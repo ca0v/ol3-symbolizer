@@ -627,9 +627,11 @@ define("format/ags-symbolizer", ["require", "exports", "jquery", "format/ol3-sym
                 case "esriSFSSolid":
                     this.fromSFSSolid(symbol, style);
                     break;
-                default:
-                    debugger;
+                case "esriSFSForwardDiagonal":
+                    this.fromSFSSolid(symbol, style);
                     break;
+                default:
+                    throw "invalid-style: " + symbol.style;
             }
         };
         StyleConverter.prototype.fromSMSCircle = function (symbol, style) {
@@ -742,8 +744,22 @@ define("format/ags-symbolizer", ["require", "exports", "jquery", "format/ol3-sym
                 case "esriSLSSolid":
                     this.fromSLSSolid(symbol, style);
                     break;
+                case "esriSLSDot":
+                    this.fromSLSSolid(symbol, style);
+                    break;
+                case "esriSLSDash":
+                    this.fromSLSSolid(symbol, style);
+                    break;
+                case "esriSLSDashDot":
+                    this.fromSLSSolid(symbol, style);
+                    break;
+                case "esriSLSDashDotDot":
+                    this.fromSLSSolid(symbol, style);
+                    break;
                 default:
-                    throw "invalid-style: " + symbol.style;
+                    this.fromSLSSolid(symbol, style);
+                    console.warn("invalid-style: " + symbol.style);
+                    break;
             }
         };
         StyleConverter.prototype.fromPFS = function (symbol, style) {
@@ -1579,7 +1595,7 @@ define("labs/index", ["require", "exports"], function (require, exports) {
     function run() {
         var l = window.location;
         var path = "" + l.origin + l.pathname + "?run=labs/";
-        var labs = "    \n  index\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&debug=1&center=-122.49,37.738\n    ";
+        var labs = "    \n  index\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&debug=1&center=-122.49,37.738\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&debug=1&center=-117.9,34.35\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&debug=1&center=-117.2,32.7\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Hydrography/Watershed173811&layers=0,1&debug=1&center=-96.53,38.37\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Petroleum/KSFields&layers=0&debug=1&center=-98.93,38.55\n    ";
         var styles = document.createElement("style");
         document.head.appendChild(styles);
         styles.innerText += "\n    #map {\n        display: none;\n    }\n    .test {\n        margin: 20px;\n    }\n    ";

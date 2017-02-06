@@ -18,9 +18,9 @@ export namespace ArcGisFeatureServerLayer {
     };
 
     export type Styles =
-        "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSLSSolid" | "esriSMSSquare" | "esriSMSX"
+        "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX"
         | "esriSFSSolid" | "esriSFSForwardDiagonal"
-        | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
+        | "esriSLSSolid" | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
 
     export type SymbolTypes = "esriSMS" | "esriSLS" | "esriSFS" | "esriPMS" | "esriPFS" | "esriTS";
 
@@ -272,9 +272,11 @@ export class StyleConverter {
             case "esriSFSSolid":
                 this.fromSFSSolid(symbol, style);
                 break;
-            default:
-                debugger;
+            case "esriSFSForwardDiagonal":
+                this.fromSFSSolid(symbol, style);
                 break;
+            default:
+                throw `invalid-style: ${symbol.style}`;
         }
     }
 
@@ -397,8 +399,27 @@ export class StyleConverter {
             case "esriSLSSolid":
                 this.fromSLSSolid(symbol, style);
                 break;
+
+            case "esriSLSDot":
+                this.fromSLSSolid(symbol, style);
+                break;
+
+            case "esriSLSDash":
+                this.fromSLSSolid(symbol, style);
+                break;
+
+            case "esriSLSDashDot":
+                this.fromSLSSolid(symbol, style);
+                break;
+
+            case "esriSLSDashDotDot":
+                this.fromSLSSolid(symbol, style);
+                break;
+
             default:
-                throw `invalid-style: ${symbol.style}`;
+                this.fromSLSSolid(symbol, style);
+                console.warn(`invalid-style: ${symbol.style}`);
+                break;
         }
     }
 

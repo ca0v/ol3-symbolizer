@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/ol3/3.20.1/ol.css');
+        @import url('./app.css');
+    </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
+
+<script>
+    (() => {
+
+        function getParameterByName(name, url = window.location.href) {
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+
+        let run = getParameterByName("run") || "labs/index";
+        let debug = getParameterByName("debug") === "1";
+
+        requirejs.config({
+            packages: [
+                {
+                    name: 'xstyle',
+                    location: 'https://cdn.rawgit.com/kriszyp/xstyle/v0.3.2',
+                    main: debug ? 'xstyle' : 'xstyle'
+                }
+            ],
+            paths: {
+                "openlayers": "https://cdnjs.cloudflare.com/ajax/libs/ol3/3.20.1/ol" + (debug ? "-debug" : ""),
+                "jquery": "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery" + (!debug ? ".min" : "")
+            },
+            deps: ["built/index"],
+            callback: () => {
+                require([run], test => {
+                    test.run ? test.run() : test();
+                });
+            }
+        });
+
+    })();
+</script>
+</head>
+
+<body>
+    <div id="map" class="map"></div>
+</body>
+
+</html>

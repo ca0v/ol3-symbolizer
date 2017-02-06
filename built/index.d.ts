@@ -1,5 +1,5 @@
 /// <reference path="../typings/index.d.ts" />
-declare module "ajax" {
+declare module "common/ajax" {
     class Ajax {
         url: string;
         options: {
@@ -16,7 +16,7 @@ declare module "ajax" {
     }
     export = Ajax;
 }
-declare module "ags-catalog" {
+declare module "ags/ags-catalog" {
     export interface Service {
         name: string;
         type: string;
@@ -314,6 +314,7 @@ declare module "format/base" {
     }
 }
 declare module "format/ol3-symbolizer" {
+    import ol = require("openlayers");
     import Serializer = require("format/base");
     export namespace Format {
         type Color = number[] | string;
@@ -333,6 +334,7 @@ declare module "format/ol3-symbolizer" {
         }
         interface Style {
             fill?: Fill;
+            image?: Image;
             stroke?: Stroke;
             text?: Text;
             zIndex?: number;
@@ -390,6 +392,9 @@ declare module "format/ol3-symbolizer" {
             svg?: Svg;
             star?: Star;
             circle?: Circle;
+            text?: Text;
+            fill?: Fill;
+            stroke?: Stroke;
         }
         interface Icon {
             "anchor-x"?: number;
@@ -402,7 +407,7 @@ declare module "format/ol3-symbolizer" {
         interface Circle {
             opacity?: number;
         }
-        interface Svg extends Image {
+        interface Svg {
             anchor?: Offset;
             anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
             anchorXUnits?: string;
@@ -421,6 +426,7 @@ declare module "format/ol3-symbolizer" {
     export class StyleConverter implements Serializer.IConverter<Format.Style> {
         fromJson(json: Format.Style): ol.style.Style;
         toJson(style: ol.style.Style): Format.Style;
+        setGeometry(feature: ol.Feature): ol.geom.Geometry;
         private assign(obj, prop, value);
         private serializeStyle(style);
         private serializeColor(color);
@@ -446,9 +452,7 @@ declare module "format/ags-symbolizer" {
         type Extent = {
             xmin: number;
         };
-        type Styles = "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSLSSolid" | "esriSMSSquare" | "esriSMSX"
-            | "esriSFSSolid" | "esriSFSForwardDiagonal"
-            | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
+        type Styles = "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX" | "esriSFSSolid" | "esriSFSForwardDiagonal" | "esriSLSSolid" | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
         type SymbolTypes = "esriSMS" | "esriSLS" | "esriSFS" | "esriPMS" | "esriPFS" | "esriTS";
         type Color = number[];
         interface AdvancedQueryCapabilities {
@@ -641,21 +645,572 @@ declare module "format/ags-symbolizer" {
         }): ol.style.Style | ((feature: ol.Feature) => ol.style.Style);
     }
 }
-declare module "arcgis-source" {
+declare module "common/common" {
+    export function getParameterByName(name: string, url?: string): string;
+    export function doif<T>(v: T, cb: (v: T) => void): void;
+    export function mixin<A extends any, B extends any>(a: A, b: B): A & B;
+    export function defaults<T extends any>(a: T, b: T): T;
+    export function cssin(name: string, css: string): () => void;
+}
+declare module "ags/ags-source" {
     import ol = require("openlayers");
     export interface IOptions extends olx.source.VectorOptions {
         services: string;
         serviceName: string;
         map: ol.Map;
         layers: number[];
-        tileSize: number;
+        tileSize?: number;
+        where?: string;
     }
     export class ArcGisVectorSourceFactory {
         static create(options: IOptions): JQueryDeferred<ol.layer.Vector[]>;
     }
 }
+declare module "labs/ags-viewer" {
+    import ol = require("openlayers");
+    export function run(): ol.Map;
+}
 declare module "labs/index" {
     export function run(): void;
+}
+declare module "styles/ags/cartographiclinesymbol" {
+    let symbols: {
+        "type": string;
+        "style": string;
+        "color": number[];
+        "width": number;
+        "cap": string;
+        "join": string;
+        "miterLimit": number;
+    }[];
+    export = symbols;
+}
+declare module "styles/ags/picturefillsymbol" {
+    var _default: {
+        "color": number[];
+        "type": string;
+        "url": string;
+        "width": number;
+        "height": number;
+        "xoffset": number;
+        "yoffset": number;
+        "xscale": number;
+        "yscale": number;
+    }[];
+    export = _default;
+}
+declare module "styles/ags/picturemarkersymbol-imagedata" {
+    const style: {
+        "type": string;
+        "url": string;
+        "imageData": string;
+        "contentType": string;
+        "color": string;
+        "width": number;
+        "height": number;
+        "angle": number;
+        "xoffset": number;
+        "yoffset": number;
+    }[];
+    export = style;
+}
+declare module "styles/ags/picturemarkersymbol" {
+    var _default: {
+        "angle": number;
+        "xoffset": number;
+        "yoffset": number;
+        "type": string;
+        "url": string;
+        "width": number;
+        "height": number;
+    }[];
+    export = _default;
+}
+declare module "styles/ags/simplefillsymbol" {
+    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+    let symbols: ArcGisFeatureServerLayer.Symbol[];
+    export = symbols;
+}
+declare module "styles/ags/simplemarkersymbol-circle" {
+    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+    const styles: ArcGisFeatureServerLayer.Symbol[];
+    export = styles;
+}
+declare module "styles/ags/simplemarkersymbol-cross" {
+    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+    var _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "styles/ags/simplemarkersymbol-diamond" {
+    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+    var _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "styles/ags/simplemarkersymbol-path" {
+    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+    var _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "styles/ags/simplemarkersymbol-square" {
+    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+    var _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "styles/ags/simplemarkersymbol-x" {
+    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+    var _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "styles/ags/textsymbol" {
+    var _default: {
+        "color": number[];
+        "type": string;
+        "horizontalAlignment": string;
+        "angle": number;
+        "xoffset": number;
+        "yoffset": number;
+        "text": string;
+        "rotated": boolean;
+        "kerning": boolean;
+        "font": {
+            "size": number;
+            "style": string;
+            "variant": string;
+            "weight": string;
+            "family": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/basic" {
+    var _default: {
+        cross: {
+            star: {
+                opacity: number;
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                radius2: number;
+                angle: number;
+            };
+        }[];
+        square: {
+            star: {
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                angle: number;
+            };
+        }[];
+        diamond: {
+            star: {
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                angle: number;
+            };
+        }[];
+        star: {
+            star: {
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                radius2: number;
+                angle: number;
+            };
+        }[];
+        triangle: {
+            star: {
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                angle: number;
+            };
+        }[];
+        x: {
+            star: {
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                radius2: number;
+                angle: number;
+            };
+        }[];
+    };
+    export = _default;
+}
+declare module "styles/circle/alert" {
+    var _default: {
+        "circle": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+        };
+        "text": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "text": string;
+            "offset-x": number;
+            "offset-y": number;
+            "font": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/circle/gradient" {
+    var _default: {
+        "circle": {
+            "fill": {
+                "color": string;
+                "gradient": string[];
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/fill/cross" {
+    var _default: {
+        "fill": {
+            "pattern": {
+                "orientation": string;
+                "color": string;
+                "spacing": number;
+                "repitition": string;
+            };
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/fill/diagonal" {
+    var _default: {
+        "fill": {
+            "pattern": {
+                "orientation": string;
+                "color": string;
+                "spacing": number;
+                "repitition": string;
+            };
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/fill/gradient" {
+    var _default: {
+        "fill": {
+            "gradient": {
+                "type": string;
+                "stops": string;
+            };
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/fill/horizontal" {
+    var _default: {
+        "fill": {
+            "pattern": {
+                "orientation": string;
+                "color": string;
+                "spacing": number;
+                "repitition": string;
+            };
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/fill/vertical" {
+    var _default: {
+        "fill": {
+            "pattern": {
+                "orientation": string;
+                "color": string;
+                "spacing": number;
+                "repitition": string;
+            };
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/icon/png" {
+    var _default: ({
+        "circle": {
+            "fill": {
+                "gradient": {
+                    "type": string;
+                    "stops": string;
+                };
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+        };
+    } | {
+        "image": {
+            "anchor": number[];
+            "imgSize": number[];
+            "anchorXUnits": string;
+            "anchorYUnits": string;
+            "src": string;
+        };
+    })[];
+    export = _default;
+}
+declare module "styles/icon/svg" {
+    var _default: {
+        "image": {
+            "imgSize": number[];
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "path": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/peace" {
+    var _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+        "text": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "text": string;
+            "offset-x": number;
+            "offset-y": number;
+            "font": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/star/4star" {
+    var _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/star/6star" {
+    var _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/star/cold" {
+    var _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/star/flower" {
+    var _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+        "text": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "text": string;
+            "offset-x": number;
+            "offset-y": number;
+            "font": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/stroke/linedash" {
+    var dasharray: {
+        solid: string;
+        shortdash: number[];
+        shortdot: number[];
+        shortdashdot: number[];
+        shortdashdotdot: number[];
+        dot: number[];
+        dash: number[];
+        longdash: number[];
+        dashdot: number[];
+        longdashdot: number[];
+        longdashdotdot: number[];
+    };
+    export = dasharray;
+}
+declare module "styles/stroke/dash" {
+    var _default: {
+        "stroke": {
+            "color": string;
+            "width": number;
+            "lineDash": number[];
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/stroke/dashdotdot" {
+    var _default: {
+        "stroke": {
+            "color": string;
+            "width": number;
+            "lineDash": number[];
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/stroke/dot" {
+    var _default: {
+        "stroke": {
+            "color": string;
+            "width": number;
+            "lineDash": number[];
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/stroke/solid" {
+    var _default: {
+        "stroke": {
+            "color": string;
+            "width": number;
+        };
+    }[];
+    export = _default;
+}
+declare module "styles/text/text" {
+    var _default: {
+        "text": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "offset-x": number;
+            "offset-y": number;
+            "text": string;
+            "font": string;
+        };
+    }[];
+    export = _default;
 }
 declare module "tests/index" {
     export function run(): void;

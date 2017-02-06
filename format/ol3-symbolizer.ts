@@ -1,3 +1,4 @@
+import ol = require("openlayers");
 import Serializer = require("./base");
 
 function doif<T>(v: T, cb: (v: T) => void) {

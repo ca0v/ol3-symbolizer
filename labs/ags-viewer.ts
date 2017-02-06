@@ -1,8 +1,8 @@
 import $ = require("jquery");
 import ol = require("openlayers");
 import { doif, getParameterByName } from "../common/common";
-import { Popup } from "../bower_components/ol3-popup/src/ol3-popup";
-import { ArcGisVectorSourceFactory } from "../arcgis-source";
+import { Popup } from "ol3-popup";
+import { ArcGisVectorSourceFactory } from "../ags/ags-source";
 
 function parse<T>(v: string, type: T): T {
     if (typeof type === "string") return <any>v;
@@ -71,8 +71,10 @@ export function run() {
         srs: 'EPSG:4326',
         center: <[number, number]>center.vegas,
         zoom: 10,
-        services: "http://sampleserver3.arcgisonline.com/ArcGIS/rest/services",
+        services: "//sampleserver3.arcgisonline.com/ArcGIS/rest/services",
         serviceName: "SanFrancisco/311Incidents",
+        where: "1=1",
+        filter: <{ [name: string]: any }>{},
         layers: [0]
     }
 
@@ -112,6 +114,7 @@ export function run() {
         map: map,
         services: options.services,
         serviceName: options.serviceName,
+        where: options.where,
         layers: options.layers.reverse()
     }).then(agsLayers => {
 

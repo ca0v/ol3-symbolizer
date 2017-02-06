@@ -1,4 +1,4 @@
-import Ajax = require("./common/ajax");
+import Ajax = require("../common/ajax");
 
 export interface Service {
     name: string;
@@ -310,7 +310,7 @@ export interface MapServerInfo {
 /**
  * assigns undefined values
  */
-function defaults<A, B>(a: A, ...b: B[]): A & B {
+function defaults<A extends { [name: string]: any }, B extends { [name: string]: any }>(a: A, ...b: B[]): A & B {
     b.filter(b => !!b).forEach(b => {
         Object.keys(b).filter(k => a[k] === undefined).forEach(k => a[k] = b[k]);
     });

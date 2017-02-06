@@ -17,7 +17,8 @@
 import $ = require("jquery");
 import ol = require("openlayers");
 import AgsCatalog = require("./ags-catalog");
-import Symbolizer = require("./format/ags-symbolizer");
+import Symbolizer = require("../format/ags-symbolizer");
+import { defaults } from "../common/common";
 
 const esrijsonFormat = new ol.format.EsriJSON();
 
@@ -33,11 +34,13 @@ export interface IOptions extends olx.source.VectorOptions {
     serviceName: string;
     map: ol.Map;
     layers: number[];
-    tileSize: number;
+    tileSize?: number;
+    where?: string;
 };
 
-const DEFAULT_OPTIONS = {
-    tileSize: 512
+const DEFAULT_OPTIONS = <IOptions>{
+    tileSize: 512,
+    where: "1=1"
 };
 
 export class ArcGisVectorSourceFactory {
@@ -46,7 +49,7 @@ export class ArcGisVectorSourceFactory {
 
         let d = $.Deferred<ol.layer.Vector[]>();
 
-        options = $.extend(options, DEFAULT_OPTIONS);
+        options = defaults(options, DEFAULT_OPTIONS);
 
         let srs = options.map.getView()
             .getProjection()
@@ -81,6 +84,7 @@ export class ArcGisVectorSourceFactory {
                     geometry: encodeURIComponent(JSON.stringify(box)),
                     geometryType: "esriGeometryEnvelope",
                     resultType: "tile",
+                    where: encodeURIComponent(options.where),
                     inSR: srs,
                     outSR: srs,
                     outFields: "*",
@@ -118,7 +122,7 @@ export class ArcGisVectorSourceFactory {
             let converter = new Symbolizer.StyleConverter();
 
             catalog.aboutLayer(layerId).then(layerInfo => {
-                
+
                 let layer = new ol.layer.Vector({
                     title: layerInfo.name,
                     source: source

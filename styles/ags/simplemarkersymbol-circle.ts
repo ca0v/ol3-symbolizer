@@ -1,9 +1,9 @@
-import {SimpleMarkerSymbol} from "../../serializers/ags-simplemarkersymbol";
+import { ArcGisFeatureServerLayer } from "../../format/ags-symbolizer";
 
 /**
  * 
  */
-const styles: SimpleMarkerSymbol.Style[] =
+const styles: ArcGisFeatureServerLayer.Symbol[] =
     [{
         "color": [
             255,

@@ -1,29 +1,27 @@
-import {SimpleMarkerSymbol} from "../../serializers/ags-simplemarkersymbol";
+import { ArcGisFeatureServerLayer } from "../../format/ags-symbolizer";
 
-export = <SimpleMarkerSymbol.Style[]>[
-    {
+export = <ArcGisFeatureServerLayer.Symbol[]>[{
+    "color": [
+        255,
+        255,
+        255,
+        64
+    ],
+    "size": 12,
+    "angle": 0,
+    "xoffset": 0,
+    "yoffset": 0,
+    "type": "esriSMS",
+    "style": "esriSMSX",
+    "outline": {
         "color": [
-            255,
-            255,
-            255,
-            64
+            0,
+            0,
+            0,
+            255
         ],
-        "size": 12,
-        "angle": 0,
-        "xoffset": 0,
-        "yoffset": 0,
-        "type": "esriSMS",
-        "style": "esriSMSX",
-        "outline": {
-            "color": [
-                0,
-                0,
-                0,
-                255
-            ],
-            "width": 1,
-            "type": "esriSLS",
-            "style": "esriSLSSolid"
-        }
+        "width": 1,
+        "type": "esriSLS",
+        "style": "esriSLSSolid"
     }
-];
+}];

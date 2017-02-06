@@ -3,6 +3,7 @@ export function run() {
     let path = `${l.origin}${l.pathname}?run=labs/`;
     let labs = `    
   index
+  ags-viewer
   ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&debug=1&center=-122.49,37.738
   ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&debug=1&center=-117.9,34.35
   ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&debug=1&center=-117.2,32.7

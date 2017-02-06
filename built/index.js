@@ -158,6 +158,13 @@ define("format/ol3-symbolizer", ["require", "exports"], function (require, expor
         StyleConverter.prototype.toJson = function (style) {
             return this.serializeStyle(style);
         };
+        StyleConverter.prototype.setGeometry = function (feature) {
+            var geom = feature.getGeometry();
+            if (geom instanceof ol.geom.Polygon) {
+                geom = geom.getInteriorPoint();
+            }
+            return geom;
+        };
         StyleConverter.prototype.assign = function (obj, prop, value) {
             if (value === null)
                 return;
@@ -277,6 +284,7 @@ define("format/ol3-symbolizer", ["require", "exports"], function (require, expor
             return this.serializeStyle(fill);
         };
         StyleConverter.prototype.deserializeStyle = function (json) {
+            var _this = this;
             var image;
             var text;
             var fill;
@@ -307,14 +315,7 @@ define("format/ol3-symbolizer", ["require", "exports"], function (require, expor
                 fill: fill,
                 stroke: stroke
             });
-            image && s.setGeometry(function (feature) {
-                var geom = feature.getGeometry();
-                if (geom instanceof ol.geom.Polygon) {
-                    var pt = geom.getInteriorPoint();
-                    return pt;
-                }
-                return geom;
-            });
+            image && s.setGeometry(function (feature) { return _this.setGeometry(feature); });
             return s;
         };
         StyleConverter.prototype.deserializeText = function (json) {
@@ -322,7 +323,10 @@ define("format/ol3-symbolizer", ["require", "exports"], function (require, expor
             json.scale = json.scale || 1;
             var _a = [json["offset-x"] || 0, json["offset-y"] || 0], x = _a[0], y = _a[1];
             {
-                ol.coordinate.rotate([x, y].map(function (v) { return v * json.scale; }), json.rotation);
+                var p = new ol.geom.Point([x, y]);
+                p.rotate(json.rotation, [0, 0]);
+                p.scale(json.scale, json.scale);
+                _b = p.getCoordinates(), x = _b[0], y = _b[1];
             }
             return new ol.style.Text({
                 fill: json.fill && this.deserializeFill(json.fill),
@@ -334,6 +338,7 @@ define("format/ol3-symbolizer", ["require", "exports"], function (require, expor
                 rotation: json.rotation,
                 scale: json.scale
             });
+            var _b;
         };
         StyleConverter.prototype.deserializeCircle = function (json) {
             var image = new ol.style.Circle({
@@ -1019,39 +1024,6 @@ define("common/common", ["require", "exports"], function (require, exports) {
     }
     exports.cssin = cssin;
 });
-define("styles/star/flower", ["require", "exports"], function (require, exports) {
-    "use strict";
-    return [
-        {
-            "star": {
-                "fill": {
-                    "color": "rgba(106,9,251,0.7)"
-                },
-                "opacity": 1,
-                "stroke": {
-                    "color": "rgba(42,128,244,0.8)",
-                    "width": 8
-                },
-                "radius": 14,
-                "radius2": 9,
-                "points": 10
-            },
-            "text": {
-                "fill": {
-                    "color": "rgba(255,255,255,1)"
-                },
-                "stroke": {
-                    "color": "rgba(0,0,0,1)",
-                    "width": 2
-                },
-                "text": "Test",
-                "offset-x": 0,
-                "offset-y": 20,
-                "font": "18px fantasy"
-            }
-        }
-    ];
-});
 define("bower_components/ol3-popup/src/paging/paging", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
     function getInteriorPoint(geom) {
@@ -1487,9 +1459,8 @@ define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquer
     }(ol.Overlay));
     exports.Popup = Popup;
 });
-define("labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "common/common", "format/ol3-symbolizer", "bower_components/ol3-popup/src/ol3-popup", "arcgis-source"], function (require, exports, $, ol, common_1, ol3_symbolizer_1, ol3_popup_1, arcgis_source_1) {
+define("labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "common/common", "bower_components/ol3-popup/src/ol3-popup", "arcgis-source"], function (require, exports, $, ol, common_1, ol3_popup_1, arcgis_source_1) {
     "use strict";
-    var styler = new ol3_symbolizer_1.StyleConverter();
     function parse(v, type) {
         if (typeof type === "string")
             return v;
@@ -1595,7 +1566,7 @@ define("labs/index", ["require", "exports"], function (require, exports) {
     function run() {
         var l = window.location;
         var path = "" + l.origin + l.pathname + "?run=labs/";
-        var labs = "    \n  index\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&debug=1&center=-122.49,37.738\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&debug=1&center=-117.9,34.35\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&debug=1&center=-117.2,32.7\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Hydrography/Watershed173811&layers=0,1&debug=1&center=-96.53,38.37\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Petroleum/KSFields&layers=0&debug=1&center=-98.93,38.55\n    ";
+        var labs = "    \n  index\n  ags-viewer\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&debug=1&center=-122.49,37.738\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&debug=1&center=-117.9,34.35\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&debug=1&center=-117.2,32.7\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Hydrography/Watershed173811&layers=0,1&debug=1&center=-96.53,38.37\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Petroleum/KSFields&layers=0&debug=1&center=-98.93,38.55\n    ";
         var styles = document.createElement("style");
         document.head.appendChild(styles);
         styles.innerText += "\n    #map {\n        display: none;\n    }\n    .test {\n        margin: 20px;\n    }\n    ";
@@ -1874,8 +1845,7 @@ define("styles/ags/simplemarkersymbol-square", ["require", "exports"], function 
 });
 define("styles/ags/simplemarkersymbol-x", ["require", "exports"], function (require, exports) {
     "use strict";
-    return [
-        {
+    return [{
             "color": [
                 255,
                 255,
@@ -1899,8 +1869,7 @@ define("styles/ags/simplemarkersymbol-x", ["require", "exports"], function (requ
                 "type": "esriSLS",
                 "style": "esriSLSSolid"
             }
-        }
-    ];
+        }];
 });
 define("styles/ags/textsymbol", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -2257,6 +2226,39 @@ define("styles/star/cold", ["require", "exports"], function (require, exports) {
                 "radius": 11,
                 "radius2": 5,
                 "points": 12
+            }
+        }
+    ];
+});
+define("styles/star/flower", ["require", "exports"], function (require, exports) {
+    "use strict";
+    return [
+        {
+            "star": {
+                "fill": {
+                    "color": "rgba(106,9,251,0.7)"
+                },
+                "opacity": 1,
+                "stroke": {
+                    "color": "rgba(42,128,244,0.8)",
+                    "width": 8
+                },
+                "radius": 14,
+                "radius2": 9,
+                "points": 10
+            },
+            "text": {
+                "fill": {
+                    "color": "rgba(255,255,255,1)"
+                },
+                "stroke": {
+                    "color": "rgba(0,0,0,1)",
+                    "width": 2
+                },
+                "text": "Test",
+                "offset-x": 0,
+                "offset-y": 20,
+                "font": "18px fantasy"
             }
         }
     ];

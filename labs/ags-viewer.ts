@@ -1,12 +1,8 @@
 import $ = require("jquery");
 import ol = require("openlayers");
 import { doif, getParameterByName } from "../common/common";
-import { StyleConverter } from "../format/ol3-symbolizer";
-import pointStyle = require("../styles/star/flower");
 import { Popup } from "../bower_components/ol3-popup/src/ol3-popup";
 import { ArcGisVectorSourceFactory } from "../arcgis-source";
-
-let styler = new StyleConverter();
 
 function parse<T>(v: string, type: T): T {
     if (typeof type === "string") return <any>v;

@@ -9,6 +9,36 @@ function mixin<A extends any, B extends any>(a: A, b: B) {
     return <A & B>a;
 }
 
+// Class
+interface Path2D {
+    addPath(path: Path2D, transform?: SVGMatrix): void;
+    closePath(): void;
+    moveTo(x: number, y: number): void;
+    lineTo(x: number, y: number): void;
+    bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): void;
+    quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void;
+    arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, anticlockwise?: boolean): void;
+    arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): void;
+    /*ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, anticlockwise?: boolean): void;*/
+    rect(x: number, y: number, w: number, h: number): void;
+}
+
+// Constructor
+interface Path2DConstructor {
+    new (): Path2D;
+    new (d: string): Path2D;
+    new (path: Path2D, fillRule?: string): Path2D;
+    prototype: Path2D;
+}
+declare var Path2D: Path2DConstructor;
+
+// Extend CanvasRenderingContext2D
+interface CanvasRenderingContext2D {
+    fill(path: Path2D): void;
+    stroke(path: Path2D): void;
+    clip(path: Path2D, fillRule?: string): void;
+}
+
 export namespace Format {
 
     export type Color = number[] | string;
@@ -32,6 +62,7 @@ export namespace Format {
     export interface Style {
         //geometry?: string | ol.geom.Geometry | ol.style.GeometryFunction;
         fill?: Fill;
+        image?: Image;
         stroke?: Stroke;
         text?: Text;
         zIndex?: number;
@@ -93,11 +124,14 @@ export namespace Format {
 export namespace Format {
 
     export interface Style {
-        image?: Icon & Svg; // if 'image' specified must auto-detect icon or svg
+        image?: Icon & Svg; // if 'image' specified must auto-detect icon or svg 
         icon?: Icon;
         svg?: Svg;
         star?: Star;
         circle?: Circle;
+        text?: Text;
+        fill?: Fill;
+        stroke?: Stroke;
     }
 
     export interface Icon {
@@ -115,7 +149,7 @@ export namespace Format {
     }
 
     // icon + path - src    
-    export interface Svg extends Image {
+    export interface Svg {
         anchor?: Offset;
         anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
         anchorXUnits?: string;
@@ -141,6 +175,17 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
 
     toJson(style: ol.style.Style) {
         return <Format.Style>this.serializeStyle(style);
+    }
+
+    /**
+     * uses the interior point of a polygon when rendering a 'point' style
+     */
+    public setGeometry(feature: ol.Feature) {
+        let geom = feature.getGeometry();
+        if (geom instanceof ol.geom.Polygon) {
+            geom = geom.getInteriorPoint();
+        }
+        return geom;
     }
 
     private assign(obj: any, prop: string, value: Object) {
@@ -264,14 +309,7 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
             stroke: stroke
         });
 
-        image && s.setGeometry(feature => {
-            let geom = feature.getGeometry();
-            if (geom instanceof ol.geom.Polygon) {
-                let pt = geom.getInteriorPoint();
-                return pt;
-            }
-            return geom;
-        });
+        image && s.setGeometry(feature => this.setGeometry(feature));
 
         return s;
     }
@@ -282,7 +320,10 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
 
         let [x, y] = [json["offset-x"] || 0, json["offset-y"] || 0];
         {
-            ol.coordinate.rotate(<[number, number]>[x, y].map(v => v * json.scale), json.rotation);
+            let p = new ol.geom.Point([x, y]);
+            p.rotate(json.rotation, [0, 0]);
+            p.scale(json.scale, json.scale);
+            [x, y] = p.getCoordinates();
         }
 
         return new ol.style.Text({
@@ -351,7 +392,7 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
         return image;
     }
 
-    private deserializeSvg(json: Format.Svg) {
+    private deserializeSvg(json: Format.Svg & Format.Icon) {
         json.rotation = json.rotation || 0;
         json.scale = json.scale || 1;
 

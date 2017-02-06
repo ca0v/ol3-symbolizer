@@ -1,6 +1,6 @@
-import {SimpleFillSymbol} from "../../serializers/ags-simplefillsymbol";
+import { ArcGisFeatureServerLayer } from "../../format/ags-symbolizer";
 
-let symbol = () => (<SimpleFillSymbol.Style>{
+let symbol = () => (<ArcGisFeatureServerLayer.Symbol>{
     "color": [
         0,
         0,

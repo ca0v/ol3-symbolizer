@@ -13,5 +13,5 @@ Serialize and Deserialize ol3 styles, including adaptors for arcgis.
 
 ## Consume
 
-* `typings install ol3-symbolizer=github:ca0v/ol3-symbolizer/built/index.d.ts#v3.20.1 --save`
+* `typings install ol3-symbolizer=github:ca0v/ol3-symbolizer/built/index.d.ts#v3.20.1 --global --save`
 * `bower install ol3-symbolizer=git://github.com/ca0v/ol3-symbolizer.git#v3.20.1 --save`

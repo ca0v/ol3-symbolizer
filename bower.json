@@ -1,7 +1,10 @@
 {
   "name": "ol3-symbolizer",
   "description": "Deserialize ol3 styles",
-  "main": "",
+  "main": [
+    "ol3-symbolizer.ts",
+    "built/index.js"
+  ],
   "authors": [
     "coreyalix <coreyalix@hotmail.com>"
   ],
@@ -13,16 +16,17 @@
     "**/.*",
     "node_modules",
     "bower_components",
-    "test",
-    "tests"
+    "typings",
+    "ol3-symbolizer/tests/**",
+    "ol3-symbolizer/labs/**",
+    "*.html",
+    "*.md",
+    "*.yml"
   ],
   "dependencies": {
     "openlayers": "https://github.com/openlayers/ol3/releases/download/v3.20.1/v3.20.1-dist.zip",
     "requirejs": "^2.3.2",
     "jquery": "^3.1.1",
-    "ol3-popup": "git://github.com/ca0v/ol3-popup.git#2.0.6"
-  },
-  "resolutions": {
-    "ol3-popup": "v2.0.7"
+    "ol3-popup": "git://github.com/ca0v/ol3-popup.git#v3.20.1"
   }
 }

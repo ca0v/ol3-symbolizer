@@ -1,5 +1,145 @@
-/// <reference path="../typings/index.d.ts" />
-declare module "common/ajax" {
+declare module "ol3-symbolizer/format/base" {
+    export interface IConverter<T> {
+        fromJson: (json: T) => ol.style.Style;
+        toJson(style: ol.style.Style): T;
+    }
+}
+declare module "ol3-symbolizer/format/ol3-symbolizer" {
+    import ol = require("openlayers");
+    import Serializer = require("ol3-symbolizer/format/base");
+    export namespace Format {
+        type Color = number[] | string;
+        type Size = number[];
+        type Offset = number[];
+        type LineDash = number[];
+        interface Fill {
+            color?: string;
+        }
+        interface Stroke {
+            color?: string;
+            width?: number;
+            lineCap?: string;
+            lineJoin?: string;
+            lineDash?: LineDash;
+            miterLimit?: number;
+        }
+        interface Style {
+            fill?: Fill;
+            image?: Image;
+            stroke?: Stroke;
+            text?: Text;
+            zIndex?: number;
+        }
+        interface Image {
+            opacity?: number;
+            rotateWithView?: boolean;
+            rotation?: number;
+            scale?: number;
+            snapToPixel?: boolean;
+        }
+        interface Circle {
+            radius: number;
+            stroke?: Stroke;
+            fill?: Fill;
+            snapToPixel?: boolean;
+        }
+        interface Star extends Image {
+            angle?: number;
+            fill?: Fill;
+            points?: number;
+            stroke?: Stroke;
+            radius?: number;
+            radius2?: number;
+        }
+        interface Icon extends Image {
+            anchor?: Offset;
+            anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
+            anchorXUnits?: "fraction" | "pixels";
+            anchorYUnits?: "fraction" | "pixels";
+            color?: Color;
+            crossOrigin?: string;
+            src?: string;
+            offset?: Offset;
+            offsetOrigin?: 'top_left' | 'top_right' | 'bottom-left' | 'bottom-right';
+            size?: Size;
+        }
+        interface Text {
+            fill?: Fill;
+            font?: string;
+            offsetX?: number;
+            offsetY?: number;
+            rotation?: number;
+            scale?: number;
+            stroke?: Stroke;
+            text?: string;
+            textAlign?: string;
+            textBaseline?: string;
+        }
+    }
+    export namespace Format {
+        interface Style {
+            image?: Icon & Svg;
+            icon?: Icon;
+            svg?: Svg;
+            star?: Star;
+            circle?: Circle;
+            text?: Text;
+            fill?: Fill;
+            stroke?: Stroke;
+        }
+        interface Icon {
+            "anchor-x"?: number;
+            "anchor-y"?: number;
+        }
+        interface Text {
+            "offset-x"?: number;
+            "offset-y"?: number;
+        }
+        interface Circle {
+            opacity?: number;
+        }
+        interface Svg {
+            anchor?: Offset;
+            anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
+            anchorXUnits?: string;
+            anchorYUnits?: string;
+            color?: Color;
+            crossOrigin?: string;
+            img?: string;
+            imgSize?: Size;
+            offset?: Offset;
+            offsetOrigin?: 'top_left' | 'top_right' | 'bottom-left' | 'bottom-right';
+            path?: string;
+            stroke?: Stroke;
+            fill?: Fill;
+        }
+    }
+    export class StyleConverter implements Serializer.IConverter<Format.Style> {
+        fromJson(json: Format.Style): ol.style.Style;
+        toJson(style: ol.style.Style): Format.Style;
+        setGeometry(feature: ol.Feature): ol.geom.Geometry;
+        private assign(obj, prop, value);
+        private serializeStyle(style);
+        private serializeColor(color);
+        private serializeFill(fill);
+        private deserializeStyle(json);
+        private deserializeText(json);
+        private deserializeCircle(json);
+        private deserializeStar(json);
+        private deserializeIcon(json);
+        private deserializeSvg(json);
+        private deserializeFill(json);
+        private deserializeStroke(json);
+        private deserializeColor(fill);
+        private deserializeLinearGradient(json);
+        private deserializeRadialGradient(json);
+    }
+}
+declare module "ol3-symbolizer" {
+    import Symbolizer = require("ol3-symbolizer/format/ol3-symbolizer");
+    export = Symbolizer;
+}
+declare module "ol3-symbolizer/common/ajax" {
     class Ajax {
         url: string;
         options: {
@@ -16,7 +156,7 @@ declare module "common/ajax" {
     }
     export = Ajax;
 }
-declare module "ags/ags-catalog" {
+declare module "ol3-symbolizer/ags/ags-catalog" {
     export interface Service {
         name: string;
         type: string;
@@ -307,144 +447,7 @@ declare module "ags/ags-catalog" {
         aboutLayer(layer: number): JQueryDeferred<FeatureLayerInfo>;
     }
 }
-declare module "format/base" {
-    export interface IConverter<T> {
-        fromJson: (json: T) => ol.style.Style;
-        toJson(style: ol.style.Style): T;
-    }
-}
-declare module "format/ol3-symbolizer" {
-    import ol = require("openlayers");
-    import Serializer = require("format/base");
-    export namespace Format {
-        type Color = number[] | string;
-        type Size = number[];
-        type Offset = number[];
-        type LineDash = number[];
-        interface Fill {
-            color?: string;
-        }
-        interface Stroke {
-            color?: string;
-            width?: number;
-            lineCap?: string;
-            lineJoin?: string;
-            lineDash?: LineDash;
-            miterLimit?: number;
-        }
-        interface Style {
-            fill?: Fill;
-            image?: Image;
-            stroke?: Stroke;
-            text?: Text;
-            zIndex?: number;
-        }
-        interface Image {
-            opacity?: number;
-            rotateWithView?: boolean;
-            rotation?: number;
-            scale?: number;
-            snapToPixel?: boolean;
-        }
-        interface Circle {
-            radius: number;
-            stroke?: Stroke;
-            fill?: Fill;
-            snapToPixel?: boolean;
-        }
-        interface Star extends Image {
-            angle?: number;
-            fill?: Fill;
-            points?: number;
-            stroke?: Stroke;
-            radius?: number;
-            radius2?: number;
-        }
-        interface Icon extends Image {
-            anchor?: Offset;
-            anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
-            anchorXUnits?: "fraction" | "pixels";
-            anchorYUnits?: "fraction" | "pixels";
-            color?: Color;
-            crossOrigin?: string;
-            src?: string;
-            offset?: Offset;
-            offsetOrigin?: 'top_left' | 'top_right' | 'bottom-left' | 'bottom-right';
-            size?: Size;
-        }
-        interface Text {
-            fill?: Fill;
-            font?: string;
-            offsetX?: number;
-            offsetY?: number;
-            rotation?: number;
-            scale?: number;
-            stroke?: Stroke;
-            text?: string;
-            textAlign?: string;
-            textBaseline?: string;
-        }
-    }
-    export namespace Format {
-        interface Style {
-            image?: Icon & Svg;
-            icon?: Icon;
-            svg?: Svg;
-            star?: Star;
-            circle?: Circle;
-            text?: Text;
-            fill?: Fill;
-            stroke?: Stroke;
-        }
-        interface Icon {
-            "anchor-x"?: number;
-            "anchor-y"?: number;
-        }
-        interface Text {
-            "offset-x"?: number;
-            "offset-y"?: number;
-        }
-        interface Circle {
-            opacity?: number;
-        }
-        interface Svg {
-            anchor?: Offset;
-            anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
-            anchorXUnits?: string;
-            anchorYUnits?: string;
-            color?: Color;
-            crossOrigin?: string;
-            img?: string;
-            imgSize?: Size;
-            offset?: Offset;
-            offsetOrigin?: 'top_left' | 'top_right' | 'bottom-left' | 'bottom-right';
-            path?: string;
-            stroke?: Stroke;
-            fill?: Fill;
-        }
-    }
-    export class StyleConverter implements Serializer.IConverter<Format.Style> {
-        fromJson(json: Format.Style): ol.style.Style;
-        toJson(style: ol.style.Style): Format.Style;
-        setGeometry(feature: ol.Feature): ol.geom.Geometry;
-        private assign(obj, prop, value);
-        private serializeStyle(style);
-        private serializeColor(color);
-        private serializeFill(fill);
-        private deserializeStyle(json);
-        private deserializeText(json);
-        private deserializeCircle(json);
-        private deserializeStar(json);
-        private deserializeIcon(json);
-        private deserializeSvg(json);
-        private deserializeFill(json);
-        private deserializeStroke(json);
-        private deserializeColor(fill);
-        private deserializeLinearGradient(json);
-        private deserializeRadialGradient(json);
-    }
-}
-declare module "format/ags-symbolizer" {
+declare module "ol3-symbolizer/format/ags-symbolizer" {
     export namespace ArcGisFeatureServerLayer {
         type SpatialReference = {
             wkid: string;
@@ -645,14 +648,14 @@ declare module "format/ags-symbolizer" {
         }): ol.style.Style | ((feature: ol.Feature) => ol.style.Style);
     }
 }
-declare module "common/common" {
+declare module "ol3-symbolizer/common/common" {
     export function getParameterByName(name: string, url?: string): string;
     export function doif<T>(v: T, cb: (v: T) => void): void;
     export function mixin<A extends any, B extends any>(a: A, b: B): A & B;
     export function defaults<T extends any>(a: T, b: T): T;
     export function cssin(name: string, css: string): () => void;
 }
-declare module "ags/ags-source" {
+declare module "ol3-symbolizer/ags/ags-source" {
     import ol = require("openlayers");
     export interface IOptions extends olx.source.VectorOptions {
         services: string;
@@ -666,14 +669,14 @@ declare module "ags/ags-source" {
         static create(options: IOptions): JQueryDeferred<ol.layer.Vector[]>;
     }
 }
-declare module "labs/ags-viewer" {
+declare module "ol3-symbolizer/labs/ags-viewer" {
     import ol = require("openlayers");
     export function run(): ol.Map;
 }
-declare module "labs/index" {
+declare module "ol3-symbolizer/labs/index" {
     export function run(): void;
 }
-declare module "styles/ags/cartographiclinesymbol" {
+declare module "ol3-symbolizer/styles/ags/cartographiclinesymbol" {
     let symbols: {
         "type": string;
         "style": string;
@@ -685,7 +688,7 @@ declare module "styles/ags/cartographiclinesymbol" {
     }[];
     export = symbols;
 }
-declare module "styles/ags/picturefillsymbol" {
+declare module "ol3-symbolizer/styles/ags/picturefillsymbol" {
     var _default: {
         "color": number[];
         "type": string;
@@ -699,7 +702,7 @@ declare module "styles/ags/picturefillsymbol" {
     }[];
     export = _default;
 }
-declare module "styles/ags/picturemarkersymbol-imagedata" {
+declare module "ol3-symbolizer/styles/ags/picturemarkersymbol-imagedata" {
     const style: {
         "type": string;
         "url": string;
@@ -714,7 +717,7 @@ declare module "styles/ags/picturemarkersymbol-imagedata" {
     }[];
     export = style;
 }
-declare module "styles/ags/picturemarkersymbol" {
+declare module "ol3-symbolizer/styles/ags/picturemarkersymbol" {
     var _default: {
         "angle": number;
         "xoffset": number;
@@ -726,42 +729,42 @@ declare module "styles/ags/picturemarkersymbol" {
     }[];
     export = _default;
 }
-declare module "styles/ags/simplefillsymbol" {
-    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+declare module "ol3-symbolizer/styles/ags/simplefillsymbol" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
     let symbols: ArcGisFeatureServerLayer.Symbol[];
     export = symbols;
 }
-declare module "styles/ags/simplemarkersymbol-circle" {
-    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-circle" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
     const styles: ArcGisFeatureServerLayer.Symbol[];
     export = styles;
 }
-declare module "styles/ags/simplemarkersymbol-cross" {
-    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-cross" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
     var _default: ArcGisFeatureServerLayer.Symbol[];
     export = _default;
 }
-declare module "styles/ags/simplemarkersymbol-diamond" {
-    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-diamond" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
     var _default: ArcGisFeatureServerLayer.Symbol[];
     export = _default;
 }
-declare module "styles/ags/simplemarkersymbol-path" {
-    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-path" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
     var _default: ArcGisFeatureServerLayer.Symbol[];
     export = _default;
 }
-declare module "styles/ags/simplemarkersymbol-square" {
-    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-square" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
     var _default: ArcGisFeatureServerLayer.Symbol[];
     export = _default;
 }
-declare module "styles/ags/simplemarkersymbol-x" {
-    import { ArcGisFeatureServerLayer } from "format/ags-symbolizer";
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-x" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
     var _default: ArcGisFeatureServerLayer.Symbol[];
     export = _default;
 }
-declare module "styles/ags/textsymbol" {
+declare module "ol3-symbolizer/styles/ags/textsymbol" {
     var _default: {
         "color": number[];
         "type": string;
@@ -782,7 +785,7 @@ declare module "styles/ags/textsymbol" {
     }[];
     export = _default;
 }
-declare module "styles/basic" {
+declare module "ol3-symbolizer/styles/basic" {
     var _default: {
         cross: {
             star: {
@@ -875,7 +878,7 @@ declare module "styles/basic" {
     };
     export = _default;
 }
-declare module "styles/circle/alert" {
+declare module "ol3-symbolizer/styles/circle/alert" {
     var _default: {
         "circle": {
             "fill": {
@@ -904,7 +907,7 @@ declare module "styles/circle/alert" {
     }[];
     export = _default;
 }
-declare module "styles/circle/gradient" {
+declare module "ol3-symbolizer/styles/circle/gradient" {
     var _default: {
         "circle": {
             "fill": {
@@ -921,7 +924,7 @@ declare module "styles/circle/gradient" {
     }[];
     export = _default;
 }
-declare module "styles/fill/cross" {
+declare module "ol3-symbolizer/styles/fill/cross" {
     var _default: {
         "fill": {
             "pattern": {
@@ -934,7 +937,7 @@ declare module "styles/fill/cross" {
     }[];
     export = _default;
 }
-declare module "styles/fill/diagonal" {
+declare module "ol3-symbolizer/styles/fill/diagonal" {
     var _default: {
         "fill": {
             "pattern": {
@@ -947,7 +950,7 @@ declare module "styles/fill/diagonal" {
     }[];
     export = _default;
 }
-declare module "styles/fill/gradient" {
+declare module "ol3-symbolizer/styles/fill/gradient" {
     var _default: {
         "fill": {
             "gradient": {
@@ -958,7 +961,7 @@ declare module "styles/fill/gradient" {
     }[];
     export = _default;
 }
-declare module "styles/fill/horizontal" {
+declare module "ol3-symbolizer/styles/fill/horizontal" {
     var _default: {
         "fill": {
             "pattern": {
@@ -971,7 +974,7 @@ declare module "styles/fill/horizontal" {
     }[];
     export = _default;
 }
-declare module "styles/fill/vertical" {
+declare module "ol3-symbolizer/styles/fill/vertical" {
     var _default: {
         "fill": {
             "pattern": {
@@ -984,7 +987,7 @@ declare module "styles/fill/vertical" {
     }[];
     export = _default;
 }
-declare module "styles/icon/png" {
+declare module "ol3-symbolizer/styles/icon/png" {
     var _default: ({
         "circle": {
             "fill": {
@@ -1011,7 +1014,7 @@ declare module "styles/icon/png" {
     })[];
     export = _default;
 }
-declare module "styles/icon/svg" {
+declare module "ol3-symbolizer/styles/icon/svg" {
     var _default: {
         "image": {
             "imgSize": number[];
@@ -1024,7 +1027,7 @@ declare module "styles/icon/svg" {
     }[];
     export = _default;
 }
-declare module "styles/peace" {
+declare module "ol3-symbolizer/styles/peace" {
     var _default: {
         "star": {
             "fill": {
@@ -1055,7 +1058,7 @@ declare module "styles/peace" {
     }[];
     export = _default;
 }
-declare module "styles/star/4star" {
+declare module "ol3-symbolizer/styles/star/4star" {
     var _default: {
         "star": {
             "fill": {
@@ -1073,7 +1076,7 @@ declare module "styles/star/4star" {
     }[];
     export = _default;
 }
-declare module "styles/star/6star" {
+declare module "ol3-symbolizer/styles/star/6star" {
     var _default: {
         "star": {
             "fill": {
@@ -1090,7 +1093,7 @@ declare module "styles/star/6star" {
     }[];
     export = _default;
 }
-declare module "styles/star/cold" {
+declare module "ol3-symbolizer/styles/star/cold" {
     var _default: {
         "star": {
             "fill": {
@@ -1108,7 +1111,7 @@ declare module "styles/star/cold" {
     }[];
     export = _default;
 }
-declare module "styles/star/flower" {
+declare module "ol3-symbolizer/styles/star/flower" {
     var _default: {
         "star": {
             "fill": {
@@ -1139,7 +1142,7 @@ declare module "styles/star/flower" {
     }[];
     export = _default;
 }
-declare module "styles/stroke/linedash" {
+declare module "ol3-symbolizer/styles/stroke/linedash" {
     var dasharray: {
         solid: string;
         shortdash: number[];
@@ -1155,7 +1158,7 @@ declare module "styles/stroke/linedash" {
     };
     export = dasharray;
 }
-declare module "styles/stroke/dash" {
+declare module "ol3-symbolizer/styles/stroke/dash" {
     var _default: {
         "stroke": {
             "color": string;
@@ -1165,7 +1168,7 @@ declare module "styles/stroke/dash" {
     }[];
     export = _default;
 }
-declare module "styles/stroke/dashdotdot" {
+declare module "ol3-symbolizer/styles/stroke/dashdotdot" {
     var _default: {
         "stroke": {
             "color": string;
@@ -1175,7 +1178,7 @@ declare module "styles/stroke/dashdotdot" {
     }[];
     export = _default;
 }
-declare module "styles/stroke/dot" {
+declare module "ol3-symbolizer/styles/stroke/dot" {
     var _default: {
         "stroke": {
             "color": string;
@@ -1185,7 +1188,7 @@ declare module "styles/stroke/dot" {
     }[];
     export = _default;
 }
-declare module "styles/stroke/solid" {
+declare module "ol3-symbolizer/styles/stroke/solid" {
     var _default: {
         "stroke": {
             "color": string;
@@ -1194,7 +1197,7 @@ declare module "styles/stroke/solid" {
     }[];
     export = _default;
 }
-declare module "styles/text/text" {
+declare module "ol3-symbolizer/styles/text/text" {
     var _default: {
         "text": {
             "fill": {
@@ -1212,6 +1215,6 @@ declare module "styles/text/text" {
     }[];
     export = _default;
 }
-declare module "tests/index" {
+declare module "ol3-symbolizer/tests/index" {
     export function run(): void;
 }

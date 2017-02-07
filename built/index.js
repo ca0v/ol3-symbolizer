@@ -1,140 +1,7 @@
-define("common/ajax", ["require", "exports", "jquery"], function (require, exports, $) {
-    "use strict";
-    var Ajax = (function () {
-        function Ajax(url) {
-            this.url = url;
-            this.options = {
-                use_json: true,
-                use_cors: true
-            };
-        }
-        Ajax.prototype.jsonp = function (args, url) {
-            if (url === void 0) { url = this.url; }
-            var d = $.Deferred();
-            args["callback"] = "define";
-            var uri = url + "?" + Object.keys(args).map(function (k) { return (k + "=" + args[k]); }).join('&');
-            require([uri], function (data) { return d.resolve(data); });
-            return d;
-        };
-        Ajax.prototype.ajax = function (method, args, url) {
-            if (url === void 0) { url = this.url; }
-            var isData = method === "POST" || method === "PUT";
-            var isJson = this.options.use_json;
-            var isCors = this.options.use_cors;
-            var d = $.Deferred();
-            var client = new XMLHttpRequest();
-            if (isCors)
-                client.withCredentials = true;
-            var uri = url;
-            var data = null;
-            if (args) {
-                if (isData) {
-                    data = JSON.stringify(args);
-                }
-                else {
-                    uri += '?';
-                    var argcount = 0;
-                    for (var key in args) {
-                        if (args.hasOwnProperty(key)) {
-                            if (argcount++) {
-                                uri += '&';
-                            }
-                            uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
-                        }
-                    }
-                }
-            }
-            client.open(method, uri, true);
-            if (isData && isJson)
-                client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            client.send(data);
-            client.onload = function () {
-                console.log("content-type", client.getResponseHeader("Content-Type"));
-                if (client.status >= 200 && client.status < 300) {
-                    isJson = isJson || 0 === client.getResponseHeader("Content-Type").indexOf("application/json");
-                    d.resolve(isJson ? JSON.parse(client.response) : client.response);
-                }
-                else {
-                    d.reject(client.statusText);
-                }
-            };
-            client.onerror = function () { return d.reject(client.statusText); };
-            return d;
-        };
-        Ajax.prototype.get = function (args) {
-            return this.ajax('GET', args);
-        };
-        Ajax.prototype.post = function (args) {
-            return this.ajax('POST', args);
-        };
-        Ajax.prototype.put = function (args) {
-            return this.ajax('PUT', args);
-        };
-        Ajax.prototype.delete = function (args) {
-            return this.ajax('DELETE', args);
-        };
-        return Ajax;
-    }());
-    return Ajax;
-});
-define("ags/ags-catalog", ["require", "exports", "common/ajax"], function (require, exports, Ajax) {
-    "use strict";
-    function defaults(a) {
-        var b = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            b[_i - 1] = arguments[_i];
-        }
-        b.filter(function (b) { return !!b; }).forEach(function (b) {
-            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
-        });
-        return a;
-    }
-    var Catalog = (function () {
-        function Catalog(url) {
-            this.ajax = new Ajax(url);
-        }
-        Catalog.prototype.about = function (data) {
-            var req = defaults({
-                f: "pjson"
-            }, data);
-            return this.ajax.jsonp(req);
-        };
-        Catalog.prototype.aboutFolder = function (folder) {
-            var ajax = new Ajax(this.ajax.url + "/" + folder);
-            var req = {
-                f: "pjson"
-            };
-            return ajax.jsonp(req);
-        };
-        Catalog.prototype.aboutFeatureServer = function (name) {
-            var ajax = new Ajax(this.ajax.url + "/" + name + "/FeatureServer");
-            var req = {
-                f: "pjson"
-            };
-            return defaults(ajax.jsonp(req), { url: ajax.url });
-        };
-        Catalog.prototype.aboutMapServer = function (name) {
-            var ajax = new Ajax(this.ajax.url + "/" + name + "/MapServer");
-            var req = {
-                f: "pjson"
-            };
-            return defaults(ajax.jsonp(req), { url: ajax.url });
-        };
-        Catalog.prototype.aboutLayer = function (layer) {
-            var ajax = new Ajax(this.ajax.url + "/" + layer);
-            var req = {
-                f: "pjson"
-            };
-            return ajax.jsonp(req);
-        };
-        return Catalog;
-    }());
-    exports.Catalog = Catalog;
-});
-define("format/base", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/format/base", ["require", "exports"], function (require, exports) {
     "use strict";
 });
-define("format/ol3-symbolizer", ["require", "exports", "openlayers"], function (require, exports, ol) {
+define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
     function doif(v, cb) {
         if (v !== undefined && v !== null)
@@ -570,7 +437,144 @@ define("format/ol3-symbolizer", ["require", "exports", "openlayers"], function (
     }());
     exports.StyleConverter = StyleConverter;
 });
-define("format/ags-symbolizer", ["require", "exports", "jquery", "format/ol3-symbolizer"], function (require, exports, $, Symbolizer) {
+define("ol3-symbolizer", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
+    "use strict";
+    return Symbolizer;
+});
+define("ol3-symbolizer/common/ajax", ["require", "exports", "jquery"], function (require, exports, $) {
+    "use strict";
+    var Ajax = (function () {
+        function Ajax(url) {
+            this.url = url;
+            this.options = {
+                use_json: true,
+                use_cors: true
+            };
+        }
+        Ajax.prototype.jsonp = function (args, url) {
+            if (url === void 0) { url = this.url; }
+            var d = $.Deferred();
+            args["callback"] = "define";
+            var uri = url + "?" + Object.keys(args).map(function (k) { return (k + "=" + args[k]); }).join('&');
+            require([uri], function (data) { return d.resolve(data); });
+            return d;
+        };
+        Ajax.prototype.ajax = function (method, args, url) {
+            if (url === void 0) { url = this.url; }
+            var isData = method === "POST" || method === "PUT";
+            var isJson = this.options.use_json;
+            var isCors = this.options.use_cors;
+            var d = $.Deferred();
+            var client = new XMLHttpRequest();
+            if (isCors)
+                client.withCredentials = true;
+            var uri = url;
+            var data = null;
+            if (args) {
+                if (isData) {
+                    data = JSON.stringify(args);
+                }
+                else {
+                    uri += '?';
+                    var argcount = 0;
+                    for (var key in args) {
+                        if (args.hasOwnProperty(key)) {
+                            if (argcount++) {
+                                uri += '&';
+                            }
+                            uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
+                        }
+                    }
+                }
+            }
+            client.open(method, uri, true);
+            if (isData && isJson)
+                client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            client.send(data);
+            client.onload = function () {
+                console.log("content-type", client.getResponseHeader("Content-Type"));
+                if (client.status >= 200 && client.status < 300) {
+                    isJson = isJson || 0 === client.getResponseHeader("Content-Type").indexOf("application/json");
+                    d.resolve(isJson ? JSON.parse(client.response) : client.response);
+                }
+                else {
+                    d.reject(client.statusText);
+                }
+            };
+            client.onerror = function () { return d.reject(client.statusText); };
+            return d;
+        };
+        Ajax.prototype.get = function (args) {
+            return this.ajax('GET', args);
+        };
+        Ajax.prototype.post = function (args) {
+            return this.ajax('POST', args);
+        };
+        Ajax.prototype.put = function (args) {
+            return this.ajax('PUT', args);
+        };
+        Ajax.prototype.delete = function (args) {
+            return this.ajax('DELETE', args);
+        };
+        return Ajax;
+    }());
+    return Ajax;
+});
+define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/common/ajax"], function (require, exports, Ajax) {
+    "use strict";
+    function defaults(a) {
+        var b = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            b[_i - 1] = arguments[_i];
+        }
+        b.filter(function (b) { return !!b; }).forEach(function (b) {
+            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
+        });
+        return a;
+    }
+    var Catalog = (function () {
+        function Catalog(url) {
+            this.ajax = new Ajax(url);
+        }
+        Catalog.prototype.about = function (data) {
+            var req = defaults({
+                f: "pjson"
+            }, data);
+            return this.ajax.jsonp(req);
+        };
+        Catalog.prototype.aboutFolder = function (folder) {
+            var ajax = new Ajax(this.ajax.url + "/" + folder);
+            var req = {
+                f: "pjson"
+            };
+            return ajax.jsonp(req);
+        };
+        Catalog.prototype.aboutFeatureServer = function (name) {
+            var ajax = new Ajax(this.ajax.url + "/" + name + "/FeatureServer");
+            var req = {
+                f: "pjson"
+            };
+            return defaults(ajax.jsonp(req), { url: ajax.url });
+        };
+        Catalog.prototype.aboutMapServer = function (name) {
+            var ajax = new Ajax(this.ajax.url + "/" + name + "/MapServer");
+            var req = {
+                f: "pjson"
+            };
+            return defaults(ajax.jsonp(req), { url: ajax.url });
+        };
+        Catalog.prototype.aboutLayer = function (layer) {
+            var ajax = new Ajax(this.ajax.url + "/" + layer);
+            var req = {
+                f: "pjson"
+            };
+            return ajax.jsonp(req);
+        };
+        return Catalog;
+    }());
+    exports.Catalog = Catalog;
+});
+define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "jquery", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, $, Symbolizer) {
     "use strict";
     var symbolizer = new Symbolizer.StyleConverter();
     var styleMap = {
@@ -865,7 +869,7 @@ define("format/ags-symbolizer", ["require", "exports", "jquery", "format/ol3-sym
     }());
     exports.StyleConverter = StyleConverter;
 });
-define("common/common", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/common/common", ["require", "exports"], function (require, exports) {
     "use strict";
     function getParameterByName(name, url) {
         if (url === void 0) { url = window.location.href; }
@@ -913,7 +917,7 @@ define("common/common", ["require", "exports"], function (require, exports) {
     }
     exports.cssin = cssin;
 });
-define("ags/ags-source", ["require", "exports", "jquery", "openlayers", "ags/ags-catalog", "format/ags-symbolizer", "common/common"], function (require, exports, $, ol, AgsCatalog, Symbolizer, common_1) {
+define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/ags/ags-catalog", "ol3-symbolizer/format/ags-symbolizer", "ol3-symbolizer/common/common"], function (require, exports, $, ol, AgsCatalog, Symbolizer, common_1) {
     "use strict";
     var esrijsonFormat = new ol.format.EsriJSON();
     function asParam(options) {
@@ -1021,7 +1025,7 @@ define("ags/ags-source", ["require", "exports", "jquery", "openlayers", "ags/ags
     }());
     exports.ArcGisVectorSourceFactory = ArcGisVectorSourceFactory;
 });
-define("labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "common/common", "ol3-popup", "ags/ags-source"], function (require, exports, $, ol, common_2, ol3_popup_1, ags_source_1) {
+define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/common/common", "ol3-popup", "ol3-symbolizer/ags/ags-source"], function (require, exports, $, ol, common_2, ol3_popup_1, ags_source_1) {
     "use strict";
     function parse(v, type) {
         if (typeof type === "string")
@@ -1126,11 +1130,11 @@ define("labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "common
     }
     exports.run = run;
 });
-define("labs/index", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/labs/index", ["require", "exports"], function (require, exports) {
     "use strict";
     function run() {
         var l = window.location;
-        var path = "" + l.origin + l.pathname + "?run=labs/";
+        var path = "" + l.origin + l.pathname + "?run=ol3-symbolizer/labs/";
         var labs = "    \n  index\n  ags-viewer\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&center=-122.49,37.738\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&center=-117.9,34.35\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&center=-117.2,32.7\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Hydrography/Watershed173811&layers=0,1&center=-96.53,38.37\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Petroleum/KSFields&layers=0&center=-98.93,38.55\n\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION=%27GREEN%27\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION%20IN(%27RED%27,%27GREEN%27)\n\n    ";
         var styles = document.createElement("style");
         document.head.appendChild(styles);
@@ -1150,7 +1154,7 @@ define("labs/index", ["require", "exports"], function (require, exports) {
     exports.run = run;
     ;
 });
-define("styles/ags/cartographiclinesymbol", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/cartographiclinesymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     var symbol = function () { return ({
         "type": "esriSLS",
@@ -1178,7 +1182,7 @@ define("styles/ags/cartographiclinesymbol", ["require", "exports"], function (re
     });
     return symbols;
 });
-define("styles/ags/picturefillsymbol", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/picturefillsymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "color": [
@@ -1197,7 +1201,7 @@ define("styles/ags/picturefillsymbol", ["require", "exports"], function (require
             "yscale": 1
         }];
 });
-define("styles/ags/picturemarkersymbol-imagedata", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/picturemarkersymbol-imagedata", ["require", "exports"], function (require, exports) {
     "use strict";
     var style = [{
             "type": "esriPMS",
@@ -1213,7 +1217,7 @@ define("styles/ags/picturemarkersymbol-imagedata", ["require", "exports"], funct
         }];
     return style;
 });
-define("styles/ags/picturemarkersymbol", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/picturemarkersymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1227,7 +1231,7 @@ define("styles/ags/picturemarkersymbol", ["require", "exports"], function (requi
         }
     ];
 });
-define("styles/ags/simplefillsymbol", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplefillsymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     var symbol = function () { return ({
         "color": [
@@ -1258,7 +1262,7 @@ define("styles/ags/simplefillsymbol", ["require", "exports"], function (require,
     });
     return symbols;
 });
-define("styles/ags/simplemarkersymbol-circle", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-circle", ["require", "exports"], function (require, exports) {
     "use strict";
     var styles = [{
             "color": [
@@ -1287,7 +1291,7 @@ define("styles/ags/simplemarkersymbol-circle", ["require", "exports"], function 
         }];
     return styles;
 });
-define("styles/ags/simplemarkersymbol-cross", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-cross", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1317,7 +1321,7 @@ define("styles/ags/simplemarkersymbol-cross", ["require", "exports"], function (
         }
     ];
 });
-define("styles/ags/simplemarkersymbol-diamond", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-diamond", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1347,7 +1351,7 @@ define("styles/ags/simplemarkersymbol-diamond", ["require", "exports"], function
         }
     ];
 });
-define("styles/ags/simplemarkersymbol-path", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-path", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1378,7 +1382,7 @@ define("styles/ags/simplemarkersymbol-path", ["require", "exports"], function (r
         }
     ];
 });
-define("styles/ags/simplemarkersymbol-square", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-square", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1408,7 +1412,7 @@ define("styles/ags/simplemarkersymbol-square", ["require", "exports"], function 
         }
     ];
 });
-define("styles/ags/simplemarkersymbol-x", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-x", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "color": [
@@ -1436,7 +1440,7 @@ define("styles/ags/simplemarkersymbol-x", ["require", "exports"], function (requ
             }
         }];
 });
-define("styles/ags/textsymbol", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/textsymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1464,7 +1468,7 @@ define("styles/ags/textsymbol", ["require", "exports"], function (require, expor
         }
     ];
 });
-define("styles/basic", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/basic", ["require", "exports"], function (require, exports) {
     "use strict";
     var stroke = {
         color: 'black',
@@ -1530,7 +1534,7 @@ define("styles/basic", ["require", "exports"], function (require, exports) {
         x: [{ star: x }]
     };
 });
-define("styles/circle/alert", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/circle/alert", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1561,7 +1565,7 @@ define("styles/circle/alert", ["require", "exports"], function (require, exports
         }
     ];
 });
-define("styles/circle/gradient", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/circle/gradient", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1580,7 +1584,7 @@ define("styles/circle/gradient", ["require", "exports"], function (require, expo
         }
     ];
 });
-define("styles/fill/cross", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/fill/cross", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "fill": {
@@ -1593,7 +1597,7 @@ define("styles/fill/cross", ["require", "exports"], function (require, exports) 
             }
         }];
 });
-define("styles/fill/diagonal", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/fill/diagonal", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1608,7 +1612,7 @@ define("styles/fill/diagonal", ["require", "exports"], function (require, export
         }
     ];
 });
-define("styles/fill/gradient", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/fill/gradient", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1629,7 +1633,7 @@ define("styles/fill/gradient", ["require", "exports"], function (require, export
         }
     ];
 });
-define("styles/fill/horizontal", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/fill/horizontal", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "fill": {
@@ -1642,7 +1646,7 @@ define("styles/fill/horizontal", ["require", "exports"], function (require, expo
             }
         }];
 });
-define("styles/fill/vertical", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/fill/vertical", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "fill": {
@@ -1655,7 +1659,7 @@ define("styles/fill/vertical", ["require", "exports"], function (require, export
             }
         }];
 });
-define("styles/icon/png", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/icon/png", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1685,7 +1689,7 @@ define("styles/icon/png", ["require", "exports"], function (require, exports) {
         }
     ];
 });
-define("styles/icon/svg", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/icon/svg", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1703,7 +1707,7 @@ define("styles/icon/svg", ["require", "exports"], function (require, exports) {
         }
     ];
 });
-define("styles/peace", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/peace", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1736,7 +1740,7 @@ define("styles/peace", ["require", "exports"], function (require, exports) {
         }
     ];
 });
-define("styles/star/4star", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/star/4star", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1756,7 +1760,7 @@ define("styles/star/4star", ["require", "exports"], function (require, exports) 
         }
     ];
 });
-define("styles/star/6star", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/star/6star", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1775,7 +1779,7 @@ define("styles/star/6star", ["require", "exports"], function (require, exports) 
         }
     ];
 });
-define("styles/star/cold", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/star/cold", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1795,7 +1799,7 @@ define("styles/star/cold", ["require", "exports"], function (require, exports) {
         }
     ];
 });
-define("styles/star/flower", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/star/flower", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1828,7 +1832,7 @@ define("styles/star/flower", ["require", "exports"], function (require, exports)
         }
     ];
 });
-define("styles/stroke/linedash", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/stroke/linedash", ["require", "exports"], function (require, exports) {
     "use strict";
     var dasharray = {
         solid: "none",
@@ -1845,7 +1849,7 @@ define("styles/stroke/linedash", ["require", "exports"], function (require, expo
     };
     return dasharray;
 });
-define("styles/stroke/dash", ["require", "exports", "styles/stroke/linedash"], function (require, exports, Dashes) {
+define("ol3-symbolizer/styles/stroke/dash", ["require", "exports", "ol3-symbolizer/styles/stroke/linedash"], function (require, exports, Dashes) {
     "use strict";
     return [
         {
@@ -1857,7 +1861,7 @@ define("styles/stroke/dash", ["require", "exports", "styles/stroke/linedash"], f
         }
     ];
 });
-define("styles/stroke/dashdotdot", ["require", "exports", "styles/stroke/linedash"], function (require, exports, Dashes) {
+define("ol3-symbolizer/styles/stroke/dashdotdot", ["require", "exports", "ol3-symbolizer/styles/stroke/linedash"], function (require, exports, Dashes) {
     "use strict";
     return [
         {
@@ -1869,7 +1873,7 @@ define("styles/stroke/dashdotdot", ["require", "exports", "styles/stroke/linedas
         }
     ];
 });
-define("styles/stroke/dot", ["require", "exports", "styles/stroke/linedash"], function (require, exports, Dashes) {
+define("ol3-symbolizer/styles/stroke/dot", ["require", "exports", "ol3-symbolizer/styles/stroke/linedash"], function (require, exports, Dashes) {
     "use strict";
     return [
         {
@@ -1881,7 +1885,7 @@ define("styles/stroke/dot", ["require", "exports", "styles/stroke/linedash"], fu
         }
     ];
 });
-define("styles/stroke/solid", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/stroke/solid", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1892,7 +1896,7 @@ define("styles/stroke/solid", ["require", "exports"], function (require, exports
         }
     ];
 });
-define("styles/text/text", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/text/text", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1912,7 +1916,7 @@ define("styles/text/text", ["require", "exports"], function (require, exports) {
         }
     ];
 });
-define("tests/index", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/tests/index", ["require", "exports"], function (require, exports) {
     "use strict";
     function run() {
         var l = window.location;

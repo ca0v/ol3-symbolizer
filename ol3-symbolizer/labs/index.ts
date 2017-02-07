@@ -1,6 +1,6 @@
 export function run() {
     let l = window.location;
-    let path = `${l.origin}${l.pathname}?run=labs/`;
+    let path = `${l.origin}${l.pathname}?run=ol3-symbolizer/labs/`;
     let labs = `    
   index
   ags-viewer

@@ -669,6 +669,137 @@ declare module "ol3-symbolizer/ags/ags-source" {
         static create(options: IOptions): JQueryDeferred<ol.layer.Vector[]>;
     }
 }
+declare module "bower_components/ol3-popup/ol3-popup/paging/paging" {
+    import ol = require("openlayers");
+    import { Popup } from "bower_components/ol3-popup/ol3-popup/ol3-popup";
+    export type SourceType = HTMLElement | string | JQueryDeferred<HTMLElement | string>;
+    export type SourceCallback = () => SourceType;
+    export class Paging {
+        options: {
+            popup: Popup;
+        };
+        private _pages;
+        private _activeIndex;
+        domNode: HTMLDivElement;
+        constructor(options: {
+            popup: Popup;
+        });
+        readonly activePage: {
+            callback?: SourceCallback;
+            element: HTMLElement;
+            location: ol.geom.Geometry;
+        };
+        readonly activeIndex: number;
+        readonly count: number;
+        dispatch(name: string): void;
+        on(name: string, listener: EventListener): void;
+        add(source: SourceType | SourceCallback, geom?: ol.geom.Geometry): void;
+        clear(): void;
+        goto(index: number): void;
+        next(): void;
+        prev(): void;
+    }
+}
+declare module "bower_components/ol3-popup/ol3-popup/paging/page-navigator" {
+    import { Paging } from "bower_components/ol3-popup/ol3-popup/paging/paging";
+    class PageNavigator {
+        options: {
+            pages: Paging;
+        };
+        private domNode;
+        prevButton: HTMLButtonElement;
+        nextButton: HTMLButtonElement;
+        pageInfo: HTMLSpanElement;
+        constructor(options: {
+            pages: Paging;
+        });
+        dispatch(name: string): void;
+        on(name: string, listener: EventListener): void;
+        template(): string;
+        hide(): void;
+        show(): void;
+    }
+    export = PageNavigator;
+}
+declare module "bower_components/ol3-popup/ol3-popup/ol3-popup" {
+    import ol = require("openlayers");
+    import { Paging } from "bower_components/ol3-popup/ol3-popup/paging/paging";
+    export interface IPopupOptions_2_0_4 extends olx.OverlayOptions {
+        autoPan?: boolean;
+        autoPanAnimation?: {
+            duration: number;
+            source: any;
+        };
+        autoPanMargin?: number;
+        insertFirst?: boolean;
+        stopEvent?: boolean;
+        offset?: [number, number];
+        positioning?: string;
+        position?: [number, number];
+    }
+    export interface IPopupOptions_2_0_5 extends IPopupOptions_2_0_4 {
+        dockContainer?: JQuery | string | HTMLElement;
+    }
+    export interface IPopupOptions_2_0_6 extends IPopupOptions_2_0_5 {
+        css?: string;
+        pointerPosition?: number;
+    }
+    export interface IPopupOptions_2_0_7 extends IPopupOptions_2_0_6 {
+        xOffset?: number;
+        yOffset?: number;
+    }
+    export interface IPopupOptions_3_20_1 extends IPopupOptions_2_0_7 {
+    }
+    export interface IPopupOptions extends IPopupOptions_3_20_1 {
+    }
+    export interface IPopup_2_0_4<T> {
+        show(position: ol.Coordinate, markup: string): T;
+        hide(): T;
+    }
+    export interface IPopup_2_0_5<T> extends IPopup_2_0_4<T> {
+        isOpened(): boolean;
+        destroy(): void;
+        panIntoView(): void;
+        isDocked(): boolean;
+    }
+    export interface IPopup_3_20_1<T> extends IPopup_2_0_5<T> {
+        applyOffset([x, y]: [number, number]): any;
+        setIndicatorPosition(offset: number): any;
+    }
+    export interface IPopup extends IPopup_3_20_1<Popup> {
+    }
+    export class Popup extends ol.Overlay implements IPopup {
+        options: IPopupOptions & {
+            map?: ol.Map;
+            parentNode?: HTMLElement;
+        };
+        content: HTMLDivElement;
+        domNode: HTMLDivElement;
+        private closer;
+        private docker;
+        pages: Paging;
+        private handlers;
+        constructor(options?: IPopupOptions);
+        private postCreate();
+        private injectCss(css);
+        setIndicatorPosition(offset: number): void;
+        setPosition(position: ol.Coordinate): void;
+        panIntoView(): void;
+        destroy(): void;
+        dispatch(name: string): void;
+        show(coord: ol.Coordinate, html: string | HTMLElement): this;
+        hide(): this;
+        isOpened(): boolean;
+        isDocked(): boolean;
+        dock(): void;
+        undock(): void;
+        applyOffset([x, y]: [number, number]): void;
+    }
+}
+declare module "bower_components/ol3-popup/ol3-popup" {
+    import Popup = require("bower_components/ol3-popup/ol3-popup/ol3-popup");
+    export = Popup;
+}
 declare module "ol3-symbolizer/labs/ags-viewer" {
     import ol = require("openlayers");
     export function run(): ol.Map;

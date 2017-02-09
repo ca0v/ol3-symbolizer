@@ -1,3 +1,8 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 define("ol3-symbolizer/format/base", ["require", "exports"], function (require, exports) {
     "use strict";
 });
@@ -96,7 +101,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             if (style.getAnchor) {
                 this.assign(s, "anchor", style.getAnchor());
                 "anchorXUnits,anchorYUnits,anchorOrigin".split(",").forEach(function (k) {
-                    _this.assign(s, k, style[(k + "_")]);
+                    _this.assign(s, k, style[k + "_"]);
                 });
             }
             if (style.path) {
@@ -455,7 +460,7 @@ define("ol3-symbolizer/common/ajax", ["require", "exports", "jquery"], function 
             if (url === void 0) { url = this.url; }
             var d = $.Deferred();
             args["callback"] = "define";
-            var uri = url + "?" + Object.keys(args).map(function (k) { return (k + "=" + args[k]); }).join('&');
+            var uri = url + "?" + Object.keys(args).map(function (k) { return k + "=" + args[k]; }).join('&');
             require([uri], function (data) { return d.resolve(data); });
             return d;
         };
@@ -513,7 +518,7 @@ define("ol3-symbolizer/common/ajax", ["require", "exports", "jquery"], function 
         Ajax.prototype.put = function (args) {
             return this.ajax('PUT', args);
         };
-        Ajax.prototype.delete = function (args) {
+        Ajax.prototype["delete"] = function (args) {
             return this.ajax('DELETE', args);
         };
         return Ajax;
@@ -923,7 +928,7 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
     function asParam(options) {
         return Object
             .keys(options)
-            .map(function (k) { return (k + "=" + options[k]); })
+            .map(function (k) { return k + "=" + options[k]; })
             .join("&");
     }
     ;
@@ -1015,7 +1020,7 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
             $.when.apply($, all).then(function () {
                 var args = [];
                 for (var _i = 0; _i < arguments.length; _i++) {
-                    args[_i - 0] = arguments[_i];
+                    args[_i] = arguments[_i];
                 }
                 return d.resolve(args);
             });
@@ -1025,7 +1030,505 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
     }());
     exports.ArcGisVectorSourceFactory = ArcGisVectorSourceFactory;
 });
-define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/common/common", "ol3-popup", "ol3-symbolizer/ags/ags-source"], function (require, exports, $, ol, common_2, ol3_popup_1, ags_source_1) {
+define("bower_components/ol3-popup/ol3-popup/paging/paging", ["require", "exports", "openlayers"], function (require, exports, ol) {
+    "use strict";
+    function getInteriorPoint(geom) {
+        if (geom["getInteriorPoint"])
+            return geom["getInteriorPoint"]().getCoordinates();
+        return ol.extent.getCenter(geom.getExtent());
+    }
+    var classNames = {
+        pages: "pages",
+        page: "page"
+    };
+    var eventNames = {
+        add: "add",
+        clear: "clear",
+        goto: "goto"
+    };
+    var Paging = (function () {
+        function Paging(options) {
+            this.options = options;
+            this._pages = [];
+            this.domNode = document.createElement("div");
+            this.domNode.classList.add(classNames.pages);
+            options.popup.domNode.appendChild(this.domNode);
+        }
+        Object.defineProperty(Paging.prototype, "activePage", {
+            get: function () {
+                return this._pages[this._activeIndex];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Paging.prototype, "activeIndex", {
+            get: function () {
+                return this._activeIndex;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Paging.prototype, "count", {
+            get: function () {
+                return this._pages.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Paging.prototype.dispatch = function (name) {
+            this.domNode.dispatchEvent(new Event(name));
+        };
+        Paging.prototype.on = function (name, listener) {
+            this.domNode.addEventListener(name, listener);
+        };
+        Paging.prototype.add = function (source, geom) {
+            if (false) {
+            }
+            else if (typeof source === "string") {
+                var page = document.createElement("div");
+                page.innerHTML = source;
+                this._pages.push({
+                    element: page,
+                    location: geom
+                });
+            }
+            else if (source["appendChild"]) {
+                var page = source;
+                page.classList.add(classNames.page);
+                this._pages.push({
+                    element: page,
+                    location: geom
+                });
+            }
+            else if (source["then"]) {
+                var d = source;
+                var page_1 = document.createElement("div");
+                page_1.classList.add(classNames.page);
+                this._pages.push({
+                    element: page_1,
+                    location: geom
+                });
+                $.when(d).then(function (v) {
+                    if (typeof v === "string") {
+                        page_1.innerHTML = v;
+                    }
+                    else {
+                        page_1.appendChild(v);
+                    }
+                });
+            }
+            else if (typeof source === "function") {
+                var page = document.createElement("div");
+                page.classList.add("page");
+                this._pages.push({
+                    callback: source,
+                    element: page,
+                    location: geom
+                });
+            }
+            else {
+                throw "invalid source value: " + source;
+            }
+            this.dispatch(eventNames.add);
+        };
+        Paging.prototype.clear = function () {
+            var activeChild = this._activeIndex >= 0 && this._pages[this._activeIndex];
+            this._activeIndex = -1;
+            this._pages = [];
+            if (activeChild) {
+                this.domNode.removeChild(activeChild.element);
+                this.dispatch(eventNames.clear);
+            }
+        };
+        Paging.prototype.goto = function (index) {
+            var _this = this;
+            var page = this._pages[index];
+            if (!page)
+                return;
+            var activeChild = this._activeIndex >= 0 && this._pages[this._activeIndex];
+            var d = $.Deferred();
+            if (page.callback) {
+                var refreshedContent = page.callback();
+                $.when(refreshedContent).then(function (v) {
+                    if (false) {
+                    }
+                    else if (typeof v === "string") {
+                        page.element.innerHTML = v;
+                    }
+                    else if (typeof v["innerHTML"] !== "undefined") {
+                        page.element.innerHTML = "";
+                        page.element.appendChild(v);
+                    }
+                    else {
+                        throw "invalid callback result: " + v;
+                    }
+                    d.resolve();
+                });
+            }
+            else {
+                d.resolve();
+            }
+            d.then(function () {
+                activeChild && activeChild.element.remove();
+                _this._activeIndex = index;
+                _this.domNode.appendChild(page.element);
+                if (page.location) {
+                    _this.options.popup.setPosition(getInteriorPoint(page.location));
+                }
+                _this.dispatch(eventNames.goto);
+            });
+        };
+        Paging.prototype.next = function () {
+            (0 <= this.activeIndex) && (this.activeIndex < this.count) && this.goto(this.activeIndex + 1);
+        };
+        Paging.prototype.prev = function () {
+            (0 < this.activeIndex) && this.goto(this.activeIndex - 1);
+        };
+        return Paging;
+    }());
+    exports.Paging = Paging;
+});
+define("bower_components/ol3-popup/ol3-popup/paging/page-navigator", ["require", "exports"], function (require, exports) {
+    "use strict";
+    var classNames = {
+        prev: 'btn-prev',
+        next: 'btn-next',
+        hidden: 'hidden',
+        active: 'active',
+        inactive: 'inactive',
+        pagenum: "page-num"
+    };
+    var eventNames = {
+        show: "show",
+        hide: "hide",
+        prev: "prev",
+        next: "next"
+    };
+    var PageNavigator = (function () {
+        function PageNavigator(options) {
+            var _this = this;
+            this.options = options;
+            var pages = options.pages;
+            this.domNode = document.createElement("div");
+            this.domNode.classList.add("pagination");
+            this.domNode.innerHTML = this.template();
+            this.prevButton = this.domNode.getElementsByClassName(classNames.prev)[0];
+            this.nextButton = this.domNode.getElementsByClassName(classNames.next)[0];
+            this.pageInfo = this.domNode.getElementsByClassName(classNames.pagenum)[0];
+            pages.options.popup.domNode.appendChild(this.domNode);
+            this.prevButton.addEventListener('click', function () { return _this.dispatch(eventNames.prev); });
+            this.nextButton.addEventListener('click', function () { return _this.dispatch(eventNames.next); });
+            pages.on("goto", function () { return pages.count > 1 ? _this.show() : _this.hide(); });
+            pages.on("clear", function () { return _this.hide(); });
+            pages.on("goto", function () {
+                var index = pages.activeIndex;
+                var count = pages.count;
+                var canPrev = 0 < index;
+                var canNext = count - 1 > index;
+                _this.prevButton.classList.toggle(classNames.inactive, !canPrev);
+                _this.prevButton.classList.toggle(classNames.active, canPrev);
+                _this.nextButton.classList.toggle(classNames.inactive, !canNext);
+                _this.nextButton.classList.toggle(classNames.active, canNext);
+                _this.prevButton.disabled = !canPrev;
+                _this.nextButton.disabled = !canNext;
+                _this.pageInfo.innerHTML = 1 + index + " of " + count;
+            });
+        }
+        PageNavigator.prototype.dispatch = function (name) {
+            this.domNode.dispatchEvent(new Event(name));
+        };
+        PageNavigator.prototype.on = function (name, listener) {
+            this.domNode.addEventListener(name, listener);
+        };
+        PageNavigator.prototype.template = function () {
+            return "<button class=\"arrow btn-prev\"></button><span class=\"page-num\">m of n</span><button class=\"arrow btn-next\"></button>";
+        };
+        PageNavigator.prototype.hide = function () {
+            this.domNode.classList.add(classNames.hidden);
+            this.dispatch(eventNames.hide);
+        };
+        PageNavigator.prototype.show = function () {
+            this.domNode.classList.remove(classNames.hidden);
+            this.dispatch(eventNames.show);
+        };
+        return PageNavigator;
+    }());
+    return PageNavigator;
+});
+define("bower_components/ol3-popup/ol3-popup/ol3-popup", ["require", "exports", "jquery", "openlayers", "bower_components/ol3-popup/ol3-popup/paging/paging", "bower_components/ol3-popup/ol3-popup/paging/page-navigator"], function (require, exports, $, ol, paging_1, PageNavigator) {
+    "use strict";
+    var css = "\n.ol-popup {\n    position: absolute;\n    bottom: 12px;\n    left: -50px;\n}\n\n.ol-popup:after {\n    top: auto;\n    bottom: -20px;\n    left: 50px;\n    border: solid transparent;\n    border-top-color: inherit;\n    content: \" \";\n    height: 0;\n    width: 0;\n    position: absolute;\n    pointer-events: none;\n    border-width: 10px;\n    margin-left: -10px;\n}\n\n.ol-popup.docked {\n    position:absolute;\n    bottom:0;\n    top:0;\n    left:0;\n    right:0;\n    width:auto;\n    height:auto;\n    pointer-events: all;\n}\n\n.ol-popup.docked:after {\n    display:none;\n}\n\n.ol-popup.docked .pages {\n    max-height: inherit;\n    overflow: auto;\n    height: calc(100% - 60px);\n}\n\n.ol-popup.docked .pagination {\n    position: absolute;\n    bottom: 0;\n}\n\n.ol-popup .pagination .btn-prev::after {\n    content: \"\u21E6\"; \n}\n\n.ol-popup .pagination .btn-next::after {\n    content: \"\u21E8\"; \n}\n\n.ol-popup .pagination.hidden {\n    display: none;\n}\n\n.ol-popup .ol-popup-closer {\n    border: none;\n    background: transparent;\n    color: inherit;\n    position: absolute;\n    top: 0;\n    right: 0;\n    text-decoration: none;\n}\n    \n.ol-popup .ol-popup-closer:after {\n    content:'\u2716';\n}\n\n.ol-popup .ol-popup-docker {\n    border: none;\n    background: transparent;\n    color: inherit;\n    text-decoration: none;\n    position: absolute;\n    top: 0;\n    right: 20px;\n}\n\n.ol-popup .ol-popup-docker:after {\n    content:'\u25A1';\n}\n";
+    var classNames = {
+        olPopup: 'ol-popup',
+        olPopupDocker: 'ol-popup-docker',
+        olPopupCloser: 'ol-popup-closer',
+        olPopupContent: 'ol-popup-content',
+        hidden: 'hidden',
+        docked: 'docked'
+    };
+    var eventNames = {
+        show: "show",
+        hide: "hide"
+    };
+    function defaults(a) {
+        var b = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            b[_i - 1] = arguments[_i];
+        }
+        b.forEach(function (b) {
+            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
+        });
+        return a;
+    }
+    function debounce(func, wait, immediate) {
+        var _this = this;
+        if (wait === void 0) { wait = 20; }
+        if (immediate === void 0) { immediate = false; }
+        var timeout;
+        return (function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            var later = function () {
+                timeout = null;
+                if (!immediate)
+                    func.call(_this, args);
+            };
+            var callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow)
+                func.call(_this, args);
+        });
+    }
+    var isTouchDevice = function () {
+        try {
+            document.createEvent("TouchEvent");
+            isTouchDevice = function () { return true; };
+        }
+        catch (e) {
+            isTouchDevice = function () { return false; };
+        }
+        return isTouchDevice();
+    };
+    function enableTouchScroll(elm) {
+        var scrollStartPos = 0;
+        elm.addEventListener("touchstart", function (event) {
+            scrollStartPos = this.scrollTop + event.touches[0].pageY;
+        }, false);
+        elm.addEventListener("touchmove", function (event) {
+            this.scrollTop = scrollStartPos - event.touches[0].pageY;
+        }, false);
+    }
+    ;
+    var DEFAULT_OPTIONS = {
+        insertFirst: true,
+        autoPan: true,
+        autoPanAnimation: {
+            source: null,
+            duration: 250
+        },
+        pointerPosition: 50,
+        xOffset: 0,
+        yOffset: 0,
+        positioning: "top-right",
+        stopEvent: true
+    };
+    var Popup = (function (_super) {
+        __extends(Popup, _super);
+        function Popup(options) {
+            if (options === void 0) { options = DEFAULT_OPTIONS; }
+            var _this = this;
+            options = defaults({}, options, DEFAULT_OPTIONS);
+            _this = _super.call(this, options) || this;
+            _this.options = options;
+            _this.handlers = [];
+            _this.postCreate();
+            return _this;
+        }
+        Popup.prototype.postCreate = function () {
+            var _this = this;
+            this.injectCss(css);
+            var options = this.options;
+            options.css && this.injectCss(options.css);
+            var domNode = this.domNode = document.createElement('div');
+            domNode.className = classNames.olPopup;
+            this.setElement(domNode);
+            if (typeof this.options.pointerPosition === "number") {
+                this.setIndicatorPosition(this.options.pointerPosition);
+            }
+            if (this.options.dockContainer) {
+                var dockContainer = $(this.options.dockContainer)[0];
+                if (dockContainer) {
+                    var docker = this.docker = document.createElement('label');
+                    docker.className = classNames.olPopupDocker;
+                    domNode.appendChild(docker);
+                    docker.addEventListener('click', function (evt) {
+                        _this.isDocked() ? _this.undock() : _this.dock();
+                        evt.preventDefault();
+                    }, false);
+                }
+            }
+            {
+                var closer = this.closer = document.createElement('label');
+                closer.className = classNames.olPopupCloser;
+                domNode.appendChild(closer);
+                closer.addEventListener('click', function (evt) {
+                    _this.hide();
+                    evt.preventDefault();
+                }, false);
+            }
+            {
+                var content = this.content = document.createElement('div');
+                content.className = classNames.olPopupContent;
+                this.domNode.appendChild(content);
+                isTouchDevice() && enableTouchScroll(content);
+            }
+            {
+                var pages_1 = this.pages = new paging_1.Paging({ popup: this });
+                var pageNavigator = new PageNavigator({ pages: pages_1 });
+                pageNavigator.hide();
+                pageNavigator.on("prev", function () { return pages_1.prev(); });
+                pageNavigator.on("next", function () { return pages_1.next(); });
+                pages_1.on("goto", function () { return _this.panIntoView(); });
+            }
+            if (0) {
+                var callback_1 = this.setPosition;
+                this.setPosition = debounce(function (args) { return callback_1.apply(_this, args); }, 50);
+            }
+        };
+        Popup.prototype.injectCss = function (css) {
+            var style = $("<style type='text/css'>" + css + "</style>");
+            style.appendTo('head');
+            this.handlers.push(function () { return style.remove(); });
+        };
+        Popup.prototype.setIndicatorPosition = function (offset) {
+            var _this = this;
+            var _a = this.getPositioning().split("-", 2), verticalPosition = _a[0], horizontalPosition = _a[1];
+            var css = [];
+            switch (verticalPosition) {
+                case "bottom":
+                    css.push(".ol-popup { top: " + (10 + this.options.yOffset) + "px; bottom: auto; }");
+                    css.push(".ol-popup:after {  top: -20px; bottom: auto; transform: rotate(180deg);}");
+                    break;
+                case "center":
+                    break;
+                case "top":
+                    css.push(".ol-popup { top: auto; bottom: " + (10 + this.options.yOffset) + "px; }");
+                    css.push(".ol-popup:after {  top: auto; bottom: -20px; transform: rotate(0deg);}");
+                    break;
+            }
+            switch (horizontalPosition) {
+                case "center":
+                    break;
+                case "left":
+                    css.push(".ol-popup { left: auto; right: " + (this.options.xOffset - offset - 10) + "px; }");
+                    css.push(".ol-popup:after { left: auto; right: " + offset + "px; }");
+                    break;
+                case "right":
+                    css.push(".ol-popup { left: " + (this.options.xOffset - offset - 10) + "px; right: auto; }");
+                    css.push(".ol-popup:after { left: " + (10 + offset) + "px; right: auto; }");
+                    break;
+            }
+            css.forEach(function (css) { return _this.injectCss(css); });
+        };
+        Popup.prototype.setPosition = function (position) {
+            this.options.position = position;
+            if (!this.isDocked()) {
+                _super.prototype.setPosition.call(this, position);
+            }
+            else {
+                var view = this.options.map.getView();
+                view.animate({
+                    center: position
+                });
+            }
+        };
+        Popup.prototype.panIntoView = function () {
+            if (!this.isOpened())
+                return;
+            if (this.isDocked())
+                return;
+            var p = this.getPosition();
+            p && this.setPosition(p.map(function (v) { return v; }));
+        };
+        Popup.prototype.destroy = function () {
+            this.handlers.forEach(function (h) { return h(); });
+            this.handlers = [];
+            this.getMap().removeOverlay(this);
+            this.dispatch("dispose");
+        };
+        Popup.prototype.dispatch = function (name) {
+            this["dispatchEvent"](new Event(name));
+        };
+        Popup.prototype.show = function (coord, html) {
+            if (html instanceof HTMLElement) {
+                this.content.innerHTML = "";
+                this.content.appendChild(html);
+            }
+            else {
+                this.content.innerHTML = html;
+            }
+            this.domNode.classList.remove(classNames.hidden);
+            this.setPosition(coord);
+            this.dispatch(eventNames.show);
+            return this;
+        };
+        Popup.prototype.hide = function () {
+            this.isDocked() && this.undock();
+            this.setPosition(undefined);
+            this.pages.clear();
+            this.dispatch(eventNames.hide);
+            this.domNode.classList.add(classNames.hidden);
+            return this;
+        };
+        Popup.prototype.isOpened = function () {
+            return !this.domNode.classList.contains(classNames.hidden);
+        };
+        Popup.prototype.isDocked = function () {
+            return this.domNode.classList.contains(classNames.docked);
+        };
+        Popup.prototype.dock = function () {
+            var map = this.getMap();
+            this.options.map = map;
+            this.options.parentNode = this.domNode.parentElement;
+            map.removeOverlay(this);
+            this.domNode.classList.add(classNames.docked);
+            $(this.options.dockContainer).append(this.domNode);
+        };
+        Popup.prototype.undock = function () {
+            this.options.parentNode.appendChild(this.domNode);
+            this.domNode.classList.remove(classNames.docked);
+            this.options.map.addOverlay(this);
+            this.setPosition(this.options.position);
+        };
+        Popup.prototype.applyOffset = function (_a) {
+            var x = _a[0], y = _a[1];
+            switch (this.getPositioning()) {
+                case "bottom-left":
+                    this.setOffset([x, -y]);
+                    break;
+                case "bottom-right":
+                    this.setOffset([-x, -y]);
+                    break;
+                case "top-left":
+                    this.setOffset([x, y]);
+                    break;
+                case "top-right":
+                    this.setOffset([-x, y]);
+                    break;
+            }
+        };
+        return Popup;
+    }(ol.Overlay));
+    exports.Popup = Popup;
+});
+define("bower_components/ol3-popup/ol3-popup", ["require", "exports", "bower_components/ol3-popup/ol3-popup/ol3-popup"], function (require, exports, Popup) {
+    "use strict";
+    return Popup;
+});
+define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/common/common", "bower_components/ol3-popup/ol3-popup", "ol3-symbolizer/ags/ags-source"], function (require, exports, $, ol, common_2, ol3_popup_1, ags_source_1) {
     "use strict";
     function parse(v, type) {
         if (typeof type === "string")
@@ -1088,7 +1591,8 @@ define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "jquery", "openl
                     opacity: 0.8,
                     visible: true,
                     source: new ol.source.OSM()
-                })]
+                })
+            ]
         });
         ags_source_1.ArcGisVectorSourceFactory.create({
             tileSize: 256,
@@ -1119,7 +1623,7 @@ define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "jquery", "openl
                         return false;
                     });
                     page.title = "" + ++pageNum;
-                    page.innerHTML = "<table>" + keys.map(function (k) { return ("<tr><td>" + k + "</td><td>" + feature.get(k) + "</td></tr>"); }).join("") + "</table>";
+                    page.innerHTML = "<table>" + keys.map(function (k) { return "<tr><td>" + k + "</td><td>" + feature.get(k) + "</td></tr>"; }).join("") + "</table>";
                     popup.pages.add(page, feature.getGeometry());
                 });
                 popup.show(coord, "<label>" + pageNum + " Features Found</label>");
@@ -1145,7 +1649,7 @@ define("ol3-symbolizer/labs/index", ["require", "exports"], function (require, e
             .split(/ /)
             .map(function (v) { return v.trim(); })
             .filter(function (v) { return !!v; })
-            .map(function (lab) { return ("<div class='test'><a href='" + path + lab + "'>" + lab + "</a></div>"); })
+            .map(function (lab) { return "<div class='test'><a href='" + path + lab + "'>" + lab + "</a></div>"; })
             .join("\n");
         var testDiv = document.createElement("div");
         document.body.appendChild(testDiv);
@@ -1257,7 +1761,7 @@ define("ol3-symbolizer/styles/ags/simplefillsymbol", ["require", "exports"], fun
     var styles = "BackwardDiagonal,Cross,DiagonalCross,ForwardDiagonal,Horizontal,Solid,Vertical".split(",");
     var symbols = styles.map(function (style) {
         var result = symbol();
-        result.style = ("esriSFS" + style);
+        result.style = "esriSFS" + style;
         return result;
     });
     return symbols;
@@ -1928,7 +2432,7 @@ define("ol3-symbolizer/tests/index", ["require", "exports"], function (require, 
             .map(function (v) { return v.trim(); })
             .filter(function (v) { return !!v; })
             .sort()
-            .map(function (lab) { return ("<a href=" + path + lab + "&debug=1>" + lab + "</a>"); })
+            .map(function (lab) { return "<a href=" + path + lab + "&debug=1>" + lab + "</a>"; })
             .join("<br/>"));
     }
     exports.run = run;

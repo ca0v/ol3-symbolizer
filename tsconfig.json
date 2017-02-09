@@ -7,7 +7,13 @@
         "noImplicitAny": true,
         "sourceMap": true,
         "outFile": "./built/index.js",
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "baseUrl": "./",
+        "paths": {
+            "bower/*": [
+                "./bower_components/*"
+            ]
+        }
     },
     "exclude": [
         "bower_components",

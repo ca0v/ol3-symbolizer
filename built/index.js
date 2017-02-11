@@ -3,143 +3,10 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-define("common/ajax", ["require", "exports", "jquery"], function (require, exports, $) {
-    "use strict";
-    var Ajax = (function () {
-        function Ajax(url) {
-            this.url = url;
-            this.options = {
-                use_json: true,
-                use_cors: true
-            };
-        }
-        Ajax.prototype.jsonp = function (args, url) {
-            if (url === void 0) { url = this.url; }
-            var d = $.Deferred();
-            args["callback"] = "define";
-            var uri = url + "?" + Object.keys(args).map(function (k) { return (k + "=" + args[k]); }).join('&');
-            require([uri], function (data) { return d.resolve(data); });
-            return d;
-        };
-        Ajax.prototype.ajax = function (method, args, url) {
-            if (url === void 0) { url = this.url; }
-            var isData = method === "POST" || method === "PUT";
-            var isJson = this.options.use_json;
-            var isCors = this.options.use_cors;
-            var d = $.Deferred();
-            var client = new XMLHttpRequest();
-            if (isCors)
-                client.withCredentials = true;
-            var uri = url;
-            var data = null;
-            if (args) {
-                if (isData) {
-                    data = JSON.stringify(args);
-                }
-                else {
-                    uri += '?';
-                    var argcount = 0;
-                    for (var key in args) {
-                        if (args.hasOwnProperty(key)) {
-                            if (argcount++) {
-                                uri += '&';
-                            }
-                            uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
-                        }
-                    }
-                }
-            }
-            client.open(method, uri, true);
-            if (isData && isJson)
-                client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            client.send(data);
-            client.onload = function () {
-                console.log("content-type", client.getResponseHeader("Content-Type"));
-                if (client.status >= 200 && client.status < 300) {
-                    isJson = isJson || 0 === client.getResponseHeader("Content-Type").indexOf("application/json");
-                    d.resolve(isJson ? JSON.parse(client.response) : client.response);
-                }
-                else {
-                    d.reject(client.statusText);
-                }
-            };
-            client.onerror = function () { return d.reject(client.statusText); };
-            return d;
-        };
-        Ajax.prototype.get = function (args) {
-            return this.ajax('GET', args);
-        };
-        Ajax.prototype.post = function (args) {
-            return this.ajax('POST', args);
-        };
-        Ajax.prototype.put = function (args) {
-            return this.ajax('PUT', args);
-        };
-        Ajax.prototype.delete = function (args) {
-            return this.ajax('DELETE', args);
-        };
-        return Ajax;
-    }());
-    return Ajax;
-});
-define("ags-catalog", ["require", "exports", "common/ajax"], function (require, exports, Ajax) {
-    "use strict";
-    function defaults(a) {
-        var b = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            b[_i - 1] = arguments[_i];
-        }
-        b.filter(function (b) { return !!b; }).forEach(function (b) {
-            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
-        });
-        return a;
-    }
-    var Catalog = (function () {
-        function Catalog(url) {
-            this.ajax = new Ajax(url);
-        }
-        Catalog.prototype.about = function (data) {
-            var req = defaults({
-                f: "pjson"
-            }, data);
-            return this.ajax.jsonp(req);
-        };
-        Catalog.prototype.aboutFolder = function (folder) {
-            var ajax = new Ajax(this.ajax.url + "/" + folder);
-            var req = {
-                f: "pjson"
-            };
-            return ajax.jsonp(req);
-        };
-        Catalog.prototype.aboutFeatureServer = function (name) {
-            var ajax = new Ajax(this.ajax.url + "/" + name + "/FeatureServer");
-            var req = {
-                f: "pjson"
-            };
-            return defaults(ajax.jsonp(req), { url: ajax.url });
-        };
-        Catalog.prototype.aboutMapServer = function (name) {
-            var ajax = new Ajax(this.ajax.url + "/" + name + "/MapServer");
-            var req = {
-                f: "pjson"
-            };
-            return defaults(ajax.jsonp(req), { url: ajax.url });
-        };
-        Catalog.prototype.aboutLayer = function (layer) {
-            var ajax = new Ajax(this.ajax.url + "/" + layer);
-            var req = {
-                f: "pjson"
-            };
-            return ajax.jsonp(req);
-        };
-        return Catalog;
-    }());
-    exports.Catalog = Catalog;
-});
-define("format/base", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/format/base", ["require", "exports"], function (require, exports) {
     "use strict";
 });
-define("format/ol3-symbolizer", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
     function doif(v, cb) {
         if (v !== undefined && v !== null)
@@ -234,7 +101,7 @@ define("format/ol3-symbolizer", ["require", "exports"], function (require, expor
             if (style.getAnchor) {
                 this.assign(s, "anchor", style.getAnchor());
                 "anchorXUnits,anchorYUnits,anchorOrigin".split(",").forEach(function (k) {
-                    _this.assign(s, k, style[(k + "_")]);
+                    _this.assign(s, k, style[k + "_"]);
                 });
             }
             if (style.path) {
@@ -575,7 +442,144 @@ define("format/ol3-symbolizer", ["require", "exports"], function (require, expor
     }());
     exports.StyleConverter = StyleConverter;
 });
-define("format/ags-symbolizer", ["require", "exports", "jquery", "format/ol3-symbolizer"], function (require, exports, $, Symbolizer) {
+define("ol3-symbolizer", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
+    "use strict";
+    return Symbolizer;
+});
+define("ol3-symbolizer/common/ajax", ["require", "exports", "jquery"], function (require, exports, $) {
+    "use strict";
+    var Ajax = (function () {
+        function Ajax(url) {
+            this.url = url;
+            this.options = {
+                use_json: true,
+                use_cors: true
+            };
+        }
+        Ajax.prototype.jsonp = function (args, url) {
+            if (url === void 0) { url = this.url; }
+            var d = $.Deferred();
+            args["callback"] = "define";
+            var uri = url + "?" + Object.keys(args).map(function (k) { return k + "=" + args[k]; }).join('&');
+            require([uri], function (data) { return d.resolve(data); });
+            return d;
+        };
+        Ajax.prototype.ajax = function (method, args, url) {
+            if (url === void 0) { url = this.url; }
+            var isData = method === "POST" || method === "PUT";
+            var isJson = this.options.use_json;
+            var isCors = this.options.use_cors;
+            var d = $.Deferred();
+            var client = new XMLHttpRequest();
+            if (isCors)
+                client.withCredentials = true;
+            var uri = url;
+            var data = null;
+            if (args) {
+                if (isData) {
+                    data = JSON.stringify(args);
+                }
+                else {
+                    uri += '?';
+                    var argcount = 0;
+                    for (var key in args) {
+                        if (args.hasOwnProperty(key)) {
+                            if (argcount++) {
+                                uri += '&';
+                            }
+                            uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
+                        }
+                    }
+                }
+            }
+            client.open(method, uri, true);
+            if (isData && isJson)
+                client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            client.send(data);
+            client.onload = function () {
+                console.log("content-type", client.getResponseHeader("Content-Type"));
+                if (client.status >= 200 && client.status < 300) {
+                    isJson = isJson || 0 === client.getResponseHeader("Content-Type").indexOf("application/json");
+                    d.resolve(isJson ? JSON.parse(client.response) : client.response);
+                }
+                else {
+                    d.reject(client.statusText);
+                }
+            };
+            client.onerror = function () { return d.reject(client.statusText); };
+            return d;
+        };
+        Ajax.prototype.get = function (args) {
+            return this.ajax('GET', args);
+        };
+        Ajax.prototype.post = function (args) {
+            return this.ajax('POST', args);
+        };
+        Ajax.prototype.put = function (args) {
+            return this.ajax('PUT', args);
+        };
+        Ajax.prototype["delete"] = function (args) {
+            return this.ajax('DELETE', args);
+        };
+        return Ajax;
+    }());
+    return Ajax;
+});
+define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/common/ajax"], function (require, exports, Ajax) {
+    "use strict";
+    function defaults(a) {
+        var b = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            b[_i - 1] = arguments[_i];
+        }
+        b.filter(function (b) { return !!b; }).forEach(function (b) {
+            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
+        });
+        return a;
+    }
+    var Catalog = (function () {
+        function Catalog(url) {
+            this.ajax = new Ajax(url);
+        }
+        Catalog.prototype.about = function (data) {
+            var req = defaults({
+                f: "pjson"
+            }, data);
+            return this.ajax.jsonp(req);
+        };
+        Catalog.prototype.aboutFolder = function (folder) {
+            var ajax = new Ajax(this.ajax.url + "/" + folder);
+            var req = {
+                f: "pjson"
+            };
+            return ajax.jsonp(req);
+        };
+        Catalog.prototype.aboutFeatureServer = function (name) {
+            var ajax = new Ajax(this.ajax.url + "/" + name + "/FeatureServer");
+            var req = {
+                f: "pjson"
+            };
+            return defaults(ajax.jsonp(req), { url: ajax.url });
+        };
+        Catalog.prototype.aboutMapServer = function (name) {
+            var ajax = new Ajax(this.ajax.url + "/" + name + "/MapServer");
+            var req = {
+                f: "pjson"
+            };
+            return defaults(ajax.jsonp(req), { url: ajax.url });
+        };
+        Catalog.prototype.aboutLayer = function (layer) {
+            var ajax = new Ajax(this.ajax.url + "/" + layer);
+            var req = {
+                f: "pjson"
+            };
+            return ajax.jsonp(req);
+        };
+        return Catalog;
+    }());
+    exports.Catalog = Catalog;
+});
+define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "jquery", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, $, Symbolizer) {
     "use strict";
     var symbolizer = new Symbolizer.StyleConverter();
     var styleMap = {
@@ -870,25 +874,74 @@ define("format/ags-symbolizer", ["require", "exports", "jquery", "format/ol3-sym
     }());
     exports.StyleConverter = StyleConverter;
 });
-define("arcgis-source", ["require", "exports", "jquery", "openlayers", "ags-catalog", "format/ags-symbolizer"], function (require, exports, $, ol, AgsCatalog, Symbolizer) {
+define("ol3-symbolizer/common/common", ["require", "exports"], function (require, exports) {
+    "use strict";
+    function getParameterByName(name, url) {
+        if (url === void 0) { url = window.location.href; }
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"), results = regex.exec(url);
+        if (!results)
+            return null;
+        if (!results[2])
+            return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+    exports.getParameterByName = getParameterByName;
+    function doif(v, cb) {
+        if (v !== undefined && v !== null)
+            cb(v);
+    }
+    exports.doif = doif;
+    function mixin(a, b) {
+        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
+        return a;
+    }
+    exports.mixin = mixin;
+    function defaults(a, b) {
+        Object.keys(b).filter(function (k) { return a[k] == undefined; }).forEach(function (k) { return a[k] = b[k]; });
+        return a;
+    }
+    exports.defaults = defaults;
+    function cssin(name, css) {
+        var id = "style-" + name;
+        var styleTag = document.getElementById(id);
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = id;
+            styleTag.innerText = css;
+            document.head.appendChild(styleTag);
+        }
+        var dataset = styleTag.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                styleTag.remove();
+            }
+        };
+    }
+    exports.cssin = cssin;
+});
+define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/ags/ags-catalog", "ol3-symbolizer/format/ags-symbolizer", "ol3-symbolizer/common/common"], function (require, exports, $, ol, AgsCatalog, Symbolizer, common_1) {
     "use strict";
     var esrijsonFormat = new ol.format.EsriJSON();
     function asParam(options) {
         return Object
             .keys(options)
-            .map(function (k) { return (k + "=" + options[k]); })
+            .map(function (k) { return k + "=" + options[k]; })
             .join("&");
     }
     ;
     var DEFAULT_OPTIONS = {
-        tileSize: 512
+        tileSize: 512,
+        where: "1=1"
     };
     var ArcGisVectorSourceFactory = (function () {
         function ArcGisVectorSourceFactory() {
         }
         ArcGisVectorSourceFactory.create = function (options) {
             var d = $.Deferred();
-            options = $.extend(options, DEFAULT_OPTIONS);
+            options = common_1.defaults(options, DEFAULT_OPTIONS);
             var srs = options.map.getView()
                 .getProjection()
                 .getCode()
@@ -914,6 +967,7 @@ define("arcgis-source", ["require", "exports", "jquery", "openlayers", "ags-cata
                         geometry: encodeURIComponent(JSON.stringify(box)),
                         geometryType: "esriGeometryEnvelope",
                         resultType: "tile",
+                        where: encodeURIComponent(options.where),
                         inSR: srs,
                         outSR: srs,
                         outFields: "*"
@@ -966,7 +1020,7 @@ define("arcgis-source", ["require", "exports", "jquery", "openlayers", "ags-cata
             $.when.apply($, all).then(function () {
                 var args = [];
                 for (var _i = 0; _i < arguments.length; _i++) {
-                    args[_i - 0] = arguments[_i];
+                    args[_i] = arguments[_i];
                 }
                 return d.resolve(args);
             });
@@ -976,69 +1030,37 @@ define("arcgis-source", ["require", "exports", "jquery", "openlayers", "ags-cata
     }());
     exports.ArcGisVectorSourceFactory = ArcGisVectorSourceFactory;
 });
-define("common/common", ["require", "exports"], function (require, exports) {
-    "use strict";
-    function getParameterByName(name, url) {
-        if (url === void 0) { url = window.location.href; }
-        name = name.replace(/[\[\]]/g, "\\$&");
-        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"), results = regex.exec(url);
-        if (!results)
-            return null;
-        if (!results[2])
-            return '';
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
-    }
-    exports.getParameterByName = getParameterByName;
-    function doif(v, cb) {
-        if (v !== undefined && v !== null)
-            cb(v);
-    }
-    exports.doif = doif;
-    function mixin(a, b) {
-        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
-        return a;
-    }
-    exports.mixin = mixin;
-    function defaults(a, b) {
-        Object.keys(b).filter(function (k) { return a[k] == undefined; }).forEach(function (k) { return a[k] = b[k]; });
-        return a;
-    }
-    exports.defaults = defaults;
-    function cssin(name, css) {
-        var id = "style-" + name;
-        var styleTag = document.getElementById(id);
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            styleTag.id = id;
-            styleTag.innerText = css;
-            document.head.appendChild(styleTag);
-        }
-        var dataset = styleTag.dataset;
-        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
-        return function () {
-            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
-            if (dataset["count"] === "0") {
-                styleTag.remove();
-            }
-        };
-    }
-    exports.cssin = cssin;
-});
-define("bower_components/ol3-popup/src/paging/paging", ["require", "exports", "openlayers"], function (require, exports, ol) {
+define("bower_components/ol3-popup/ol3-popup/paging/paging", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
     function getInteriorPoint(geom) {
         if (geom["getInteriorPoint"])
             return geom["getInteriorPoint"]().getCoordinates();
         return ol.extent.getCenter(geom.getExtent());
     }
+    var classNames = {
+        pages: "pages",
+        page: "page"
+    };
+    var eventNames = {
+        add: "add",
+        clear: "clear",
+        goto: "goto"
+    };
     var Paging = (function () {
         function Paging(options) {
             this.options = options;
             this._pages = [];
             this.domNode = document.createElement("div");
-            this.domNode.classList.add("pages");
+            this.domNode.classList.add(classNames.pages);
             options.popup.domNode.appendChild(this.domNode);
         }
+        Object.defineProperty(Paging.prototype, "activePage", {
+            get: function () {
+                return this._pages[this._activeIndex];
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Paging.prototype, "activeIndex", {
             get: function () {
                 return this._activeIndex;
@@ -1066,25 +1088,25 @@ define("bower_components/ol3-popup/src/paging/paging", ["require", "exports", "o
                 var page = document.createElement("div");
                 page.innerHTML = source;
                 this._pages.push({
-                    element: page.firstChild,
-                    location: geom && getInteriorPoint(geom)
+                    element: page,
+                    location: geom
                 });
             }
             else if (source["appendChild"]) {
                 var page = source;
-                page.classList.add("page");
+                page.classList.add(classNames.page);
                 this._pages.push({
                     element: page,
-                    location: geom && getInteriorPoint(geom)
+                    location: geom
                 });
             }
             else if (source["then"]) {
                 var d = source;
                 var page_1 = document.createElement("div");
-                page_1.classList.add("page");
+                page_1.classList.add(classNames.page);
                 this._pages.push({
                     element: page_1,
-                    location: geom && getInteriorPoint(geom)
+                    location: geom
                 });
                 $.when(d).then(function (v) {
                     if (typeof v === "string") {
@@ -1101,13 +1123,13 @@ define("bower_components/ol3-popup/src/paging/paging", ["require", "exports", "o
                 this._pages.push({
                     callback: source,
                     element: page,
-                    location: geom && getInteriorPoint(geom)
+                    location: geom
                 });
             }
             else {
                 throw "invalid source value: " + source;
             }
-            this.dispatch("add");
+            this.dispatch(eventNames.add);
         };
         Paging.prototype.clear = function () {
             var activeChild = this._activeIndex >= 0 && this._pages[this._activeIndex];
@@ -1115,48 +1137,46 @@ define("bower_components/ol3-popup/src/paging/paging", ["require", "exports", "o
             this._pages = [];
             if (activeChild) {
                 this.domNode.removeChild(activeChild.element);
-                this.dispatch("clear");
+                this.dispatch(eventNames.clear);
             }
         };
         Paging.prototype.goto = function (index) {
             var _this = this;
             var page = this._pages[index];
-            if (page) {
-                var activeChild = this._activeIndex >= 0 && this._pages[this._activeIndex];
-                if (activeChild) {
-                    this.domNode.removeChild(activeChild.element);
-                }
-                var d_1 = $.Deferred();
-                if (page.callback) {
-                    var refreshedContent = page.callback();
-                    $.when(refreshedContent).then(function (v) {
-                        if (false) {
-                        }
-                        else if (typeof v === "string") {
-                            page.element.innerHTML = v;
-                        }
-                        else if (typeof v["innerHTML"] !== "undefined") {
-                            page.element.innerHTML = "";
-                            page.element.appendChild(v);
-                        }
-                        else {
-                            throw "invalid callback result: " + v;
-                        }
-                        d_1.resolve();
-                    });
-                }
-                else {
-                    d_1.resolve();
-                }
-                d_1.then(function () {
-                    _this.domNode.appendChild(page.element);
-                    _this._activeIndex = index;
-                    if (page.location) {
-                        _this.options.popup.setPosition(page.location);
+            if (!page)
+                return;
+            var activeChild = this._activeIndex >= 0 && this._pages[this._activeIndex];
+            var d = $.Deferred();
+            if (page.callback) {
+                var refreshedContent = page.callback();
+                $.when(refreshedContent).then(function (v) {
+                    if (false) {
                     }
-                    _this.dispatch("goto");
+                    else if (typeof v === "string") {
+                        page.element.innerHTML = v;
+                    }
+                    else if (typeof v["innerHTML"] !== "undefined") {
+                        page.element.innerHTML = "";
+                        page.element.appendChild(v);
+                    }
+                    else {
+                        throw "invalid callback result: " + v;
+                    }
+                    d.resolve();
                 });
             }
+            else {
+                d.resolve();
+            }
+            d.then(function () {
+                activeChild && activeChild.element.remove();
+                _this._activeIndex = index;
+                _this.domNode.appendChild(page.element);
+                if (page.location) {
+                    _this.options.popup.setPosition(getInteriorPoint(page.location));
+                }
+                _this.dispatch(eventNames.goto);
+            });
         };
         Paging.prototype.next = function () {
             (0 <= this.activeIndex) && (this.activeIndex < this.count) && this.goto(this.activeIndex + 1);
@@ -1168,7 +1188,7 @@ define("bower_components/ol3-popup/src/paging/paging", ["require", "exports", "o
     }());
     exports.Paging = Paging;
 });
-define("bower_components/ol3-popup/src/paging/page-navigator", ["require", "exports"], function (require, exports) {
+define("bower_components/ol3-popup/ol3-popup/paging/page-navigator", ["require", "exports"], function (require, exports) {
     "use strict";
     var classNames = {
         prev: 'btn-prev',
@@ -1211,7 +1231,7 @@ define("bower_components/ol3-popup/src/paging/page-navigator", ["require", "expo
                 _this.nextButton.classList.toggle(classNames.active, canNext);
                 _this.prevButton.disabled = !canPrev;
                 _this.nextButton.disabled = !canNext;
-                _this.pageInfo.innerHTML = (1 + index) + " of " + count;
+                _this.pageInfo.innerHTML = 1 + index + " of " + count;
             });
         }
         PageNavigator.prototype.dispatch = function (name) {
@@ -1235,9 +1255,9 @@ define("bower_components/ol3-popup/src/paging/page-navigator", ["require", "expo
     }());
     return PageNavigator;
 });
-define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquery", "openlayers", "bower_components/ol3-popup/src/paging/paging", "bower_components/ol3-popup/src/paging/page-navigator"], function (require, exports, $, ol, paging_1, PageNavigator) {
+define("bower_components/ol3-popup/ol3-popup/ol3-popup", ["require", "exports", "jquery", "openlayers", "bower_components/ol3-popup/ol3-popup/paging/paging", "bower_components/ol3-popup/ol3-popup/paging/page-navigator"], function (require, exports, $, ol, paging_1, PageNavigator) {
     "use strict";
-    var css = "\n.ol-popup {\n    position: absolute;\n    bottom: 12px;\n    left: -50px;\n}\n\n.ol-popup:after {\n    top: auto;\n    bottom: -20px;\n    left: 50px;\n    border: solid transparent;\n    border-top-color: inherit;\n    content: \" \";\n    height: 0;\n    width: 0;\n    position: absolute;\n    pointer-events: none;\n    border-width: 10px;\n    margin-left: -10px;\n}\n\n.ol-popup.docked {\n    position:absolute;\n    bottom:0;\n    top:0;\n    left:0;\n    right:0;\n    pointer-events: all;\n}\n\n.ol-popup.docked:after {\n    display:none;\n}\n\n.ol-popup.docked .pages {\n    max-height: inherit;\n    overflow: auto;\n    height: calc(100% - 60px);\n}\n\n.ol-popup.docked .pagination {\n    position: absolute;\n    bottom: 0;\n}\n\n.ol-popup .pagination .btn-prev::after {\n    content: \"\u21E6\"; \n}\n\n.ol-popup .pagination .btn-next::after {\n    content: \"\u21E8\"; \n}\n\n.ol-popup .pagination.hidden {\n    display: none;\n}\n\n.ol-popup .ol-popup-closer {\n    border: none;\n    background: transparent;\n    color: inherit;\n    position: absolute;\n    top: 0;\n    right: 0;\n    text-decoration: none;\n}\n    \n.ol-popup .ol-popup-closer:after {\n    content:'\u2716';\n}\n\n.ol-popup .ol-popup-docker {\n    border: none;\n    background: transparent;\n    color: inherit;\n    text-decoration: none;\n    position: absolute;\n    top: 0;\n    right: 20px;\n}\n\n.ol-popup .ol-popup-docker:after {\n    content:'\u25A1';\n}\n";
+    var css = "\n.ol-popup {\n    position: absolute;\n    bottom: 12px;\n    left: -50px;\n}\n\n.ol-popup:after {\n    top: auto;\n    bottom: -20px;\n    left: 50px;\n    border: solid transparent;\n    border-top-color: inherit;\n    content: \" \";\n    height: 0;\n    width: 0;\n    position: absolute;\n    pointer-events: none;\n    border-width: 10px;\n    margin-left: -10px;\n}\n\n.ol-popup.docked {\n    position:absolute;\n    bottom:0;\n    top:0;\n    left:0;\n    right:0;\n    width:auto;\n    height:auto;\n    pointer-events: all;\n}\n\n.ol-popup.docked:after {\n    display:none;\n}\n\n.ol-popup.docked .pages {\n    max-height: inherit;\n    overflow: auto;\n    height: calc(100% - 60px);\n}\n\n.ol-popup.docked .pagination {\n    position: absolute;\n    bottom: 0;\n}\n\n.ol-popup .pagination .btn-prev::after {\n    content: \"\u21E6\"; \n}\n\n.ol-popup .pagination .btn-next::after {\n    content: \"\u21E8\"; \n}\n\n.ol-popup .pagination.hidden {\n    display: none;\n}\n\n.ol-popup .ol-popup-closer {\n    border: none;\n    background: transparent;\n    color: inherit;\n    position: absolute;\n    top: 0;\n    right: 0;\n    text-decoration: none;\n}\n    \n.ol-popup .ol-popup-closer:after {\n    content:'\u2716';\n}\n\n.ol-popup .ol-popup-docker {\n    border: none;\n    background: transparent;\n    color: inherit;\n    text-decoration: none;\n    position: absolute;\n    top: 0;\n    right: 20px;\n}\n\n.ol-popup .ol-popup-docker:after {\n    content:'\u25A1';\n}\n";
     var classNames = {
         olPopup: 'ol-popup',
         olPopupDocker: 'ol-popup-docker',
@@ -1248,8 +1268,7 @@ define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquer
     };
     var eventNames = {
         show: "show",
-        hide: "hide",
-        next: "next-page"
+        hide: "hide"
     };
     function defaults(a) {
         var b = [];
@@ -1269,7 +1288,7 @@ define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquer
         return (function () {
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i - 0] = arguments[_i];
+                args[_i] = arguments[_i];
             }
             var later = function () {
                 timeout = null;
@@ -1311,6 +1330,8 @@ define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquer
             duration: 250
         },
         pointerPosition: 50,
+        xOffset: 0,
+        yOffset: 0,
         positioning: "top-right",
         stopEvent: true
     };
@@ -1318,11 +1339,13 @@ define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquer
         __extends(Popup, _super);
         function Popup(options) {
             if (options === void 0) { options = DEFAULT_OPTIONS; }
+            var _this = this;
             options = defaults({}, options, DEFAULT_OPTIONS);
-            _super.call(this, options);
-            this.options = options;
-            this.handlers = [];
-            this.postCreate();
+            _this = _super.call(this, options) || this;
+            _this.options = options;
+            _this.handlers = [];
+            _this.postCreate();
+            return _this;
         }
         Popup.prototype.postCreate = function () {
             var _this = this;
@@ -1332,13 +1355,13 @@ define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquer
             var domNode = this.domNode = document.createElement('div');
             domNode.className = classNames.olPopup;
             this.setElement(domNode);
-            if (this.options.pointerPosition) {
+            if (typeof this.options.pointerPosition === "number") {
                 this.setIndicatorPosition(this.options.pointerPosition);
             }
             if (this.options.dockContainer) {
                 var dockContainer = $(this.options.dockContainer)[0];
                 if (dockContainer) {
-                    var docker = this.docker = document.createElement('button');
+                    var docker = this.docker = document.createElement('label');
                     docker.className = classNames.olPopupDocker;
                     domNode.appendChild(docker);
                     docker.addEventListener('click', function (evt) {
@@ -1348,7 +1371,7 @@ define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquer
                 }
             }
             {
-                var closer = this.closer = document.createElement('button');
+                var closer = this.closer = document.createElement('label');
                 closer.className = classNames.olPopupCloser;
                 domNode.appendChild(closer);
                 closer.addEventListener('click', function (evt) {
@@ -1380,9 +1403,35 @@ define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquer
             style.appendTo('head');
             this.handlers.push(function () { return style.remove(); });
         };
-        Popup.prototype.setIndicatorPosition = function (x) {
-            var css = "\n.ol-popup { position: absolute; bottom: 12px; left: -" + x + "px; }\n.ol-popup:after { bottom: -20px; left: " + x + "px; }\n";
-            this.injectCss(css);
+        Popup.prototype.setIndicatorPosition = function (offset) {
+            var _this = this;
+            var _a = this.getPositioning().split("-", 2), verticalPosition = _a[0], horizontalPosition = _a[1];
+            var css = [];
+            switch (verticalPosition) {
+                case "bottom":
+                    css.push(".ol-popup { top: " + (10 + this.options.yOffset) + "px; bottom: auto; }");
+                    css.push(".ol-popup:after {  top: -20px; bottom: auto; transform: rotate(180deg);}");
+                    break;
+                case "center":
+                    break;
+                case "top":
+                    css.push(".ol-popup { top: auto; bottom: " + (10 + this.options.yOffset) + "px; }");
+                    css.push(".ol-popup:after {  top: auto; bottom: -20px; transform: rotate(0deg);}");
+                    break;
+            }
+            switch (horizontalPosition) {
+                case "center":
+                    break;
+                case "left":
+                    css.push(".ol-popup { left: auto; right: " + (this.options.xOffset - offset - 10) + "px; }");
+                    css.push(".ol-popup:after { left: auto; right: " + offset + "px; }");
+                    break;
+                case "right":
+                    css.push(".ol-popup { left: " + (this.options.xOffset - offset - 10) + "px; right: auto; }");
+                    css.push(".ol-popup:after { left: " + (10 + offset) + "px; right: auto; }");
+                    break;
+            }
+            css.forEach(function (css) { return _this.injectCss(css); });
         };
         Popup.prototype.setPosition = function (position) {
             this.options.position = position;
@@ -1408,7 +1457,6 @@ define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquer
             this.handlers.forEach(function (h) { return h(); });
             this.handlers = [];
             this.getMap().removeOverlay(this);
-            this.dispose();
             this.dispatch("dispose");
         };
         Popup.prototype.dispatch = function (name) {
@@ -1455,11 +1503,32 @@ define("bower_components/ol3-popup/src/ol3-popup", ["require", "exports", "jquer
             this.options.map.addOverlay(this);
             this.setPosition(this.options.position);
         };
+        Popup.prototype.applyOffset = function (_a) {
+            var x = _a[0], y = _a[1];
+            switch (this.getPositioning()) {
+                case "bottom-left":
+                    this.setOffset([x, -y]);
+                    break;
+                case "bottom-right":
+                    this.setOffset([-x, -y]);
+                    break;
+                case "top-left":
+                    this.setOffset([x, y]);
+                    break;
+                case "top-right":
+                    this.setOffset([-x, y]);
+                    break;
+            }
+        };
         return Popup;
     }(ol.Overlay));
     exports.Popup = Popup;
 });
-define("labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "common/common", "bower_components/ol3-popup/src/ol3-popup", "arcgis-source"], function (require, exports, $, ol, common_1, ol3_popup_1, arcgis_source_1) {
+define("bower_components/ol3-popup/ol3-popup", ["require", "exports", "bower_components/ol3-popup/ol3-popup/ol3-popup"], function (require, exports, Popup) {
+    "use strict";
+    return Popup;
+});
+define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/common/common", "bower_components/ol3-popup/ol3-popup", "ol3-symbolizer/ags/ags-source"], function (require, exports, $, ol, common_2, ol3_popup_1, ags_source_1) {
     "use strict";
     function parse(v, type) {
         if (typeof type === "string")
@@ -1488,14 +1557,16 @@ define("labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "common
             srs: 'EPSG:4326',
             center: center.vegas,
             zoom: 10,
-            services: "http://sampleserver3.arcgisonline.com/ArcGIS/rest/services",
+            services: "//sampleserver3.arcgisonline.com/ArcGIS/rest/services",
             serviceName: "SanFrancisco/311Incidents",
+            where: "1=1",
+            filter: {},
             layers: [0]
         };
         {
             var opts_1 = options;
             Object.keys(opts_1).forEach(function (k) {
-                common_1.doif(common_1.getParameterByName(k), function (v) {
+                common_2.doif(common_2.getParameterByName(k), function (v) {
                     var value = parse(v, opts_1[k]);
                     if (value !== undefined)
                         opts_1[k] = value;
@@ -1520,13 +1591,15 @@ define("labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "common
                     opacity: 0.8,
                     visible: true,
                     source: new ol.source.OSM()
-                })]
+                })
+            ]
         });
-        arcgis_source_1.ArcGisVectorSourceFactory.create({
+        ags_source_1.ArcGisVectorSourceFactory.create({
             tileSize: 256,
             map: map,
             services: options.services,
             serviceName: options.serviceName,
+            where: options.where,
             layers: options.layers.reverse()
         }).then(function (agsLayers) {
             agsLayers.forEach(function (agsLayer) { return map.addLayer(agsLayer); });
@@ -1550,7 +1623,7 @@ define("labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "common
                         return false;
                     });
                     page.title = "" + ++pageNum;
-                    page.innerHTML = "<table>" + keys.map(function (k) { return ("<tr><td>" + k + "</td><td>" + feature.get(k) + "</td></tr>"); }).join("") + "</table>";
+                    page.innerHTML = "<table>" + keys.map(function (k) { return "<tr><td>" + k + "</td><td>" + feature.get(k) + "</td></tr>"; }).join("") + "</table>";
                     popup.pages.add(page, feature.getGeometry());
                 });
                 popup.show(coord, "<label>" + pageNum + " Features Found</label>");
@@ -1561,12 +1634,12 @@ define("labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "common
     }
     exports.run = run;
 });
-define("labs/index", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/labs/index", ["require", "exports"], function (require, exports) {
     "use strict";
     function run() {
         var l = window.location;
-        var path = "" + l.origin + l.pathname + "?run=labs/";
-        var labs = "    \n  index\n  ags-viewer\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&debug=1&center=-122.49,37.738\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&debug=1&center=-117.9,34.35\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&debug=1&center=-117.2,32.7\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Hydrography/Watershed173811&layers=0,1&debug=1&center=-96.53,38.37\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Petroleum/KSFields&layers=0&debug=1&center=-98.93,38.55\n    ";
+        var path = "" + l.origin + l.pathname + "?run=ol3-symbolizer/labs/";
+        var labs = "    \n  index\n  ags-viewer\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&center=-122.49,37.738\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&center=-117.9,34.35\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&center=-117.2,32.7\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Hydrography/Watershed173811&layers=0,1&center=-96.53,38.37\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Petroleum/KSFields&layers=0&center=-98.93,38.55\n\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION=%27GREEN%27\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION%20IN(%27RED%27,%27GREEN%27)\n\n    ";
         var styles = document.createElement("style");
         document.head.appendChild(styles);
         styles.innerText += "\n    #map {\n        display: none;\n    }\n    .test {\n        margin: 20px;\n    }\n    ";
@@ -1576,7 +1649,7 @@ define("labs/index", ["require", "exports"], function (require, exports) {
             .split(/ /)
             .map(function (v) { return v.trim(); })
             .filter(function (v) { return !!v; })
-            .map(function (lab) { return ("<div class='test'><a href='" + path + lab + "&debug=1'>" + lab + "</a></div>"); })
+            .map(function (lab) { return "<div class='test'><a href='" + path + lab + "'>" + lab + "</a></div>"; })
             .join("\n");
         var testDiv = document.createElement("div");
         document.body.appendChild(testDiv);
@@ -1585,7 +1658,7 @@ define("labs/index", ["require", "exports"], function (require, exports) {
     exports.run = run;
     ;
 });
-define("styles/ags/cartographiclinesymbol", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/cartographiclinesymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     var symbol = function () { return ({
         "type": "esriSLS",
@@ -1613,7 +1686,7 @@ define("styles/ags/cartographiclinesymbol", ["require", "exports"], function (re
     });
     return symbols;
 });
-define("styles/ags/picturefillsymbol", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/picturefillsymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "color": [
@@ -1632,7 +1705,7 @@ define("styles/ags/picturefillsymbol", ["require", "exports"], function (require
             "yscale": 1
         }];
 });
-define("styles/ags/picturemarkersymbol-imagedata", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/picturemarkersymbol-imagedata", ["require", "exports"], function (require, exports) {
     "use strict";
     var style = [{
             "type": "esriPMS",
@@ -1648,7 +1721,7 @@ define("styles/ags/picturemarkersymbol-imagedata", ["require", "exports"], funct
         }];
     return style;
 });
-define("styles/ags/picturemarkersymbol", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/picturemarkersymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1662,7 +1735,7 @@ define("styles/ags/picturemarkersymbol", ["require", "exports"], function (requi
         }
     ];
 });
-define("styles/ags/simplefillsymbol", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplefillsymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     var symbol = function () { return ({
         "color": [
@@ -1688,12 +1761,12 @@ define("styles/ags/simplefillsymbol", ["require", "exports"], function (require,
     var styles = "BackwardDiagonal,Cross,DiagonalCross,ForwardDiagonal,Horizontal,Solid,Vertical".split(",");
     var symbols = styles.map(function (style) {
         var result = symbol();
-        result.style = ("esriSFS" + style);
+        result.style = "esriSFS" + style;
         return result;
     });
     return symbols;
 });
-define("styles/ags/simplemarkersymbol-circle", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-circle", ["require", "exports"], function (require, exports) {
     "use strict";
     var styles = [{
             "color": [
@@ -1722,7 +1795,7 @@ define("styles/ags/simplemarkersymbol-circle", ["require", "exports"], function 
         }];
     return styles;
 });
-define("styles/ags/simplemarkersymbol-cross", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-cross", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1752,7 +1825,7 @@ define("styles/ags/simplemarkersymbol-cross", ["require", "exports"], function (
         }
     ];
 });
-define("styles/ags/simplemarkersymbol-diamond", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-diamond", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1782,7 +1855,7 @@ define("styles/ags/simplemarkersymbol-diamond", ["require", "exports"], function
         }
     ];
 });
-define("styles/ags/simplemarkersymbol-path", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-path", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1813,7 +1886,7 @@ define("styles/ags/simplemarkersymbol-path", ["require", "exports"], function (r
         }
     ];
 });
-define("styles/ags/simplemarkersymbol-square", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-square", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1843,7 +1916,7 @@ define("styles/ags/simplemarkersymbol-square", ["require", "exports"], function 
         }
     ];
 });
-define("styles/ags/simplemarkersymbol-x", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/simplemarkersymbol-x", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "color": [
@@ -1871,7 +1944,7 @@ define("styles/ags/simplemarkersymbol-x", ["require", "exports"], function (requ
             }
         }];
 });
-define("styles/ags/textsymbol", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/ags/textsymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1899,7 +1972,7 @@ define("styles/ags/textsymbol", ["require", "exports"], function (require, expor
         }
     ];
 });
-define("styles/basic", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/basic", ["require", "exports"], function (require, exports) {
     "use strict";
     var stroke = {
         color: 'black',
@@ -1965,7 +2038,7 @@ define("styles/basic", ["require", "exports"], function (require, exports) {
         x: [{ star: x }]
     };
 });
-define("styles/circle/alert", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/circle/alert", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -1996,7 +2069,7 @@ define("styles/circle/alert", ["require", "exports"], function (require, exports
         }
     ];
 });
-define("styles/circle/gradient", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/circle/gradient", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2015,7 +2088,7 @@ define("styles/circle/gradient", ["require", "exports"], function (require, expo
         }
     ];
 });
-define("styles/fill/cross", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/fill/cross", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "fill": {
@@ -2028,7 +2101,7 @@ define("styles/fill/cross", ["require", "exports"], function (require, exports) 
             }
         }];
 });
-define("styles/fill/diagonal", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/fill/diagonal", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2043,7 +2116,7 @@ define("styles/fill/diagonal", ["require", "exports"], function (require, export
         }
     ];
 });
-define("styles/fill/gradient", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/fill/gradient", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2064,7 +2137,7 @@ define("styles/fill/gradient", ["require", "exports"], function (require, export
         }
     ];
 });
-define("styles/fill/horizontal", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/fill/horizontal", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "fill": {
@@ -2077,7 +2150,7 @@ define("styles/fill/horizontal", ["require", "exports"], function (require, expo
             }
         }];
 });
-define("styles/fill/vertical", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/fill/vertical", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "fill": {
@@ -2090,7 +2163,7 @@ define("styles/fill/vertical", ["require", "exports"], function (require, export
             }
         }];
 });
-define("styles/icon/png", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/icon/png", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2120,7 +2193,7 @@ define("styles/icon/png", ["require", "exports"], function (require, exports) {
         }
     ];
 });
-define("styles/icon/svg", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/icon/svg", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2138,7 +2211,7 @@ define("styles/icon/svg", ["require", "exports"], function (require, exports) {
         }
     ];
 });
-define("styles/peace", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/peace", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2171,7 +2244,7 @@ define("styles/peace", ["require", "exports"], function (require, exports) {
         }
     ];
 });
-define("styles/star/4star", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/star/4star", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2191,7 +2264,7 @@ define("styles/star/4star", ["require", "exports"], function (require, exports) 
         }
     ];
 });
-define("styles/star/6star", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/star/6star", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2210,7 +2283,7 @@ define("styles/star/6star", ["require", "exports"], function (require, exports) 
         }
     ];
 });
-define("styles/star/cold", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/star/cold", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2230,7 +2303,7 @@ define("styles/star/cold", ["require", "exports"], function (require, exports) {
         }
     ];
 });
-define("styles/star/flower", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/star/flower", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2263,7 +2336,7 @@ define("styles/star/flower", ["require", "exports"], function (require, exports)
         }
     ];
 });
-define("styles/stroke/linedash", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/stroke/linedash", ["require", "exports"], function (require, exports) {
     "use strict";
     var dasharray = {
         solid: "none",
@@ -2280,7 +2353,7 @@ define("styles/stroke/linedash", ["require", "exports"], function (require, expo
     };
     return dasharray;
 });
-define("styles/stroke/dash", ["require", "exports", "styles/stroke/linedash"], function (require, exports, Dashes) {
+define("ol3-symbolizer/styles/stroke/dash", ["require", "exports", "ol3-symbolizer/styles/stroke/linedash"], function (require, exports, Dashes) {
     "use strict";
     return [
         {
@@ -2292,7 +2365,7 @@ define("styles/stroke/dash", ["require", "exports", "styles/stroke/linedash"], f
         }
     ];
 });
-define("styles/stroke/dashdotdot", ["require", "exports", "styles/stroke/linedash"], function (require, exports, Dashes) {
+define("ol3-symbolizer/styles/stroke/dashdotdot", ["require", "exports", "ol3-symbolizer/styles/stroke/linedash"], function (require, exports, Dashes) {
     "use strict";
     return [
         {
@@ -2304,7 +2377,7 @@ define("styles/stroke/dashdotdot", ["require", "exports", "styles/stroke/linedas
         }
     ];
 });
-define("styles/stroke/dot", ["require", "exports", "styles/stroke/linedash"], function (require, exports, Dashes) {
+define("ol3-symbolizer/styles/stroke/dot", ["require", "exports", "ol3-symbolizer/styles/stroke/linedash"], function (require, exports, Dashes) {
     "use strict";
     return [
         {
@@ -2316,7 +2389,7 @@ define("styles/stroke/dot", ["require", "exports", "styles/stroke/linedash"], fu
         }
     ];
 });
-define("styles/stroke/solid", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/stroke/solid", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2327,7 +2400,7 @@ define("styles/stroke/solid", ["require", "exports"], function (require, exports
         }
     ];
 });
-define("styles/text/text", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/styles/text/text", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2347,11 +2420,11 @@ define("styles/text/text", ["require", "exports"], function (require, exports) {
         }
     ];
 });
-define("tests/index", ["require", "exports"], function (require, exports) {
+define("ol3-symbolizer/tests/index", ["require", "exports"], function (require, exports) {
     "use strict";
     function run() {
         var l = window.location;
-        var path = "" + l.origin + l.pathname + "?run=tests/";
+        var path = "" + l.origin + l.pathname + "?run=ol3-symbolizer/tests/";
         var labs = "\n    index\n    ";
         document.writeln("\n    <p>\n    Watch the console output for failed assertions (blank is good).\n    </p>\n    ");
         document.writeln(labs
@@ -2359,7 +2432,7 @@ define("tests/index", ["require", "exports"], function (require, exports) {
             .map(function (v) { return v.trim(); })
             .filter(function (v) { return !!v; })
             .sort()
-            .map(function (lab) { return ("<a href=" + path + lab + "&debug=1>" + lab + "</a>"); })
+            .map(function (lab) { return "<a href=" + path + lab + "&debug=1>" + lab + "</a>"; })
             .join("<br/>"));
     }
     exports.run = run;

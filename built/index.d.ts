@@ -1,5 +1,145 @@
-/// <reference path="../typings/index.d.ts" />
-declare module "ajax" {
+declare module "ol3-symbolizer/format/base" {
+    export interface IConverter<T> {
+        fromJson: (json: T) => ol.style.Style;
+        toJson(style: ol.style.Style): T;
+    }
+}
+declare module "ol3-symbolizer/format/ol3-symbolizer" {
+    import ol = require("openlayers");
+    import Serializer = require("ol3-symbolizer/format/base");
+    export namespace Format {
+        type Color = number[] | string;
+        type Size = number[];
+        type Offset = number[];
+        type LineDash = number[];
+        interface Fill {
+            color?: string;
+        }
+        interface Stroke {
+            color?: string;
+            width?: number;
+            lineCap?: string;
+            lineJoin?: string;
+            lineDash?: LineDash;
+            miterLimit?: number;
+        }
+        interface Style {
+            fill?: Fill;
+            image?: Image;
+            stroke?: Stroke;
+            text?: Text;
+            zIndex?: number;
+        }
+        interface Image {
+            opacity?: number;
+            rotateWithView?: boolean;
+            rotation?: number;
+            scale?: number;
+            snapToPixel?: boolean;
+        }
+        interface Circle {
+            radius: number;
+            stroke?: Stroke;
+            fill?: Fill;
+            snapToPixel?: boolean;
+        }
+        interface Star extends Image {
+            angle?: number;
+            fill?: Fill;
+            points?: number;
+            stroke?: Stroke;
+            radius?: number;
+            radius2?: number;
+        }
+        interface Icon extends Image {
+            anchor?: Offset;
+            anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
+            anchorXUnits?: "fraction" | "pixels";
+            anchorYUnits?: "fraction" | "pixels";
+            color?: Color;
+            crossOrigin?: string;
+            src?: string;
+            offset?: Offset;
+            offsetOrigin?: 'top_left' | 'top_right' | 'bottom-left' | 'bottom-right';
+            size?: Size;
+        }
+        interface Text {
+            fill?: Fill;
+            font?: string;
+            offsetX?: number;
+            offsetY?: number;
+            rotation?: number;
+            scale?: number;
+            stroke?: Stroke;
+            text?: string;
+            textAlign?: string;
+            textBaseline?: string;
+        }
+    }
+    export namespace Format {
+        interface Style {
+            image?: Icon & Svg;
+            icon?: Icon;
+            svg?: Svg;
+            star?: Star;
+            circle?: Circle;
+            text?: Text;
+            fill?: Fill;
+            stroke?: Stroke;
+        }
+        interface Icon {
+            "anchor-x"?: number;
+            "anchor-y"?: number;
+        }
+        interface Text {
+            "offset-x"?: number;
+            "offset-y"?: number;
+        }
+        interface Circle {
+            opacity?: number;
+        }
+        interface Svg {
+            anchor?: Offset;
+            anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
+            anchorXUnits?: string;
+            anchorYUnits?: string;
+            color?: Color;
+            crossOrigin?: string;
+            img?: string;
+            imgSize?: Size;
+            offset?: Offset;
+            offsetOrigin?: 'top_left' | 'top_right' | 'bottom-left' | 'bottom-right';
+            path?: string;
+            stroke?: Stroke;
+            fill?: Fill;
+        }
+    }
+    export class StyleConverter implements Serializer.IConverter<Format.Style> {
+        fromJson(json: Format.Style): ol.style.Style;
+        toJson(style: ol.style.Style): Format.Style;
+        setGeometry(feature: ol.Feature): ol.geom.Geometry;
+        private assign(obj, prop, value);
+        private serializeStyle(style);
+        private serializeColor(color);
+        private serializeFill(fill);
+        private deserializeStyle(json);
+        private deserializeText(json);
+        private deserializeCircle(json);
+        private deserializeStar(json);
+        private deserializeIcon(json);
+        private deserializeSvg(json);
+        private deserializeFill(json);
+        private deserializeStroke(json);
+        private deserializeColor(fill);
+        private deserializeLinearGradient(json);
+        private deserializeRadialGradient(json);
+    }
+}
+declare module "ol3-symbolizer" {
+    import Symbolizer = require("ol3-symbolizer/format/ol3-symbolizer");
+    export = Symbolizer;
+}
+declare module "ol3-symbolizer/common/ajax" {
     class Ajax {
         url: string;
         options: {
@@ -16,7 +156,7 @@ declare module "ajax" {
     }
     export = Ajax;
 }
-declare module "ags-catalog" {
+declare module "ol3-symbolizer/ags/ags-catalog" {
     export interface Service {
         name: string;
         type: string;
@@ -307,138 +447,7 @@ declare module "ags-catalog" {
         aboutLayer(layer: number): JQueryDeferred<FeatureLayerInfo>;
     }
 }
-declare module "format/base" {
-    export interface IConverter<T> {
-        fromJson: (json: T) => ol.style.Style;
-        toJson(style: ol.style.Style): T;
-    }
-}
-declare module "format/ol3-symbolizer" {
-    import Serializer = require("format/base");
-    export namespace Format {
-        type Color = number[] | string;
-        type Size = number[];
-        type Offset = number[];
-        type LineDash = number[];
-        interface Fill {
-            color?: string;
-        }
-        interface Stroke {
-            color?: string;
-            width?: number;
-            lineCap?: string;
-            lineJoin?: string;
-            lineDash?: LineDash;
-            miterLimit?: number;
-        }
-        interface Style {
-            fill?: Fill;
-            stroke?: Stroke;
-            text?: Text;
-            zIndex?: number;
-        }
-        interface Image {
-            opacity?: number;
-            rotateWithView?: boolean;
-            rotation?: number;
-            scale?: number;
-            snapToPixel?: boolean;
-        }
-        interface Circle {
-            radius: number;
-            stroke?: Stroke;
-            fill?: Fill;
-            snapToPixel?: boolean;
-        }
-        interface Star extends Image {
-            angle?: number;
-            fill?: Fill;
-            points?: number;
-            stroke?: Stroke;
-            radius?: number;
-            radius2?: number;
-        }
-        interface Icon extends Image {
-            anchor?: Offset;
-            anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
-            anchorXUnits?: "fraction" | "pixels";
-            anchorYUnits?: "fraction" | "pixels";
-            color?: Color;
-            crossOrigin?: string;
-            src?: string;
-            offset?: Offset;
-            offsetOrigin?: 'top_left' | 'top_right' | 'bottom-left' | 'bottom-right';
-            size?: Size;
-        }
-        interface Text {
-            fill?: Fill;
-            font?: string;
-            offsetX?: number;
-            offsetY?: number;
-            rotation?: number;
-            scale?: number;
-            stroke?: Stroke;
-            text?: string;
-            textAlign?: string;
-            textBaseline?: string;
-        }
-    }
-    export namespace Format {
-        interface Style {
-            image?: Icon & Svg;
-            icon?: Icon;
-            svg?: Svg;
-            star?: Star;
-            circle?: Circle;
-        }
-        interface Icon {
-            "anchor-x"?: number;
-            "anchor-y"?: number;
-        }
-        interface Text {
-            "offset-x"?: number;
-            "offset-y"?: number;
-        }
-        interface Circle {
-            opacity?: number;
-        }
-        interface Svg extends Image {
-            anchor?: Offset;
-            anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
-            anchorXUnits?: string;
-            anchorYUnits?: string;
-            color?: Color;
-            crossOrigin?: string;
-            img?: string;
-            imgSize?: Size;
-            offset?: Offset;
-            offsetOrigin?: 'top_left' | 'top_right' | 'bottom-left' | 'bottom-right';
-            path?: string;
-            stroke?: Stroke;
-            fill?: Fill;
-        }
-    }
-    export class StyleConverter implements Serializer.IConverter<Format.Style> {
-        fromJson(json: Format.Style): ol.style.Style;
-        toJson(style: ol.style.Style): Format.Style;
-        private assign(obj, prop, value);
-        private serializeStyle(style);
-        private serializeColor(color);
-        private serializeFill(fill);
-        private deserializeStyle(json);
-        private deserializeText(json);
-        private deserializeCircle(json);
-        private deserializeStar(json);
-        private deserializeIcon(json);
-        private deserializeSvg(json);
-        private deserializeFill(json);
-        private deserializeStroke(json);
-        private deserializeColor(fill);
-        private deserializeLinearGradient(json);
-        private deserializeRadialGradient(json);
-    }
-}
-declare module "format/ags-symbolizer" {
+declare module "ol3-symbolizer/format/ags-symbolizer" {
     export namespace ArcGisFeatureServerLayer {
         type SpatialReference = {
             wkid: string;
@@ -446,9 +455,7 @@ declare module "format/ags-symbolizer" {
         type Extent = {
             xmin: number;
         };
-        type Styles = "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSLSSolid" | "esriSMSSquare" | "esriSMSX"
-            | "esriSFSSolid" | "esriSFSForwardDiagonal"
-            | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
+        type Styles = "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX" | "esriSFSSolid" | "esriSFSForwardDiagonal" | "esriSLSSolid" | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
         type SymbolTypes = "esriSMS" | "esriSLS" | "esriSFS" | "esriPMS" | "esriPFS" | "esriTS";
         type Color = number[];
         interface AdvancedQueryCapabilities {
@@ -641,22 +648,704 @@ declare module "format/ags-symbolizer" {
         }): ol.style.Style | ((feature: ol.Feature) => ol.style.Style);
     }
 }
-declare module "arcgis-source" {
+declare module "ol3-symbolizer/common/common" {
+    export function getParameterByName(name: string, url?: string): string;
+    export function doif<T>(v: T, cb: (v: T) => void): void;
+    export function mixin<A extends any, B extends any>(a: A, b: B): A & B;
+    export function defaults<T extends any>(a: T, b: T): T;
+    export function cssin(name: string, css: string): () => void;
+}
+declare module "ol3-symbolizer/ags/ags-source" {
     import ol = require("openlayers");
     export interface IOptions extends olx.source.VectorOptions {
         services: string;
         serviceName: string;
         map: ol.Map;
         layers: number[];
-        tileSize: number;
+        tileSize?: number;
+        where?: string;
     }
     export class ArcGisVectorSourceFactory {
         static create(options: IOptions): JQueryDeferred<ol.layer.Vector[]>;
     }
 }
-declare module "labs/index" {
+declare module "bower_components/ol3-popup/ol3-popup/paging/paging" {
+    import ol = require("openlayers");
+    import { Popup } from "bower_components/ol3-popup/ol3-popup/ol3-popup";
+    export type SourceType = HTMLElement | string | JQueryDeferred<HTMLElement | string>;
+    export type SourceCallback = () => SourceType;
+    export class Paging {
+        options: {
+            popup: Popup;
+        };
+        private _pages;
+        private _activeIndex;
+        domNode: HTMLDivElement;
+        constructor(options: {
+            popup: Popup;
+        });
+        readonly activePage: {
+            callback?: SourceCallback;
+            element: HTMLElement;
+            location: ol.geom.Geometry;
+        };
+        readonly activeIndex: number;
+        readonly count: number;
+        dispatch(name: string): void;
+        on(name: string, listener: EventListener): void;
+        add(source: SourceType | SourceCallback, geom?: ol.geom.Geometry): void;
+        clear(): void;
+        goto(index: number): void;
+        next(): void;
+        prev(): void;
+    }
+}
+declare module "bower_components/ol3-popup/ol3-popup/paging/page-navigator" {
+    import { Paging } from "bower_components/ol3-popup/ol3-popup/paging/paging";
+    class PageNavigator {
+        options: {
+            pages: Paging;
+        };
+        private domNode;
+        prevButton: HTMLButtonElement;
+        nextButton: HTMLButtonElement;
+        pageInfo: HTMLSpanElement;
+        constructor(options: {
+            pages: Paging;
+        });
+        dispatch(name: string): void;
+        on(name: string, listener: EventListener): void;
+        template(): string;
+        hide(): void;
+        show(): void;
+    }
+    export = PageNavigator;
+}
+declare module "bower_components/ol3-popup/ol3-popup/ol3-popup" {
+    import ol = require("openlayers");
+    import { Paging } from "bower_components/ol3-popup/ol3-popup/paging/paging";
+    export interface IPopupOptions_2_0_4 extends olx.OverlayOptions {
+        autoPan?: boolean;
+        autoPanAnimation?: {
+            duration: number;
+            source: any;
+        };
+        autoPanMargin?: number;
+        insertFirst?: boolean;
+        stopEvent?: boolean;
+        offset?: [number, number];
+        positioning?: string;
+        position?: [number, number];
+    }
+    export interface IPopupOptions_2_0_5 extends IPopupOptions_2_0_4 {
+        dockContainer?: JQuery | string | HTMLElement;
+    }
+    export interface IPopupOptions_2_0_6 extends IPopupOptions_2_0_5 {
+        css?: string;
+        pointerPosition?: number;
+    }
+    export interface IPopupOptions_2_0_7 extends IPopupOptions_2_0_6 {
+        xOffset?: number;
+        yOffset?: number;
+    }
+    export interface IPopupOptions_3_20_1 extends IPopupOptions_2_0_7 {
+    }
+    export interface IPopupOptions extends IPopupOptions_3_20_1 {
+    }
+    export interface IPopup_2_0_4<T> {
+        show(position: ol.Coordinate, markup: string): T;
+        hide(): T;
+    }
+    export interface IPopup_2_0_5<T> extends IPopup_2_0_4<T> {
+        isOpened(): boolean;
+        destroy(): void;
+        panIntoView(): void;
+        isDocked(): boolean;
+    }
+    export interface IPopup_3_20_1<T> extends IPopup_2_0_5<T> {
+        applyOffset([x, y]: [number, number]): any;
+        setIndicatorPosition(offset: number): any;
+    }
+    export interface IPopup extends IPopup_3_20_1<Popup> {
+    }
+    export class Popup extends ol.Overlay implements IPopup {
+        options: IPopupOptions & {
+            map?: ol.Map;
+            parentNode?: HTMLElement;
+        };
+        content: HTMLDivElement;
+        domNode: HTMLDivElement;
+        private closer;
+        private docker;
+        pages: Paging;
+        private handlers;
+        constructor(options?: IPopupOptions);
+        private postCreate();
+        private injectCss(css);
+        setIndicatorPosition(offset: number): void;
+        setPosition(position: ol.Coordinate): void;
+        panIntoView(): void;
+        destroy(): void;
+        dispatch(name: string): void;
+        show(coord: ol.Coordinate, html: string | HTMLElement): this;
+        hide(): this;
+        isOpened(): boolean;
+        isDocked(): boolean;
+        dock(): void;
+        undock(): void;
+        applyOffset([x, y]: [number, number]): void;
+    }
+}
+declare module "bower_components/ol3-popup/ol3-popup" {
+    import Popup = require("bower_components/ol3-popup/ol3-popup/ol3-popup");
+    export = Popup;
+}
+declare module "ol3-symbolizer/labs/ags-viewer" {
+    import ol = require("openlayers");
+    export function run(): ol.Map;
+}
+declare module "ol3-symbolizer/labs/index" {
     export function run(): void;
 }
-declare module "tests/index" {
+declare module "ol3-symbolizer/styles/ags/cartographiclinesymbol" {
+    let symbols: {
+        "type": string;
+        "style": string;
+        "color": number[];
+        "width": number;
+        "cap": string;
+        "join": string;
+        "miterLimit": number;
+    }[];
+    export = symbols;
+}
+declare module "ol3-symbolizer/styles/ags/picturefillsymbol" {
+    var _default: {
+        "color": number[];
+        "type": string;
+        "url": string;
+        "width": number;
+        "height": number;
+        "xoffset": number;
+        "yoffset": number;
+        "xscale": number;
+        "yscale": number;
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/picturemarkersymbol-imagedata" {
+    const style: {
+        "type": string;
+        "url": string;
+        "imageData": string;
+        "contentType": string;
+        "color": string;
+        "width": number;
+        "height": number;
+        "angle": number;
+        "xoffset": number;
+        "yoffset": number;
+    }[];
+    export = style;
+}
+declare module "ol3-symbolizer/styles/ags/picturemarkersymbol" {
+    var _default: {
+        "angle": number;
+        "xoffset": number;
+        "yoffset": number;
+        "type": string;
+        "url": string;
+        "width": number;
+        "height": number;
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/simplefillsymbol" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    let symbols: ArcGisFeatureServerLayer.Symbol[];
+    export = symbols;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-circle" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    const styles: ArcGisFeatureServerLayer.Symbol[];
+    export = styles;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-cross" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    var _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-diamond" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    var _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-path" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    var _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-square" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    var _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-x" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    var _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/textsymbol" {
+    var _default: {
+        "color": number[];
+        "type": string;
+        "horizontalAlignment": string;
+        "angle": number;
+        "xoffset": number;
+        "yoffset": number;
+        "text": string;
+        "rotated": boolean;
+        "kerning": boolean;
+        "font": {
+            "size": number;
+            "style": string;
+            "variant": string;
+            "weight": string;
+            "family": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/basic" {
+    var _default: {
+        cross: {
+            star: {
+                opacity: number;
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                radius2: number;
+                angle: number;
+            };
+        }[];
+        square: {
+            star: {
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                angle: number;
+            };
+        }[];
+        diamond: {
+            star: {
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                angle: number;
+            };
+        }[];
+        star: {
+            star: {
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                radius2: number;
+                angle: number;
+            };
+        }[];
+        triangle: {
+            star: {
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                angle: number;
+            };
+        }[];
+        x: {
+            star: {
+                fill: {
+                    color: string;
+                };
+                stroke: {
+                    color: string;
+                    width: number;
+                };
+                points: number;
+                radius: number;
+                radius2: number;
+                angle: number;
+            };
+        }[];
+    };
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/circle/alert" {
+    var _default: {
+        "circle": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+        };
+        "text": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "text": string;
+            "offset-x": number;
+            "offset-y": number;
+            "font": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/circle/gradient" {
+    var _default: {
+        "circle": {
+            "fill": {
+                "color": string;
+                "gradient": string[];
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/fill/cross" {
+    var _default: {
+        "fill": {
+            "pattern": {
+                "orientation": string;
+                "color": string;
+                "spacing": number;
+                "repitition": string;
+            };
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/fill/diagonal" {
+    var _default: {
+        "fill": {
+            "pattern": {
+                "orientation": string;
+                "color": string;
+                "spacing": number;
+                "repitition": string;
+            };
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/fill/gradient" {
+    var _default: {
+        "fill": {
+            "gradient": {
+                "type": string;
+                "stops": string;
+            };
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/fill/horizontal" {
+    var _default: {
+        "fill": {
+            "pattern": {
+                "orientation": string;
+                "color": string;
+                "spacing": number;
+                "repitition": string;
+            };
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/fill/vertical" {
+    var _default: {
+        "fill": {
+            "pattern": {
+                "orientation": string;
+                "color": string;
+                "spacing": number;
+                "repitition": string;
+            };
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/icon/png" {
+    var _default: ({
+        "circle": {
+            "fill": {
+                "gradient": {
+                    "type": string;
+                    "stops": string;
+                };
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+        };
+    } | {
+        "image": {
+            "anchor": number[];
+            "imgSize": number[];
+            "anchorXUnits": string;
+            "anchorYUnits": string;
+            "src": string;
+        };
+    })[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/icon/svg" {
+    var _default: {
+        "image": {
+            "imgSize": number[];
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "path": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/peace" {
+    var _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+        "text": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "text": string;
+            "offset-x": number;
+            "offset-y": number;
+            "font": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/star/4star" {
+    var _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/star/6star" {
+    var _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/star/cold" {
+    var _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/star/flower" {
+    var _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+        "text": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "text": string;
+            "offset-x": number;
+            "offset-y": number;
+            "font": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/stroke/linedash" {
+    var dasharray: {
+        solid: string;
+        shortdash: number[];
+        shortdot: number[];
+        shortdashdot: number[];
+        shortdashdotdot: number[];
+        dot: number[];
+        dash: number[];
+        longdash: number[];
+        dashdot: number[];
+        longdashdot: number[];
+        longdashdotdot: number[];
+    };
+    export = dasharray;
+}
+declare module "ol3-symbolizer/styles/stroke/dash" {
+    var _default: {
+        "stroke": {
+            "color": string;
+            "width": number;
+            "lineDash": number[];
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/stroke/dashdotdot" {
+    var _default: {
+        "stroke": {
+            "color": string;
+            "width": number;
+            "lineDash": number[];
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/stroke/dot" {
+    var _default: {
+        "stroke": {
+            "color": string;
+            "width": number;
+            "lineDash": number[];
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/stroke/solid" {
+    var _default: {
+        "stroke": {
+            "color": string;
+            "width": number;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/text/text" {
+    var _default: {
+        "text": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "offset-x": number;
+            "offset-y": number;
+            "text": string;
+            "font": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/tests/index" {
     export function run(): void;
 }

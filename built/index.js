@@ -1653,7 +1653,7 @@ define("ol3-symbolizer/labs/index", ["require", "exports"], function (require, e
             .join("\n");
         var testDiv = document.createElement("div");
         document.body.appendChild(testDiv);
-        testDiv.innerHTML = "<a href='" + l.origin + l.pathname + "?run=tests/index'>tests</a>";
+        testDiv.innerHTML = "<a href='" + l.origin + l.pathname + "?run=ol3-symbolizer/tests/index'>tests</a>";
     }
     exports.run = run;
     ;

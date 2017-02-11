@@ -2424,7 +2424,7 @@ define("ol3-symbolizer/tests/index", ["require", "exports"], function (require, 
     "use strict";
     function run() {
         var l = window.location;
-        var path = "" + l.origin + l.pathname + "?run=tests/";
+        var path = "" + l.origin + l.pathname + "?run=ol3-symbolizer/tests/";
         var labs = "\n    index\n    ";
         document.writeln("\n    <p>\n    Watch the console output for failed assertions (blank is good).\n    </p>\n    ");
         document.writeln(labs

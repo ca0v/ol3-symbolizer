@@ -7,7 +7,7 @@ Serialize and Deserialize ol3 styles, including adaptors for arcgis.
 
 ## Build
 
-* tsd install
+* typings install
 * bower install
 * tsc -w
 

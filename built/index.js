@@ -442,7 +442,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
     }());
     exports.StyleConverter = StyleConverter;
 });
-define("ol3-symbolizer", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
+define("index", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
     "use strict";
     return Symbolizer;
 });
@@ -579,7 +579,7 @@ define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/
     }());
     exports.Catalog = Catalog;
 });
-define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "jquery", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, $, Symbolizer) {
+define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
     "use strict";
     var symbolizer = new Symbolizer.StyleConverter();
     var styleMap = {
@@ -1524,11 +1524,105 @@ define("bower_components/ol3-popup/ol3-popup/ol3-popup", ["require", "exports", 
     }(ol.Overlay));
     exports.Popup = Popup;
 });
-define("bower_components/ol3-popup/ol3-popup", ["require", "exports", "bower_components/ol3-popup/ol3-popup/ol3-popup"], function (require, exports, Popup) {
+define("bower_components/ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
     "use strict";
-    return Popup;
+    function parse(v, type) {
+        if (typeof type === "string")
+            return v;
+        if (typeof type === "number")
+            return parseFloat(v);
+        if (typeof type === "boolean")
+            return (v === "1" || v === "true");
+        if (Array.isArray(type)) {
+            return (v.split(",").map(function (v) { return parse(v, type[0]); }));
+        }
+        throw "unknown type: " + type;
+    }
+    exports.parse = parse;
+    function getQueryParameters(options, url) {
+        if (url === void 0) { url = window.location.href; }
+        var opts = options;
+        Object.keys(opts).forEach(function (k) {
+            doif(getParameterByName(k, url), function (v) {
+                var value = parse(v, opts[k]);
+                if (value !== undefined)
+                    opts[k] = value;
+            });
+        });
+    }
+    exports.getQueryParameters = getQueryParameters;
+    function getParameterByName(name, url) {
+        if (url === void 0) { url = window.location.href; }
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"), results = regex.exec(url);
+        if (!results)
+            return null;
+        if (!results[2])
+            return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+    exports.getParameterByName = getParameterByName;
+    function doif(v, cb) {
+        if (v !== undefined && v !== null)
+            cb(v);
+    }
+    exports.doif = doif;
+    function mixin(a, b) {
+        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
+        return a;
+    }
+    exports.mixin = mixin;
+    function defaults(a) {
+        var b = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            b[_i - 1] = arguments[_i];
+        }
+        b.forEach(function (b) {
+            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
+        });
+        return a;
+    }
+    exports.defaults = defaults;
+    function cssin(name, css) {
+        var id = "style-" + name;
+        var styleTag = document.getElementById(id);
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = id;
+            styleTag.innerText = css;
+            document.head.appendChild(styleTag);
+        }
+        var dataset = styleTag.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                styleTag.remove();
+            }
+        };
+    }
+    exports.cssin = cssin;
+    function debounce(func, wait) {
+        if (wait === void 0) { wait = 50; }
+        var h;
+        return function () {
+            clearTimeout(h);
+            h = setTimeout(function () { return func(); }, wait);
+        };
+    }
+    exports.debounce = debounce;
+    function html(html) {
+        var d = document;
+        var a = d.createElement("div");
+        var b = d.createDocumentFragment();
+        a.innerHTML = html;
+        while (a.firstChild)
+            b.appendChild(a.firstChild);
+        return b.firstElementChild;
+    }
+    exports.html = html;
 });
-define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/common/common", "bower_components/ol3-popup/ol3-popup", "ol3-symbolizer/ags/ags-source"], function (require, exports, $, ol, common_2, ol3_popup_1, ags_source_1) {
+define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "openlayers", "ol3-symbolizer/common/common", "bower_components/ol3-popup/ol3-popup/ol3-popup", "ol3-symbolizer/ags/ags-source", "bower_components/ol3-fun/ol3-fun/common"], function (require, exports, ol, common_2, ol3_popup_1, ags_source_1, common_3) {
     "use strict";
     function parse(v, type) {
         if (typeof type === "string")
@@ -1551,8 +1645,9 @@ define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "jquery", "openl
         vegas: [-115.235, 36.173]
     };
     function run() {
-        $(html).appendTo(".map");
-        $(css).appendTo("head");
+        var target = document.getElementsByClassName("map")[0];
+        target.appendChild(common_3.html(html));
+        document.head.appendChild(common_3.html(css));
         var options = {
             srs: 'EPSG:4326',
             center: center.vegas,

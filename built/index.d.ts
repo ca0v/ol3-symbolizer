@@ -135,7 +135,7 @@ declare module "ol3-symbolizer/format/ol3-symbolizer" {
         private deserializeRadialGradient(json);
     }
 }
-declare module "ol3-symbolizer" {
+declare module "index" {
     import Symbolizer = require("ol3-symbolizer/format/ol3-symbolizer");
     export = Symbolizer;
 }
@@ -796,9 +796,16 @@ declare module "bower_components/ol3-popup/ol3-popup/ol3-popup" {
         applyOffset([x, y]: [number, number]): void;
     }
 }
-declare module "bower_components/ol3-popup/ol3-popup" {
-    import Popup = require("bower_components/ol3-popup/ol3-popup/ol3-popup");
-    export = Popup;
+declare module "bower_components/ol3-fun/ol3-fun/common" {
+    export function parse<T>(v: string, type: T): T;
+    export function getQueryParameters(options: any, url?: string): void;
+    export function getParameterByName(name: string, url?: string): string;
+    export function doif<T>(v: T, cb: (v: T) => void): void;
+    export function mixin<A extends any, B extends any>(a: A, b: B): A & B;
+    export function defaults<A extends any, B extends any>(a: A, ...b: B[]): A & B;
+    export function cssin(name: string, css: string): () => void;
+    export function debounce(func: () => void, wait?: number): () => void;
+    export function html(html: string): HTMLElement;
 }
 declare module "ol3-symbolizer/labs/ags-viewer" {
     import ol = require("openlayers");

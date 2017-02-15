@@ -2,7 +2,6 @@
  * Converts style information from arcgis.com into a format compatible with the symbolizer
  * The symbolizer converts the object to an actual ol3 style
  */
-import $ = require("jquery");
 import Symbolizer = require("./ol3-symbolizer");
 
 const symbolizer = new Symbolizer.StyleConverter();

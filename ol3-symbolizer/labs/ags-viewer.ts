@@ -1,7 +1,7 @@
 import $ = require("jquery");
 import ol = require("openlayers");
 import { doif, getParameterByName } from "../common/common";
-import { Popup } from "bower/ol3-popup/ol3-popup";
+import { Popup } from "ol3-popup";
 import { ArcGisVectorSourceFactory } from "../ags/ags-source";
 
 function parse<T>(v: string, type: T): T {

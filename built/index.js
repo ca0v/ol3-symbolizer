@@ -442,7 +442,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
     }());
     exports.StyleConverter = StyleConverter;
 });
-define("ol3-symbolizer", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
+define("index", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
     "use strict";
     return Symbolizer;
 });
@@ -1524,11 +1524,11 @@ define("bower_components/ol3-popup/ol3-popup/ol3-popup", ["require", "exports", 
     }(ol.Overlay));
     exports.Popup = Popup;
 });
-define("bower_components/ol3-popup/ol3-popup", ["require", "exports", "bower_components/ol3-popup/ol3-popup/ol3-popup"], function (require, exports, Popup) {
+define("bower_components/ol3-popup/index", ["require", "exports", "bower_components/ol3-popup/ol3-popup/ol3-popup"], function (require, exports, Popup) {
     "use strict";
     return Popup;
 });
-define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/common/common", "bower_components/ol3-popup/ol3-popup", "ol3-symbolizer/ags/ags-source"], function (require, exports, $, ol, common_2, ol3_popup_1, ags_source_1) {
+define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/common/common", "bower_components/ol3-popup/index", "ol3-symbolizer/ags/ags-source"], function (require, exports, $, ol, common_2, ol3_popup_1, ags_source_1) {
     "use strict";
     function parse(v, type) {
         if (typeof type === "string")

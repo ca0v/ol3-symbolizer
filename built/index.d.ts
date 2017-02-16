@@ -135,7 +135,7 @@ declare module "ol3-symbolizer/format/ol3-symbolizer" {
         private deserializeRadialGradient(json);
     }
 }
-declare module "ol3-symbolizer" {
+declare module "index" {
     import Symbolizer = require("ol3-symbolizer/format/ol3-symbolizer");
     export = Symbolizer;
 }
@@ -796,7 +796,7 @@ declare module "bower_components/ol3-popup/ol3-popup/ol3-popup" {
         applyOffset([x, y]: [number, number]): void;
     }
 }
-declare module "bower_components/ol3-popup/ol3-popup" {
+declare module "bower_components/ol3-popup/index" {
     import Popup = require("bower_components/ol3-popup/ol3-popup/ol3-popup");
     export = Popup;
 }

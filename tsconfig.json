@@ -8,15 +8,11 @@
         "sourceMap": true,
         "outFile": "./built/index.js",
         "moduleResolution": "node",
-        "baseUrl": "./",
-        "paths": {
-            "bower/*": [
-                "./bower_components/*"
-            ]
-        }
+        "baseUrl": "./bower_components"
     },
-    "exclude": [
-        "bower_components",
-        "built"
+    "include": [
+        "index.ts",
+        "ol3-symbolizer",
+        "typings/index.d.ts"
     ]
 }

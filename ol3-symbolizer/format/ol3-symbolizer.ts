@@ -49,6 +49,10 @@ export namespace Format {
 
     export interface Fill {
         color?: string;
+        gradient?: {
+            type?: string;
+            stops?: string;
+        }
     }
 
     export interface Stroke {

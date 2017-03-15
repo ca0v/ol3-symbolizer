@@ -1,8 +1,7 @@
 import ol = require("openlayers");
-import { doif, getParameterByName } from "../common/common";
-import { Popup } from "ol3-popup/ol3-popup/ol3-popup";
+import { doif, getParameterByName, html as asHtml } from "ol3-fun";
+import { Popup } from "ol3-popup";
 import { ArcGisVectorSourceFactory } from "../ags/ags-source";
-import {html as asHtml} from "ol3-fun/ol3-fun/common";
 
 function parse<T>(v: string, type: T): T {
     if (typeof type === "string") return <any>v;

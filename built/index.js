@@ -518,7 +518,7 @@ define("ol3-symbolizer/common/ajax", ["require", "exports", "jquery"], function 
         Ajax.prototype.put = function (args) {
             return this.ajax('PUT', args);
         };
-        Ajax.prototype["delete"] = function (args) {
+        Ajax.prototype.delete = function (args) {
             return this.ajax('DELETE', args);
         };
         return Ajax;
@@ -593,7 +593,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
         "esriSLSDash": "dash",
         "esriSLSDashDot": "dashdot",
         "esriSLSDashDotDot": "dashdotdot",
-        "esriSFSForwardDiagonal": "forward-diagonal"
+        "esriSFSForwardDiagonal": "forward-diagonal",
     };
     var typeMap = {
         "esriSMS": "sms",
@@ -601,7 +601,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
         "esriSFS": "sfs",
         "esriPMS": "pms",
         "esriPFS": "pfs",
-        "esriTS": "txt"
+        "esriTS": "txt",
     };
     function range(a, b) {
         var result = new Array(b - a + 1);
@@ -648,7 +648,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                 opacity: 1,
                 radius: this.asWidth(symbol.size / 2),
                 stroke: {
-                    color: this.asColor(symbol.outline.color)
+                    color: this.asColor(symbol.outline.color),
                 },
                 snapToPixel: true
             };
@@ -1204,7 +1204,7 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
                         where: encodeURIComponent(options.where),
                         inSR: srs,
                         outSR: srs,
-                        outFields: "*"
+                        outFields: "*",
                     };
                     var query = options.services + "/" + options.serviceName + "/FeatureServer/" + layerId + "/query?" + asParam(params);
                     $.ajax({

@@ -97,7 +97,7 @@ export class ArcGisVectorSourceFactory {
                     dataType: 'jsonp',
                     success: response => {
                         if (response.error) {
-                            alert(response.error.message + '\n' +
+                            console.warn(response.error.message + '\n' +
                                 response.error.details.join('\n'));
                         } else {
                             // dataProjection will be read from document

@@ -115,7 +115,8 @@ export class ArcGisVectorSourceFactory {
 
             let source = new ol.source.Vector({
                 strategy: strategy,
-                loader: loader
+                loader: loader,
+                wrapX: false
             });
 
             let catalog = new AgsCatalog.Catalog(`${options.services}/${options.serviceName}/FeatureServer`);

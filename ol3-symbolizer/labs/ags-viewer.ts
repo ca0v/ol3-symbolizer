@@ -73,6 +73,7 @@ export function run() {
         zoom: 10,
         services: "//sampleserver3.arcgisonline.com/ArcGIS/rest/services",
         serviceName: "SanFrancisco/311Incidents",
+        serviceType: "FeatureServer",
         where: "1=1",
         filter: <{ [name: string]: any }>{},
         layers: [0]
@@ -114,6 +115,7 @@ export function run() {
         map: map,
         services: options.services,
         serviceName: options.serviceName,
+        serviceType: options.serviceType,
         where: options.where,
         layers: options.layers.reverse()
     }).then(agsLayers => {

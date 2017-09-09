@@ -5,15 +5,6 @@
  * See https://github.com/ca0v/ol3-lab/issues/4
  */
 
-/**
- * There are several similarly incomplete solutions
- * See ux/serializer/ags-simplefillsymbol and ags-simplemarkersymbol as two examples
- * It is also in the ol3-layerswitcher project under extras/ags-webmap
- * This is in the "alpha" folder because I want it to become a stand-alone solutions
- * for rendering ArcGIS FeatureServer content in openlayers
- * 
- * It couples with a style readi
- */
 import $ = require("jquery");
 import ol = require("openlayers");
 import AgsCatalog = require("./ags-catalog");
@@ -32,15 +23,17 @@ function asParam(options: any) {
 export interface IOptions extends olx.source.VectorOptions {
     services: string;
     serviceName: string;
+    serviceType: "FeatureServer" | "MapServer";
     map: ol.Map;
     layers: number[];
     tileSize?: number;
     where?: string;
+    uidFieldName?: string;
 };
 
 const DEFAULT_OPTIONS = <IOptions>{
     tileSize: 512,
-    where: "1=1"
+    where: "1=1",
 };
 
 export class ArcGisVectorSourceFactory {
@@ -70,6 +63,9 @@ export class ArcGisVectorSourceFactory {
 
             let loader = (extent: ol.Extent, resolution: number, projection: ol.proj.Projection) => {
 
+                // current loading strategy isn't being clever enough?  Getting duplicates.
+                // see ol.source.Vector.prototype.loadFeatures (it keeps history of extents)
+
                 let box = {
                     xmin: extent[0],
                     ymin: extent[1],
@@ -90,12 +86,19 @@ export class ArcGisVectorSourceFactory {
                     outFields: "*",
                 }
 
-                let query = `${options.services}/${options.serviceName}/FeatureServer/${layerId}/query?${asParam(params)}`;
+                let query = `${options.services}/${options.serviceName}/${options.serviceType}/${layerId}/query?${asParam(params)}`;
 
                 $.ajax({
                     url: query,
                     dataType: 'jsonp',
-                    success: response => {
+                    success: (response: {
+                        error: any;
+                        fields: Array<{
+                            alias: string;
+                            name: string;
+                            type: string;
+                        }>;
+                    }) => {
                         if (response.error) {
                             console.warn(response.error.message + '\n' +
                                 response.error.details.join('\n'));
@@ -105,6 +108,17 @@ export class ArcGisVectorSourceFactory {
                                 featureProjection: projection,
                                 dataProjection: projection
                             });
+                            // if we've defined a primary key we can ignore duplicates
+                            if (!options.uidFieldName && response.fields) {
+                                let oidField = response.fields.filter(f => f.type === "esriFieldTypeOID")[0];
+                                if (oidField) {
+                                    options.uidFieldName = oidField.name;
+                                }
+                            }
+                            if (options.uidFieldName) {
+                                features = features.filter(f => !source.getFeatures().some(f => f.get(options.uidFieldName)));
+                            }
+                            // anything left to add?
                             if (features.length > 0) {
                                 source.addFeatures(features);
                             }
@@ -119,7 +133,7 @@ export class ArcGisVectorSourceFactory {
                 wrapX: false
             });
 
-            let catalog = new AgsCatalog.Catalog(`${options.services}/${options.serviceName}/FeatureServer`);
+            let catalog = new AgsCatalog.Catalog(`${options.services}/${options.serviceName}/${options.serviceType}`);
             let converter = new Symbolizer.StyleConverter();
 
             catalog.aboutLayer(layerId).then(layerInfo => {

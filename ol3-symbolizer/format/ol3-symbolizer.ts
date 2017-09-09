@@ -26,9 +26,9 @@ interface Path2D {
 
 // Constructor
 interface Path2DConstructor {
-    new (): Path2D;
-    new (d: string): Path2D;
-    new (path: Path2D, fillRule?: string): Path2D;
+    new(): Path2D;
+    new(d: string): Path2D;
+    new(path: Path2D, fillRule?: string): Path2D;
     prototype: Path2D;
 }
 declare var Path2D: Path2DConstructor;
@@ -52,7 +52,17 @@ export namespace Format {
         gradient?: {
             type?: string;
             stops?: string;
-        }
+        };
+        pattern?: {
+            color?: any;
+            orientation?: string;
+            spacing?: number;
+            repitition?: string;
+        };
+        image?: {
+            imageData?: string;
+            imgSize?: Size;
+        };
     }
 
     export interface Stroke {
@@ -67,7 +77,7 @@ export namespace Format {
     export interface Style {
         //geometry?: string | ol.geom.Geometry | ol.style.GeometryFunction;
         fill?: Fill;
-        image?: Image;
+        image?: Image & Icon & Svg;
         stroke?: Stroke;
         text?: Text;
         zIndex?: number;
@@ -129,7 +139,7 @@ export namespace Format {
 export namespace Format {
 
     export interface Style {
-        image?: Icon & Svg; // if 'image' specified must auto-detect icon or svg 
+        image?: Image & Icon & Svg; // if 'image' specified must auto-detect icon or svg 
         icon?: Icon;
         svg?: Svg;
         star?: Star;
@@ -168,6 +178,7 @@ export namespace Format {
         path?: string;
         stroke?: Stroke;
         fill?: Fill;
+        rotation?: number;
     }
 
 }
@@ -500,10 +511,11 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
         return stroke;
     }
 
-    private deserializeColor(fill: any) {
+    private deserializeColor(fill: Format.Fill) {
         if (fill.color) {
             return fill.color;
         }
+
         if (fill.gradient) {
             let type = <string>fill.gradient.type;
             let gradient: CanvasGradient;
@@ -579,6 +591,17 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
             }
 
             return mixin(context.createPattern(canvas, repitition), fill.pattern);
+        }
+
+        if (fill.image) {
+            let canvas = <HTMLCanvasElement>document.createElement('canvas');
+            let [w, h] = [canvas.width, canvas.height] = fill.image.imgSize;
+            let context = canvas.getContext('2d');
+            let [dx, dy] = [0, 0];
+            let image = document.createElement("img");
+            image.src = fill.image.imageData;
+            image.onload = () => context.drawImage(image, 0, 0, w, h);
+            return "rgba(255,255,255,0.1)"; // TODO
         }
 
         throw "invalid color configuration";

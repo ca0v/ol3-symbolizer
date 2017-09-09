@@ -18,7 +18,7 @@ export namespace ArcGisFeatureServerLayer {
 
     export type Styles =
         "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX"
-        | "esriSFSSolid" | "esriSFSForwardDiagonal"
+        | "esriSFSSolid" | "esriSFSBackwardDiagonal" | "esriSFSForwardDiagonal"
         | "esriSLSSolid" | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
 
     export type SymbolTypes = "esriSMS" | "esriSLS" | "esriSFS" | "esriPMS" | "esriPFS" | "esriTS";
@@ -222,6 +222,7 @@ const styleMap = {
     "esriSLSDash": "dash",
     "esriSLSDashDot": "dashdot",
     "esriSLSDashDotDot": "dashdotdot",
+    "esriSFSBackwardDiagonal": "backward-diagonal",
     "esriSFSForwardDiagonal": "forward-diagonal",
 };
 
@@ -266,13 +267,40 @@ export class StyleConverter {
         this.fromSLS(symbol.outline, style);
     }
 
+    private fromSFSForwardDiagonal(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+        style.fill = {
+            pattern: {
+                color: this.asColor(symbol.color),
+                orientation: "forward",
+                spacing: 3,
+                repitition: "repeat",
+            }
+        };
+        this.fromSLS(symbol.outline, style);
+    }
+
+    private fromSFSBackwardDiagonal(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+        style.fill = {
+            pattern: {
+                color: this.asColor(symbol.color),
+                orientation: "backward",
+                spacing: 3,
+                repitition: "repeat",
+            }
+        };
+        this.fromSLS(symbol.outline, style);
+    }
+
     private fromSFS(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
         switch (symbol.style) {
             case "esriSFSSolid":
                 this.fromSFSSolid(symbol, style);
                 break;
             case "esriSFSForwardDiagonal":
-                this.fromSFSSolid(symbol, style);
+                this.fromSFSForwardDiagonal(symbol, style);
+                break;
+            case "esriSFSBackwardDiagonal":
+                this.fromSFSBackwardDiagonal(symbol, style);
                 break;
             default:
                 throw `invalid-style: ${symbol.style}`;
@@ -422,8 +450,20 @@ export class StyleConverter {
         }
     }
 
+    // picture fill symbol (does not render the picture due to drawPolygon limitation)
     private fromPFS(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
-        throw "not-implemented";
+        // TODO drawPolygon does not call setImageStyle so this is being ignored
+        style.fill = {
+            image: {
+                src: symbol.url,
+                imageData: symbol.imageData && `data:image/png;base64,${symbol.imageData}`,
+                "anchor-x": this.asWidth(symbol.xoffset),
+                "anchor-y": this.asWidth(symbol.yoffset),
+                imgSize: [this.asWidth(symbol.width), this.asWidth(symbol.height)]
+            }
+        };
+
+        this.fromSLS(symbol.outline, style);
     }
 
     private fromTS(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
@@ -514,7 +554,7 @@ export class StyleConverter {
 
                                     classBreakRenderer.classBreakInfos.forEach(classBreakInfo => {
                                         let icons = steps.map(step => {
-                                            let json = $.extend({}, classBreakInfo.symbol);
+                                            let json = <ArcGisFeatureServerLayer.Symbol>JSON.parse(JSON.stringify(classBreakInfo.symbol));
                                             json.size = vars.minSize + dx * (dataValue - vars.minDataValue);
                                             let style = this.fromJson(json);
                                             styles[dataValue] = style;

@@ -1,5 +1,8 @@
 import Ajax = require("../common/ajax");
 
+export type StyleTypes = "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX" | "esriSFSSolid" | "esriSFSBackwardDiagonal" | "esriSFSForwardDiagonal" | "esriSLSSolid" | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
+export type SymbolTypes = "esriSMS" | "esriSLS" | "esriSFS" | "esriPMS" | "esriPFS" | "esriTS";
+
 export interface Service {
     name: string;
     type: string;
@@ -95,15 +98,23 @@ export interface EsriTSSymbol {
 }
 
 export interface DefaultSymbol {
-    type: string;
-    url: string;
-    imageData: string;
-    contentType: string;
+    type: SymbolTypes;
+    style: StyleTypes;
+    color?: any;
+    url?: string;
+    imageData?: string;
+    contentType?: string;
+    outline?: DefaultSymbol;
     width: number;
     height: number;
     angle: number;
     xoffset: number;
     yoffset: number;
+    horizontalAlignment?: string;
+    verticalAlignment?: string;
+    font?: Font;
+    size?: number;
+    path?: string;    
 }
 
 export interface UniqueValueInfo {

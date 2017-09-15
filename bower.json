@@ -28,7 +28,7 @@
     "ol3-popup": "git://github.com/ca0v/ol3-popup.git#v3.20.1"
   },
   "dependencies": {
-    "openlayers": "https://github.com/openlayers/openlayers/releases/download/v4.0.1/v4.0.1-dist.zip",
+    "openlayers": "https://github.com/openlayers/openlayers/releases/download/v4.3.2/v4.3.2-dist.zip",
     "requirejs": "^2.3.2",
     "jquery": "^3.1.1",
     "ol3-fun": "git://github.com/ca0v/ol3-fun.git#v4.0.1"

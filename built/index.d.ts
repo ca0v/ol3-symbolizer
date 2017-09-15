@@ -18,6 +18,16 @@ declare module "ol3-symbolizer/format/ol3-symbolizer" {
                 type?: string;
                 stops?: string;
             };
+            pattern?: {
+                color?: any;
+                orientation?: "backward" | "forward" | "diagonal" | "horizontal" | "vertical" | "cross";
+                spacing?: number;
+                repitition?: string;
+            };
+            image?: {
+                imageData?: string;
+                imgSize?: Size;
+            };
         }
         interface Stroke {
             color?: string;
@@ -29,7 +39,7 @@ declare module "ol3-symbolizer/format/ol3-symbolizer" {
         }
         interface Style {
             fill?: Fill;
-            image?: Image;
+            image?: Image & Icon & Svg;
             stroke?: Stroke;
             text?: Text;
             zIndex?: number;
@@ -82,7 +92,7 @@ declare module "ol3-symbolizer/format/ol3-symbolizer" {
     }
     export namespace Format {
         interface Style {
-            image?: Icon & Svg;
+            image?: Image & Icon & Svg;
             icon?: Icon;
             svg?: Svg;
             star?: Star;
@@ -116,6 +126,7 @@ declare module "ol3-symbolizer/format/ol3-symbolizer" {
             path?: string;
             stroke?: Stroke;
             fill?: Fill;
+            rotation?: number;
         }
     }
     export class StyleConverter implements Serializer.IConverter<Format.Style> {
@@ -161,6 +172,8 @@ declare module "ol3-symbolizer/common/ajax" {
     export = Ajax;
 }
 declare module "ol3-symbolizer/ags/ags-catalog" {
+    export type StyleTypes = "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX" | "esriSFSSolid" | "esriSFSBackwardDiagonal" | "esriSFSForwardDiagonal" | "esriSLSSolid" | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
+    export type SymbolTypes = "esriSMS" | "esriSLS" | "esriSFS" | "esriPMS" | "esriPFS" | "esriTS";
     export interface Service {
         name: string;
         type: string;
@@ -247,15 +260,23 @@ declare module "ol3-symbolizer/ags/ags-catalog" {
         font: Font;
     }
     export interface DefaultSymbol {
-        type: string;
-        url: string;
-        imageData: string;
-        contentType: string;
+        type: SymbolTypes;
+        style: StyleTypes;
+        color?: any;
+        url?: string;
+        imageData?: string;
+        contentType?: string;
+        outline?: DefaultSymbol;
         width: number;
         height: number;
         angle: number;
         xoffset: number;
         yoffset: number;
+        horizontalAlignment?: string;
+        verticalAlignment?: string;
+        font?: Font;
+        size?: number;
+        path?: string;
     }
     export interface UniqueValueInfo {
         symbol: DefaultSymbol;
@@ -452,6 +473,7 @@ declare module "ol3-symbolizer/ags/ags-catalog" {
     }
 }
 declare module "ol3-symbolizer/format/ags-symbolizer" {
+    import { StyleTypes, SymbolTypes } from "ol3-symbolizer/ags/ags-catalog";
     export namespace ArcGisFeatureServerLayer {
         type SpatialReference = {
             wkid: string;
@@ -459,8 +481,6 @@ declare module "ol3-symbolizer/format/ags-symbolizer" {
         type Extent = {
             xmin: number;
         };
-        type Styles = "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX" | "esriSFSSolid" | "esriSFSForwardDiagonal" | "esriSLSSolid" | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
-        type SymbolTypes = "esriSMS" | "esriSLS" | "esriSFS" | "esriPMS" | "esriPFS" | "esriTS";
         type Color = number[];
         interface AdvancedQueryCapabilities {
             supportsPagination: boolean;
@@ -469,7 +489,7 @@ declare module "ol3-symbolizer/format/ags-symbolizer" {
             supportsDistinct: boolean;
         }
         interface Outline {
-            style?: Styles;
+            style?: StyleTypes;
             color?: number[];
             width?: number;
             type?: SymbolTypes;
@@ -483,7 +503,7 @@ declare module "ol3-symbolizer/format/ags-symbolizer" {
         }
         interface Symbol {
             type: SymbolTypes;
-            style?: Styles;
+            style?: StyleTypes;
             color?: number[];
             outline?: Outline;
             width?: number;
@@ -586,7 +606,7 @@ declare module "ol3-symbolizer/format/ags-symbolizer" {
             domains: Domains;
             templates: Template[];
         }
-        interface RootObject {
+        interface FeatureLayerInfo {
             currentVersion: string | number;
             id: number;
             name: string;
@@ -632,6 +652,8 @@ declare module "ol3-symbolizer/format/ags-symbolizer" {
         private asWidth(v);
         private asColor(color);
         private fromSFSSolid(symbol, style);
+        private fromSFSForwardDiagonal(symbol, style);
+        private fromSFSBackwardDiagonal(symbol, style);
         private fromSFS(symbol, style);
         private fromSMSCircle(symbol, style);
         private fromSMSCross(symbol, style);
@@ -696,10 +718,12 @@ declare module "ol3-symbolizer/ags/ags-source" {
     export interface IOptions extends olx.source.VectorOptions {
         services: string;
         serviceName: string;
+        serviceType: "FeatureServer" | "MapServer";
         map: ol.Map;
         layers: number[];
         tileSize?: number;
         where?: string;
+        uidFieldName?: string;
     }
     export class ArcGisVectorSourceFactory {
         static create(options: IOptions): JQueryDeferred<ol.layer.Vector[]>;
@@ -852,7 +876,7 @@ declare module "bower_components/ol3-fun/ol3-fun/snapshot" {
     export = Snapshot;
 }
 declare module "ol3-symbolizer/styles/icon/png" {
-    var _default: ({
+    const _default: ({
         "circle": {
             "fill": {
                 "gradient": {
@@ -881,117 +905,8 @@ declare module "ol3-symbolizer/styles/icon/png" {
 declare module "ol3-symbolizer/labs/style-viewer" {
     export function run(): void;
 }
-declare module "ol3-symbolizer/styles/ags/cartographiclinesymbol" {
-    let symbols: {
-        "type": string;
-        "style": string;
-        "color": number[];
-        "width": number;
-        "cap": string;
-        "join": string;
-        "miterLimit": number;
-    }[];
-    export = symbols;
-}
-declare module "ol3-symbolizer/styles/ags/picturefillsymbol" {
-    var _default: {
-        "color": number[];
-        "type": string;
-        "url": string;
-        "width": number;
-        "height": number;
-        "xoffset": number;
-        "yoffset": number;
-        "xscale": number;
-        "yscale": number;
-    }[];
-    export = _default;
-}
-declare module "ol3-symbolizer/styles/ags/picturemarkersymbol-imagedata" {
-    const style: {
-        "type": string;
-        "url": string;
-        "imageData": string;
-        "contentType": string;
-        "color": string;
-        "width": number;
-        "height": number;
-        "angle": number;
-        "xoffset": number;
-        "yoffset": number;
-    }[];
-    export = style;
-}
-declare module "ol3-symbolizer/styles/ags/picturemarkersymbol" {
-    var _default: {
-        "angle": number;
-        "xoffset": number;
-        "yoffset": number;
-        "type": string;
-        "url": string;
-        "width": number;
-        "height": number;
-    }[];
-    export = _default;
-}
-declare module "ol3-symbolizer/styles/ags/simplefillsymbol" {
-    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
-    let symbols: ArcGisFeatureServerLayer.Symbol[];
-    export = symbols;
-}
-declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-circle" {
-    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
-    const styles: ArcGisFeatureServerLayer.Symbol[];
-    export = styles;
-}
-declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-cross" {
-    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
-    var _default: ArcGisFeatureServerLayer.Symbol[];
-    export = _default;
-}
-declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-diamond" {
-    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
-    var _default: ArcGisFeatureServerLayer.Symbol[];
-    export = _default;
-}
-declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-path" {
-    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
-    var _default: ArcGisFeatureServerLayer.Symbol[];
-    export = _default;
-}
-declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-square" {
-    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
-    var _default: ArcGisFeatureServerLayer.Symbol[];
-    export = _default;
-}
-declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-x" {
-    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
-    var _default: ArcGisFeatureServerLayer.Symbol[];
-    export = _default;
-}
-declare module "ol3-symbolizer/styles/ags/textsymbol" {
-    var _default: {
-        "color": number[];
-        "type": string;
-        "horizontalAlignment": string;
-        "angle": number;
-        "xoffset": number;
-        "yoffset": number;
-        "text": string;
-        "rotated": boolean;
-        "kerning": boolean;
-        "font": {
-            "size": number;
-            "style": string;
-            "variant": string;
-            "weight": string;
-            "family": string;
-        };
-    }[];
-    export = _default;
-}
 declare module "ol3-symbolizer/styles/basic" {
-    var _default: {
+    const _default: {
         cross: {
             star: {
                 opacity: number;
@@ -1083,8 +998,148 @@ declare module "ol3-symbolizer/styles/basic" {
     };
     export = _default;
 }
+declare module "ol3-symbolizer/styles/peace" {
+    const _default: {
+        "star": {
+            "fill": {
+                "color": string;
+            };
+            "opacity": number;
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "radius": number;
+            "radius2": number;
+            "points": number;
+        };
+        "text": {
+            "fill": {
+                "color": string;
+            };
+            "stroke": {
+                "color": string;
+                "width": number;
+            };
+            "text": string;
+            "offset-x": number;
+            "offset-y": number;
+            "font": string;
+        };
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/cartographiclinesymbol" {
+    let symbols: {
+        "type": string;
+        "style": string;
+        "color": number[];
+        "width": number;
+        "cap": string;
+        "join": string;
+        "miterLimit": number;
+    }[];
+    export = symbols;
+}
+declare module "ol3-symbolizer/styles/ags/picturefillsymbol" {
+    const _default: {
+        "color": number[];
+        "type": string;
+        "url": string;
+        "width": number;
+        "height": number;
+        "xoffset": number;
+        "yoffset": number;
+        "xscale": number;
+        "yscale": number;
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/picturemarkersymbol-imagedata" {
+    const style: {
+        "type": string;
+        "url": string;
+        "imageData": string;
+        "contentType": string;
+        "color": string;
+        "width": number;
+        "height": number;
+        "angle": number;
+        "xoffset": number;
+        "yoffset": number;
+    }[];
+    export = style;
+}
+declare module "ol3-symbolizer/styles/ags/picturemarkersymbol" {
+    const _default: {
+        "angle": number;
+        "xoffset": number;
+        "yoffset": number;
+        "type": string;
+        "url": string;
+        "width": number;
+        "height": number;
+    }[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/simplefillsymbol" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    let symbols: ArcGisFeatureServerLayer.Symbol[];
+    export = symbols;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-circle" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    const styles: ArcGisFeatureServerLayer.Symbol[];
+    export = styles;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-cross" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    const _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-diamond" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    const _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-path" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    const _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-square" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    const _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/simplemarkersymbol-x" {
+    import { ArcGisFeatureServerLayer } from "ol3-symbolizer/format/ags-symbolizer";
+    const _default: ArcGisFeatureServerLayer.Symbol[];
+    export = _default;
+}
+declare module "ol3-symbolizer/styles/ags/textsymbol" {
+    const _default: {
+        "color": number[];
+        "type": string;
+        "horizontalAlignment": string;
+        "angle": number;
+        "xoffset": number;
+        "yoffset": number;
+        "text": string;
+        "rotated": boolean;
+        "kerning": boolean;
+        "font": {
+            "size": number;
+            "style": string;
+            "variant": string;
+            "weight": string;
+            "family": string;
+        };
+    }[];
+    export = _default;
+}
 declare module "ol3-symbolizer/styles/circle/alert" {
-    var _default: {
+    const _default: {
         "circle": {
             "fill": {
                 "color": string;
@@ -1113,7 +1168,7 @@ declare module "ol3-symbolizer/styles/circle/alert" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/circle/gradient" {
-    var _default: {
+    const _default: {
         "circle": {
             "fill": {
                 "color": string;
@@ -1130,7 +1185,7 @@ declare module "ol3-symbolizer/styles/circle/gradient" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/fill/cross" {
-    var _default: {
+    const _default: {
         "fill": {
             "pattern": {
                 "orientation": string;
@@ -1143,7 +1198,7 @@ declare module "ol3-symbolizer/styles/fill/cross" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/fill/diagonal" {
-    var _default: {
+    const _default: {
         "fill": {
             "pattern": {
                 "orientation": string;
@@ -1156,7 +1211,7 @@ declare module "ol3-symbolizer/styles/fill/diagonal" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/fill/gradient" {
-    var _default: {
+    const _default: {
         "fill": {
             "gradient": {
                 "type": string;
@@ -1167,7 +1222,7 @@ declare module "ol3-symbolizer/styles/fill/gradient" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/fill/horizontal" {
-    var _default: {
+    const _default: {
         "fill": {
             "pattern": {
                 "orientation": string;
@@ -1180,7 +1235,7 @@ declare module "ol3-symbolizer/styles/fill/horizontal" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/fill/vertical" {
-    var _default: {
+    const _default: {
         "fill": {
             "pattern": {
                 "orientation": string;
@@ -1193,7 +1248,7 @@ declare module "ol3-symbolizer/styles/fill/vertical" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/icon/svg" {
-    var _default: {
+    const _default: {
         "image": {
             "imgSize": number[];
             "stroke": {
@@ -1205,39 +1260,8 @@ declare module "ol3-symbolizer/styles/icon/svg" {
     }[];
     export = _default;
 }
-declare module "ol3-symbolizer/styles/peace" {
-    var _default: {
-        "star": {
-            "fill": {
-                "color": string;
-            };
-            "opacity": number;
-            "stroke": {
-                "color": string;
-                "width": number;
-            };
-            "radius": number;
-            "radius2": number;
-            "points": number;
-        };
-        "text": {
-            "fill": {
-                "color": string;
-            };
-            "stroke": {
-                "color": string;
-                "width": number;
-            };
-            "text": string;
-            "offset-x": number;
-            "offset-y": number;
-            "font": string;
-        };
-    }[];
-    export = _default;
-}
 declare module "ol3-symbolizer/styles/star/4star" {
-    var _default: {
+    const _default: {
         "star": {
             "fill": {
                 "color": string;
@@ -1255,7 +1279,7 @@ declare module "ol3-symbolizer/styles/star/4star" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/star/6star" {
-    var _default: {
+    const _default: {
         "star": {
             "fill": {
                 "color": string;
@@ -1272,7 +1296,7 @@ declare module "ol3-symbolizer/styles/star/6star" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/star/cold" {
-    var _default: {
+    const _default: {
         "star": {
             "fill": {
                 "color": string;
@@ -1290,7 +1314,7 @@ declare module "ol3-symbolizer/styles/star/cold" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/star/flower" {
-    var _default: {
+    const _default: {
         "star": {
             "fill": {
                 "color": string;
@@ -1337,7 +1361,7 @@ declare module "ol3-symbolizer/styles/stroke/linedash" {
     export = dasharray;
 }
 declare module "ol3-symbolizer/styles/stroke/dash" {
-    var _default: {
+    const _default: {
         "stroke": {
             "color": string;
             "width": number;
@@ -1347,7 +1371,7 @@ declare module "ol3-symbolizer/styles/stroke/dash" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/stroke/dashdotdot" {
-    var _default: {
+    const _default: {
         "stroke": {
             "color": string;
             "width": number;
@@ -1357,7 +1381,7 @@ declare module "ol3-symbolizer/styles/stroke/dashdotdot" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/stroke/dot" {
-    var _default: {
+    const _default: {
         "stroke": {
             "color": string;
             "width": number;
@@ -1367,7 +1391,7 @@ declare module "ol3-symbolizer/styles/stroke/dot" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/stroke/solid" {
-    var _default: {
+    const _default: {
         "stroke": {
             "color": string;
             "width": number;
@@ -1376,7 +1400,7 @@ declare module "ol3-symbolizer/styles/stroke/solid" {
     export = _default;
 }
 declare module "ol3-symbolizer/styles/text/text" {
-    var _default: {
+    const _default: {
         "text": {
             "fill": {
                 "color": string;
@@ -1393,36 +1417,39 @@ declare module "ol3-symbolizer/styles/text/text" {
     }[];
     export = _default;
 }
+declare module "ol3-symbolizer/tests/backward-diagonal" {
+    export function run(): void;
+}
+declare module "ol3-symbolizer/tests/index" {
+    export function run(): void;
+}
 declare module "ol3-symbolizer/tests/geom/multipoint" {
     import ol = require("openlayers");
-    var _default: ol.geom.MultiPoint;
+    const _default: ol.geom.MultiPoint;
     export = _default;
 }
 declare module "ol3-symbolizer/tests/geom/multipolygon" {
     import ol = require("openlayers");
-    var _default: ol.geom.MultiPolygon;
+    const _default: ol.geom.MultiPolygon;
     export = _default;
 }
 declare module "ol3-symbolizer/tests/geom/point" {
     import ol = require("openlayers");
-    var _default: ol.geom.Point;
+    const _default: ol.geom.Point;
     export = _default;
 }
 declare module "ol3-symbolizer/tests/geom/polygon-with-holes" {
     import ol = require("openlayers");
-    var _default: ol.geom.Polygon;
+    const _default: ol.geom.Polygon;
     export = _default;
 }
 declare module "ol3-symbolizer/tests/geom/polygon" {
     import ol = require("openlayers");
-    var _default: ol.geom.Polygon;
+    const _default: ol.geom.Polygon;
     export = _default;
 }
 declare module "ol3-symbolizer/tests/geom/polyline" {
     import ol = require("openlayers");
-    var _default: ol.geom.MultiLineString;
+    const _default: ol.geom.MultiLineString;
     export = _default;
-}
-declare module "ol3-symbolizer/tests/index" {
-    export function run(): void;
 }

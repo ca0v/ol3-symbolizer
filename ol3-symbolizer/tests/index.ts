@@ -3,6 +3,7 @@ export function run() {
     let path = `${l.origin}${l.pathname}?run=ol3-symbolizer/tests/`;
     let labs = `
     index
+    backward-diagonal
     `;
     
     document.writeln(`

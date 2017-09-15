@@ -55,7 +55,7 @@ export namespace Format {
         };
         pattern?: {
             color?: any;
-            orientation?: string;
+            orientation?: "backward" | "forward" | "diagonal" | "horizontal" | "vertical" | "cross";
             spacing?: number;
             repitition?: string;
         };

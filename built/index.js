@@ -1,13 +1,20 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 define("ol3-symbolizer/format/base", ["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
 });
 define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function doif(v, cb) {
         if (v !== undefined && v !== null)
             cb(v);
@@ -410,7 +417,18 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 }
                 return mixin(context.createPattern(canvas, repitition), fill.pattern);
             }
+            if (fill.image) {
+                var canvas = document.createElement('canvas');
+                var _a = (_b = fill.image.imgSize, canvas.width = _b[0], canvas.height = _b[1], _b), w_1 = _a[0], h_1 = _a[1];
+                var context_1 = canvas.getContext('2d');
+                var _c = [0, 0], dx = _c[0], dy = _c[1];
+                var image_1 = document.createElement("img");
+                image_1.src = fill.image.imageData;
+                image_1.onload = function () { return context_1.drawImage(image_1, 0, 0, w_1, h_1); };
+                return "rgba(255,255,255,0.1)";
+            }
             throw "invalid color configuration";
+            var _b;
         };
         StyleConverter.prototype.deserializeLinearGradient = function (json) {
             var rx = /\w+\((.*)\)/m;
@@ -527,6 +545,7 @@ define("ol3-symbolizer/common/ajax", ["require", "exports", "jquery"], function 
 });
 define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/common/ajax"], function (require, exports, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function defaults(a) {
         var b = [];
         for (var _i = 1; _i < arguments.length; _i++) {
@@ -581,6 +600,7 @@ define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/
 });
 define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var symbolizer = new Symbolizer.StyleConverter();
     var styleMap = {
         "esriSMSCircle": "circle",
@@ -593,6 +613,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
         "esriSLSDash": "dash",
         "esriSLSDashDot": "dashdot",
         "esriSLSDashDotDot": "dashdotdot",
+        "esriSFSBackwardDiagonal": "backward-diagonal",
         "esriSFSForwardDiagonal": "forward-diagonal",
     };
     var typeMap = {
@@ -631,13 +652,38 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
             };
             this.fromSLS(symbol.outline, style);
         };
+        StyleConverter.prototype.fromSFSForwardDiagonal = function (symbol, style) {
+            style.fill = {
+                pattern: {
+                    color: this.asColor(symbol.color),
+                    orientation: "forward",
+                    spacing: 3,
+                    repitition: "repeat",
+                }
+            };
+            this.fromSLS(symbol.outline, style);
+        };
+        StyleConverter.prototype.fromSFSBackwardDiagonal = function (symbol, style) {
+            style.fill = {
+                pattern: {
+                    color: this.asColor(symbol.color),
+                    orientation: "backward",
+                    spacing: 3,
+                    repitition: "repeat",
+                }
+            };
+            this.fromSLS(symbol.outline, style);
+        };
         StyleConverter.prototype.fromSFS = function (symbol, style) {
             switch (symbol.style) {
                 case "esriSFSSolid":
                     this.fromSFSSolid(symbol, style);
                     break;
                 case "esriSFSForwardDiagonal":
-                    this.fromSFSSolid(symbol, style);
+                    this.fromSFSForwardDiagonal(symbol, style);
+                    break;
+                case "esriSFSBackwardDiagonal":
+                    this.fromSFSBackwardDiagonal(symbol, style);
                     break;
                 default:
                     throw "invalid-style: " + symbol.style;
@@ -772,7 +818,16 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
             }
         };
         StyleConverter.prototype.fromPFS = function (symbol, style) {
-            throw "not-implemented";
+            style.fill = {
+                image: {
+                    src: symbol.url,
+                    imageData: symbol.imageData && "data:image/png;base64," + symbol.imageData,
+                    "anchor-x": this.asWidth(symbol.xoffset),
+                    "anchor-y": this.asWidth(symbol.yoffset),
+                    imgSize: [this.asWidth(symbol.width), this.asWidth(symbol.height)]
+                }
+            };
+            this.fromSLS(symbol.outline, style);
         };
         StyleConverter.prototype.fromTS = function (symbol, style) {
             throw "not-implemented";
@@ -838,7 +893,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                                         var dataValue_1 = (vars.maxDataValue - vars.minDataValue) / steps_1.length;
                                         classBreakRenderer_1.classBreakInfos.forEach(function (classBreakInfo) {
                                             var icons = steps_1.map(function (step) {
-                                                var json = $.extend({}, classBreakInfo.symbol);
+                                                var json = JSON.parse(JSON.stringify(classBreakInfo.symbol));
                                                 json.size = vars.minSize + dx_1 * (dataValue_1 - vars.minDataValue);
                                                 var style = _this.fromJson(json);
                                                 styles_2[dataValue_1] = style;
@@ -876,6 +931,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
 });
 define("bower_components/ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function uuid() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -1031,6 +1087,7 @@ define("bower_components/ol3-fun/ol3-fun/common", ["require", "exports"], functi
 });
 define("bower_components/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "bower_components/ol3-fun/ol3-fun/common"], function (require, exports, ol, common_1) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function zoomToFeature(map, feature, options) {
         options = common_1.defaults(options || {}, {
             duration: 1000,
@@ -1073,6 +1130,7 @@ define("bower_components/ol3-fun/ol3-fun/navigation", ["require", "exports", "op
 });
 define("bower_components/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function decDegFromMatch(m) {
         var signIndex = {
             "-": -1,
@@ -1158,6 +1216,7 @@ define("bower_components/ol3-fun/index", ["require", "exports", "bower_component
 });
 define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/ags/ags-catalog", "ol3-symbolizer/format/ags-symbolizer", "bower_components/ol3-fun/index"], function (require, exports, $, ol, AgsCatalog, Symbolizer, ol3_fun_1) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var esrijsonFormat = new ol.format.EsriJSON();
     function asParam(options) {
         return Object
@@ -1168,7 +1227,7 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
     ;
     var DEFAULT_OPTIONS = {
         tileSize: 512,
-        where: "1=1"
+        where: "1=1",
     };
     var ArcGisVectorSourceFactory = (function () {
         function ArcGisVectorSourceFactory() {
@@ -1206,13 +1265,13 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
                         outSR: srs,
                         outFields: "*",
                     };
-                    var query = options.services + "/" + options.serviceName + "/FeatureServer/" + layerId + "/query?" + asParam(params);
+                    var query = options.services + "/" + options.serviceName + "/" + options.serviceType + "/" + layerId + "/query?" + asParam(params);
                     $.ajax({
                         url: query,
                         dataType: 'jsonp',
                         success: function (response) {
                             if (response.error) {
-                                alert(response.error.message + '\n' +
+                                console.warn(response.error.message + '\n' +
                                     response.error.details.join('\n'));
                             }
                             else {
@@ -1220,6 +1279,15 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
                                     featureProjection: projection,
                                     dataProjection: projection
                                 });
+                                if (!options.uidFieldName && response.fields) {
+                                    var oidField = response.fields.filter(function (f) { return f.type === "esriFieldTypeOID"; })[0];
+                                    if (oidField) {
+                                        options.uidFieldName = oidField.name;
+                                    }
+                                }
+                                if (options.uidFieldName) {
+                                    features = features.filter(function (f) { return !source.getFeatures().some(function (f) { return f.get(options.uidFieldName); }); });
+                                }
                                 if (features.length > 0) {
                                     source.addFeatures(features);
                                 }
@@ -1229,9 +1297,10 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
                 };
                 var source = new ol.source.Vector({
                     strategy: strategy,
-                    loader: loader
+                    loader: loader,
+                    wrapX: false
                 });
-                var catalog = new AgsCatalog.Catalog(options.services + "/" + options.serviceName + "/FeatureServer");
+                var catalog = new AgsCatalog.Catalog(options.services + "/" + options.serviceName + "/" + options.serviceType);
                 var converter = new Symbolizer.StyleConverter();
                 catalog.aboutLayer(layerId).then(function (layerInfo) {
                     var layer = new ol.layer.Vector({
@@ -1266,6 +1335,7 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
 });
 define("bower_components/ol3-popup/ol3-popup/paging/paging", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function getInteriorPoint(geom) {
         if (geom["getInteriorPoint"])
             return geom["getInteriorPoint"]().getCoordinates();
@@ -1491,6 +1561,7 @@ define("bower_components/ol3-popup/ol3-popup/paging/page-navigator", ["require",
 });
 define("bower_components/ol3-popup/ol3-popup/ol3-popup", ["require", "exports", "jquery", "openlayers", "bower_components/ol3-popup/ol3-popup/paging/paging", "bower_components/ol3-popup/ol3-popup/paging/page-navigator"], function (require, exports, $, ol, paging_1, PageNavigator) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var css = "\n.ol-popup {\n    position: absolute;\n    bottom: 12px;\n    left: -50px;\n}\n\n.ol-popup:after {\n    top: auto;\n    bottom: -20px;\n    left: 50px;\n    border: solid transparent;\n    border-top-color: inherit;\n    content: \" \";\n    height: 0;\n    width: 0;\n    position: absolute;\n    pointer-events: none;\n    border-width: 10px;\n    margin-left: -10px;\n}\n\n.ol-popup.docked {\n    position:absolute;\n    bottom:0;\n    top:0;\n    left:0;\n    right:0;\n    width:auto;\n    height:auto;\n    pointer-events: all;\n}\n\n.ol-popup.docked:after {\n    display:none;\n}\n\n.ol-popup.docked .pages {\n    max-height: inherit;\n    overflow: auto;\n    height: calc(100% - 60px);\n}\n\n.ol-popup.docked .pagination {\n    position: absolute;\n    bottom: 0;\n}\n\n.ol-popup .pagination .btn-prev::after {\n    content: \"\u21E6\"; \n}\n\n.ol-popup .pagination .btn-next::after {\n    content: \"\u21E8\"; \n}\n\n.ol-popup .pagination.hidden {\n    display: none;\n}\n\n.ol-popup .ol-popup-closer {\n    border: none;\n    background: transparent;\n    color: inherit;\n    position: absolute;\n    top: 0;\n    right: 0;\n    text-decoration: none;\n}\n    \n.ol-popup .ol-popup-closer:after {\n    content:'\u2716';\n}\n\n.ol-popup .ol-popup-docker {\n    border: none;\n    background: transparent;\n    color: inherit;\n    text-decoration: none;\n    position: absolute;\n    top: 0;\n    right: 20px;\n}\n\n.ol-popup .ol-popup-docker:after {\n    content:'\u25A1';\n}\n";
     var classNames = {
         olPopup: 'ol-popup',
@@ -1764,6 +1835,7 @@ define("bower_components/ol3-popup/index", ["require", "exports", "bower_compone
 });
 define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "openlayers", "bower_components/ol3-fun/index", "bower_components/ol3-popup/index", "ol3-symbolizer/ags/ags-source"], function (require, exports, ol, ol3_fun_2, ol3_popup_1, ags_source_1) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function parse(v, type) {
         if (typeof type === "string")
             return v;
@@ -1794,6 +1866,7 @@ define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "openlayers", "b
             zoom: 10,
             services: "//sampleserver3.arcgisonline.com/ArcGIS/rest/services",
             serviceName: "SanFrancisco/311Incidents",
+            serviceType: "FeatureServer",
             where: "1=1",
             filter: {},
             layers: [0]
@@ -1834,6 +1907,7 @@ define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "openlayers", "b
             map: map,
             services: options.services,
             serviceName: options.serviceName,
+            serviceType: options.serviceType,
             where: options.where,
             layers: options.layers.reverse()
         }).then(function (agsLayers) {
@@ -1871,10 +1945,11 @@ define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "openlayers", "b
 });
 define("ol3-symbolizer/labs/index", ["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         var l = window.location;
         var path = "" + l.origin + l.pathname + "?run=ol3-symbolizer/labs/";
-        var labs = "    \n  index\n  ags-viewer\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&center=-122.49,37.738\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&center=-117.9,34.35\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&center=-117.2,32.7\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Hydrography/Watershed173811&layers=0,1&center=-96.53,38.37\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Petroleum/KSFields&layers=0&center=-98.93,38.55\n\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION=%27GREEN%27\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION%20IN(%27RED%27,%27GREEN%27)\n\n  style-viewer\n\n    style-viewer&geom=point&style=icon/png\n    style-viewer&geom=point&style=icon/png,text/text\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B45,45%5D,\"rotation\":0,\"stroke\":%7B\"color\":\"rgba(255,25,0,0.8)\",\"width\":3%7D,\"path\":\"M23%202%20L23%2023%20L43%2016.5%20L23%2023%20L35%2040%20L23%2023%20L11%2040%20L23%2023%20L3%2017%20L23%2023%20L23%202%20Z\"%7D%7D%5D\n\n    style-viewer&geom=point&style=%5B%7B\"circle\":%7B\"fill\":%7B\"gradient\":%7B\"type\":\"linear(32,32,96,96)\",\"stops\":\"rgba(0,255,0,0.1)%200%25;rgba(0,255,0,0.8)%20100%25\"%7D%7D,\"opacity\":1,\"stroke\":%7B\"color\":\"rgba(0,255,0,1)\",\"width\":1%7D,\"radius\":64%7D%7D,%7B\"image\":%7B\"anchor\":%5B16,48%5D,\"size\":%5B32,48%5D,\"anchorXUnits\":\"pixels\",\"anchorYUnits\":\"pixels\",\"src\":\"http://openlayers.org/en/v3.20.1/examples/data/icon.png\"%7D%7D,%7B\"text\":%7B\"fill\":%7B\"color\":\"rgba(75,92,85,0.85)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,255,255,1)\",\"width\":5%7D,\"offset-x\":0,\"offset-y\":16,\"text\":\"fantasy%20light\",\"font\":\"18px%20serif\"%7D%7D%5D    \n\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B13,21%5D,\"fill\":%7B\"color\":\"rgba(0,0,0,0.5)\"%7D,\"path\":\"M6.3,0C6.3,0,0,0.1,0,7.5c0,3.8,6.3,12.6,6.3,12.6s6.3-8.8,6.3-12.7C12.6,0.1,6.3,0,6.3,0z%20M6.3,8.8%20c-1.4,0-2.5-1.1-2.5-2.5c0-1.4,1.1-2.5,2.5-2.5c1.4,0,2.5,1.1,2.5,2.5C8.8,7.7,7.7,8.8,6.3,8.8z\"%7D%7D%5D\n\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B0,0.5%5D,\"fill\":%7B\"color\":\"rgba(255,0,0,0.1)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,0,0,1)\",\"width\":0.1%7D,\"scale\":8,\"rotation\":0.7,\"img\":\"lock\"%7D%7D,%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B100,0.5%5D,\"anchorXUnits\":\"pixels\",\"fill\":%7B\"color\":\"rgba(0,255,0,0.4)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,0,0,1)\",\"width\":0.1%7D,\"scale\":1.5,\"rotation\":0.7,\"img\":\"lock\"%7D%7D,%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B-10,0%5D,\"anchorXUnits\":\"pixels\",\"anchorOrigin\":\"top-right\",\"fill\":%7B\"color\":\"rgba(230,230,80,1)\"%7D,\"stroke\":%7B\"color\":\"rgba(0,0,0,1)\",\"width\":0.5%7D,\"scale\":2,\"rotation\":0.8,\"img\":\"lock\"%7D%7D%5D\n\n\n    style-viewer&geom=multipoint&style=icon/png\n\n    style-viewer&geom=polyline&style=stroke/dot\n\n    style-viewer&geom=polygon&style=fill/diagonal\n    style-viewer&geom=polygon&style=fill/horizontal,fill/vertical,stroke/dashdotdot\n    style-viewer&geom=polygon&style=stroke/solid,text/text\n    style-viewer&geom=polygon-with-holes&style=fill/cross,stroke/solid\n\n    style-viewer&geom=multipolygon&style=stroke/solid,fill/horizontal,text/text\n\n    style-viewer&geom=point&style=%5B%7B%22image%22:%7B%22imgSize%22:%5B15,15%5D,%22fill%22:%7B%22color%22:%22rgba(250,250,250,1)%22%7D,%22stroke%22:%7B%22color%22:%22rgba(0,0,0,1)%22,%22width%22:1%7D,%22path%22:%22M15,6.8182L15,8.5l-6.5-1l-0.3182,4.7727L11,14v1l-3.5-0.6818L4,15v-1l2.8182-1.7273L6.5,7.5L0,8.5V6.8182L6.5,4.5v-3c0,0,0-1.5,1-1.5s1,1.5,1,1.5v2.8182L15,6.8182z%22%7D%7D%5D\n    ";
+        var labs = "    \n  index\n  ags-viewer\n  ags-viewer&services=//maps.springfieldmo.gov/arcgis/rest/services&serviceType=MapServer&serviceName=Maps/Zoning&layers=6&center=-93.28,37.23\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&center=-122.49,37.738\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&center=-117.9,34.35\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&center=-117.2,32.7\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Hydrography/Watershed173811&layers=0,1&center=-96.53,38.37\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Petroleum/KSFields&layers=0&center=-98.93,38.55\n\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION=%27GREEN%27\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION%20IN(%27RED%27,%27GREEN%27)\n\n  style-viewer\n\n    style-viewer&geom=point&style=icon/png\n    style-viewer&geom=point&style=icon/png,text/text\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B45,45%5D,\"rotation\":0,\"stroke\":%7B\"color\":\"rgba(255,25,0,0.8)\",\"width\":3%7D,\"path\":\"M23%202%20L23%2023%20L43%2016.5%20L23%2023%20L35%2040%20L23%2023%20L11%2040%20L23%2023%20L3%2017%20L23%2023%20L23%202%20Z\"%7D%7D%5D\n\n    style-viewer&geom=point&style=%5B%7B\"circle\":%7B\"fill\":%7B\"gradient\":%7B\"type\":\"linear(32,32,96,96)\",\"stops\":\"rgba(0,255,0,0.1)%200%25;rgba(0,255,0,0.8)%20100%25\"%7D%7D,\"opacity\":1,\"stroke\":%7B\"color\":\"rgba(0,255,0,1)\",\"width\":1%7D,\"radius\":64%7D%7D,%7B\"image\":%7B\"anchor\":%5B16,48%5D,\"size\":%5B32,48%5D,\"anchorXUnits\":\"pixels\",\"anchorYUnits\":\"pixels\",\"src\":\"http://openlayers.org/en/v3.20.1/examples/data/icon.png\"%7D%7D,%7B\"text\":%7B\"fill\":%7B\"color\":\"rgba(75,92,85,0.85)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,255,255,1)\",\"width\":5%7D,\"offset-x\":0,\"offset-y\":16,\"text\":\"fantasy%20light\",\"font\":\"18px%20serif\"%7D%7D%5D    \n\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B13,21%5D,\"fill\":%7B\"color\":\"rgba(0,0,0,0.5)\"%7D,\"path\":\"M6.3,0C6.3,0,0,0.1,0,7.5c0,3.8,6.3,12.6,6.3,12.6s6.3-8.8,6.3-12.7C12.6,0.1,6.3,0,6.3,0z%20M6.3,8.8%20c-1.4,0-2.5-1.1-2.5-2.5c0-1.4,1.1-2.5,2.5-2.5c1.4,0,2.5,1.1,2.5,2.5C8.8,7.7,7.7,8.8,6.3,8.8z\"%7D%7D%5D\n\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B0,0.5%5D,\"fill\":%7B\"color\":\"rgba(255,0,0,0.1)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,0,0,1)\",\"width\":0.1%7D,\"scale\":8,\"rotation\":0.7,\"img\":\"lock\"%7D%7D,%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B100,0.5%5D,\"anchorXUnits\":\"pixels\",\"fill\":%7B\"color\":\"rgba(0,255,0,0.4)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,0,0,1)\",\"width\":0.1%7D,\"scale\":1.5,\"rotation\":0.7,\"img\":\"lock\"%7D%7D,%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B-10,0%5D,\"anchorXUnits\":\"pixels\",\"anchorOrigin\":\"top-right\",\"fill\":%7B\"color\":\"rgba(230,230,80,1)\"%7D,\"stroke\":%7B\"color\":\"rgba(0,0,0,1)\",\"width\":0.5%7D,\"scale\":2,\"rotation\":0.8,\"img\":\"lock\"%7D%7D%5D\n\n\n    style-viewer&geom=multipoint&style=icon/png\n\n    style-viewer&geom=polyline&style=stroke/dot\n\n    style-viewer&geom=polygon&style=fill/diagonal\n    style-viewer&geom=polygon&style=fill/horizontal,fill/vertical,stroke/dashdotdot\n    style-viewer&geom=polygon&style=stroke/solid,text/text\n    style-viewer&geom=polygon-with-holes&style=fill/cross,stroke/solid\n\n    style-viewer&geom=multipolygon&style=stroke/solid,fill/horizontal,text/text\n\n    style-viewer&geom=point&style=%5B%7B%22image%22:%7B%22imgSize%22:%5B15,15%5D,%22fill%22:%7B%22color%22:%22rgba(250,250,250,1)%22%7D,%22stroke%22:%7B%22color%22:%22rgba(0,0,0,1)%22,%22width%22:1%7D,%22path%22:%22M15,6.8182L15,8.5l-6.5-1l-0.3182,4.7727L11,14v1l-3.5-0.6818L4,15v-1l2.8182-1.7273L6.5,7.5L0,8.5V6.8182L6.5,4.5v-3c0,0,0-1.5,1-1.5s1,1.5,1,1.5v2.8182L15,6.8182z%22%7D%7D%5D\n    ";
         var styles = document.createElement("style");
         document.head.appendChild(styles);
         styles.innerText += "\n    #map {\n        display: none;\n    }\n    .test {\n        margin: 20px;\n    }\n    ";
@@ -1975,6 +2050,7 @@ define("ol3-symbolizer/styles/icon/png", ["require", "exports"], function (requi
 });
 define("ol3-symbolizer/labs/style-viewer", ["require", "exports", "openlayers", "jquery", "bower_components/ol3-fun/ol3-fun/snapshot", "bower_components/ol3-fun/index", "ol3-symbolizer/format/ol3-symbolizer", "ol3-symbolizer/styles/icon/png"], function (require, exports, ol, $, Snapshot, ol3_fun_3, ol3_symbolizer_1, pointStyle) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var html = "\n<div class='style-to-canvas'>\n    <h3>Renders a feature on a canvas</h3>\n    <div class=\"area\">\n        <label>256 x 256 Canvas</label>\n        <div id='canvas-collection'></div>\n    </div>\n    <div class=\"area\">\n        <label>Style</label>\n        <textarea class='style'></textarea>\n        <button class=\"save\">Save</button>\n    </div>\n    <div class=\"area\">\n        <label>Potential control for setting linear gradient start/stop locations</label>\n        <div class=\"colorramp\">\n            <input class=\"top\" type=\"range\" min=\"0\" max=\"100\" value=\"20\"/>\n            <input class=\"bottom\" type=\"range\" min=\"0\" max=\"100\" value=\"80\"/>\n        </div>\n    </div>\n</div>\n";
     var css = "\n<style>\n    #map {\n        display: none;\n    }\n\n    .style-to-canvas {\n    }\n\n    .style-to-canvas .area label {\n        display: block;\n        vertical-align: top;\n    }\n\n    .style-to-canvas .area {\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    .style-to-canvas .area .style {\n        width: 100%;\n        height: 400px;\n    }\n\n    .style-to-canvas #canvas-collection canvas {\n        font-family: sans serif;\n        font-size: 20px;\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    div.colorramp {\n        display: inline-block;\n        background: linear-gradient(to right, rgba(250,0,0,0), rgba(250,0,0,1) 60%, rgba(250,100,0,1) 85%, rgb(250,250,0) 95%);\n        width:100%;\n    }\n\n    div.colorramp > input[type=range] {\n        -webkit-appearance: slider-horizontal;\n        display:block;\n        width:100%;\n        background-color:transparent;\n    }\n\n    div.colorramp > label {\n        display: inline-block;\n    }\n\n    div.colorramp > input[type='range'] {\n        box-shadow: 0 0 0 white;\n    }\n\n    div.colorramp > input[type=range]::-webkit-slider-runnable-track {\n        height: 0px;     \n    }\n\n    div.colorramp > input[type='range'].top::-webkit-slider-thumb {\n        margin-top: -10px;\n    }\n\n    div.colorramp > input[type='range'].bottom::-webkit-slider-thumb {\n        margin-top: -12px;\n    }\n    \n</style>\n";
     var svg = "\n<div style='display:none'>\n<svg xmlns=\"http://www.w3.org/2000/svg\">\n<symbol viewBox=\"5 0 20 15\" id=\"lock\">\n    <title>lock</title>\n    <path d=\"M10.9,11.6c-0.3-0.6-0.3-2.3,0-2.8c0.4-0.6,3.4,1.4,3.4,1.4c0.9,0.4,0.9-6.1,0-5.7\n\tc0,0-3.1,2.1-3.4,1.4c-0.3-0.7-0.3-2.1,0-2.8C11.2,2.5,15,2.4,15,2.4C15,1.7,12.1,1,10.9,1S8.4,1.1,6.8,1.8C5.2,2.4,3.9,3.4,2.7,4.6\n\tS0,8.2,0,8.9s1.5,2.8,3.7,3.7s3.3,1.1,4.5,1.3c1.1,0.1,2.6,0,3.9-0.3c1-0.2,2.9-0.7,2.9-1.1C15,12.3,11.2,12.2,10.9,11.6z M4.5,9.3\n\tC3.7,9.3,3,8.6,3,7.8s0.7-1.5,1.5-1.5S6,7,6,7.8S5.3,9.3,4.5,9.3z\"\n    />\n</symbol>\n<symbol viewBox=\"0 0 37 37\" id=\"marker\">\n      <title>marker</title>\n      <path d=\"M19.75 2.75 L32.47792206135786 7.022077938642145 L36.75 19.75 L32.47792206135786 32.47792206135786 L19.75 36.75 L7.022077938642145 32.47792206135786 L2.75 19.750000000000004 L7.022077938642141 7.022077938642145 L19.749999999999996 2.75 Z\" /> </symbol>\n</svg>\n</div>\n";
@@ -2066,6 +2142,105 @@ define("ol3-symbolizer/labs/style-viewer", ["require", "exports", "openlayers", 
         });
     }
     exports.run = run;
+});
+define("ol3-symbolizer/styles/basic", ["require", "exports"], function (require, exports) {
+    "use strict";
+    var stroke = {
+        color: 'black',
+        width: 2
+    };
+    var fill = {
+        color: 'red'
+    };
+    var radius = 10;
+    var opacity = 0.5;
+    var square = {
+        fill: fill,
+        stroke: stroke,
+        points: 4,
+        radius: radius,
+        angle: Math.PI / 4
+    };
+    var diamond = {
+        fill: fill,
+        stroke: stroke,
+        points: 4,
+        radius: radius,
+        angle: 0
+    };
+    var triangle = {
+        fill: fill,
+        stroke: stroke,
+        points: 3,
+        radius: radius,
+        angle: 0
+    };
+    var star = {
+        fill: fill,
+        stroke: stroke,
+        points: 5,
+        radius: radius,
+        radius2: 4,
+        angle: 0
+    };
+    var cross = {
+        opacity: opacity,
+        fill: fill,
+        stroke: stroke,
+        points: 4,
+        radius: radius,
+        radius2: 0,
+        angle: 0
+    };
+    var x = {
+        fill: fill,
+        stroke: stroke,
+        points: 4,
+        radius: radius,
+        radius2: 0,
+        angle: Math.PI / 4
+    };
+    return {
+        cross: [{ star: cross }],
+        square: [{ star: square }],
+        diamond: [{ star: diamond }],
+        star: [{ star: star }],
+        triangle: [{ star: triangle }],
+        x: [{ star: x }]
+    };
+});
+define("ol3-symbolizer/styles/peace", ["require", "exports"], function (require, exports) {
+    "use strict";
+    return [
+        {
+            "star": {
+                "fill": {
+                    "color": "rgba(182,74,9,0.2635968300410687)"
+                },
+                "opacity": 1,
+                "stroke": {
+                    "color": "rgba(49,14,23,0.6699808995760113)",
+                    "width": 3.4639032010315107
+                },
+                "radius": 6.63376222856383,
+                "radius2": 0,
+                "points": 3
+            },
+            "text": {
+                "fill": {
+                    "color": "rgba(207,45,78,0.44950090791791375)"
+                },
+                "stroke": {
+                    "color": "rgba(233,121,254,0.3105821877136521)",
+                    "width": 4.019676388210171
+                },
+                "text": "Test",
+                "offset-x": 0,
+                "offset-y": 14.239434215855646,
+                "font": "18px fantasy"
+            }
+        }
+    ];
 });
 define("ol3-symbolizer/styles/ags/cartographiclinesymbol", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -2381,72 +2556,6 @@ define("ol3-symbolizer/styles/ags/textsymbol", ["require", "exports"], function 
         }
     ];
 });
-define("ol3-symbolizer/styles/basic", ["require", "exports"], function (require, exports) {
-    "use strict";
-    var stroke = {
-        color: 'black',
-        width: 2
-    };
-    var fill = {
-        color: 'red'
-    };
-    var radius = 10;
-    var opacity = 0.5;
-    var square = {
-        fill: fill,
-        stroke: stroke,
-        points: 4,
-        radius: radius,
-        angle: Math.PI / 4
-    };
-    var diamond = {
-        fill: fill,
-        stroke: stroke,
-        points: 4,
-        radius: radius,
-        angle: 0
-    };
-    var triangle = {
-        fill: fill,
-        stroke: stroke,
-        points: 3,
-        radius: radius,
-        angle: 0
-    };
-    var star = {
-        fill: fill,
-        stroke: stroke,
-        points: 5,
-        radius: radius,
-        radius2: 4,
-        angle: 0
-    };
-    var cross = {
-        opacity: opacity,
-        fill: fill,
-        stroke: stroke,
-        points: 4,
-        radius: radius,
-        radius2: 0,
-        angle: 0
-    };
-    var x = {
-        fill: fill,
-        stroke: stroke,
-        points: 4,
-        radius: radius,
-        radius2: 0,
-        angle: Math.PI / 4
-    };
-    return {
-        cross: [{ star: cross }],
-        square: [{ star: square }],
-        diamond: [{ star: diamond }],
-        star: [{ star: star }],
-        triangle: [{ star: triangle }],
-        x: [{ star: x }]
-    };
-});
 define("ol3-symbolizer/styles/circle/alert", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
@@ -2586,39 +2695,6 @@ define("ol3-symbolizer/styles/icon/svg", ["require", "exports"], function (requi
                     "width": 10
                 },
                 "path": "M23 2 L23 23 L43 16.5 L23 23 L35 40 L23 23 L11 40 L23 23 L3 17 L23 23 L23 2 Z"
-            }
-        }
-    ];
-});
-define("ol3-symbolizer/styles/peace", ["require", "exports"], function (require, exports) {
-    "use strict";
-    return [
-        {
-            "star": {
-                "fill": {
-                    "color": "rgba(182,74,9,0.2635968300410687)"
-                },
-                "opacity": 1,
-                "stroke": {
-                    "color": "rgba(49,14,23,0.6699808995760113)",
-                    "width": 3.4639032010315107
-                },
-                "radius": 6.63376222856383,
-                "radius2": 0,
-                "points": 3
-            },
-            "text": {
-                "fill": {
-                    "color": "rgba(207,45,78,0.44950090791791375)"
-                },
-                "stroke": {
-                    "color": "rgba(233,121,254,0.3105821877136521)",
-                    "width": 4.019676388210171
-                },
-                "text": "Test",
-                "offset-x": 0,
-                "offset-y": 14.239434215855646,
-                "font": "18px fantasy"
             }
         }
     ];
@@ -2798,6 +2874,872 @@ define("ol3-symbolizer/styles/text/text", ["require", "exports"], function (requ
             }
         }
     ];
+});
+define("ol3-symbolizer/tests/backward-diagonal", ["require", "exports", "ol3-symbolizer/format/ags-symbolizer", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, ags_symbolizer_1, ol3_symbolizer_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var agsZones = {
+        "currentVersion": 10.31,
+        "id": 6,
+        "name": "Overlay Zones",
+        "type": "Feature Layer",
+        "description": "",
+        "geometryType": "esriGeometryPolygon",
+        "copyrightText": "",
+        "parentLayer": null,
+        "subLayers": [],
+        "minScale": 0,
+        "maxScale": 0,
+        "drawingInfo": {
+            "renderer": {
+                "type": "uniqueValue",
+                "field1": "PLANZONE",
+                "field2": null,
+                "field3": null,
+                "fieldDelimiter": ", ",
+                "defaultSymbol": null,
+                "defaultLabel": null,
+                "uniqueValueInfos": [
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSForwardDiagonal",
+                            "color": [
+                                0,
+                                255,
+                                0,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    0,
+                                    255,
+                                    0,
+                                    255
+                                ],
+                                "width": 0.4
+                            }
+                        },
+                        "value": "AO-1",
+                        "label": "AO-1",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                129,
+                                254,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    0,
+                                    129,
+                                    254,
+                                    255
+                                ],
+                                "width": 0.4
+                            }
+                        },
+                        "value": "AO-2",
+                        "label": "AO-2",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriPFS",
+                            "url": "78ff6f6cb8ad6ca6d96eed86217d46ca",
+                            "imageData": "iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAAAAXNSR0IB2cksfwAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAyRJREFUaIG1WkGSAyEIJFX+JP9/Ut6SvaxVhkDTDYZTZkREBBqcrJfZ2/7pafYwQJu34rsxl+Wv9F/nSy/UP3cM8DJ7P80ep0wvJ1JSMSLiXYhR3VDEz8h8mj3OTfo1IoOxOi40qJ6o4lasMRWjb7mnHnCD6okid0dyog13KIxBvxBiVniRW53zz/hk5Veecr6HMYgUrDZQyVW8QZ170mLiJovBbMEbLqd4E1p3KYqwp8bAQKTcOc7Ec5VRX2bvFTEzJzDFKQVjWUNG4yti7gS96pJdF64SlueHMOEVysBY2XCmIOs9asIKNxgBZiWIXbBS8IZ3lEBfbagqnyp+ZozJ7tncDxxEGSqawDwr9aKSQJis6Q2fwgTjFiwuMnMYUjP7h4uiQI+K7qjEUoqGjCp3jvRA8ymYYF2SPfWuARhP+apkKoUYJZUkwcTWTYIwkT0zqZztRjrdBJJJnWCkrFp7KjDCyIyIkbtYS01qzypW1D40w+mw2FYBGI13ryymhTuiECYyQVXcsAlkgrEKb9pNqIsw8YlkMTcGSBbCRQkmJlUPcudOhcLqkbpopXingL4hO+PPZFI4yCqIbrYrBdmkox6E1NFPTgXJmmTRCnOhi7LVhoqf0yyK9NpFyf4Nrw0rnPtF/agU7hl9nKCSKDqB7+d1ugnmSjGb2+omvKI3jHGrhdry9ljqop1KhlFYqYD22KRIaN9so/eTyieSMWkCwq9LVSqe0sQALK7u39TXJcY1bt58T07M80AcREoqbslkxsk9KFWqVVZXwJnh72TdqpuI9GnXolNoUGV31klhgom5bt0ZvWNld5IdDRPd01GTgid0B7PHvZzy44ufzKblW8aqNlXJCrNoR1G0yOQbxE2i/+mk3qJN4gitqxYB1L8sGEW6c9SMiWrTEAd/ETdKtvuFYdMk0/keEPGrMckahOVLkwxSUF1M6f5Zt1WLj69KBgWvH+9mx5udCVMfUx1950Qnm7gZv2EWvfm568bGfXevyAizKJsIuteGjOxMhtpO0ZUM8+6XN2kMwX4QKTyNCRXcWWLkSBe/XjjLq8id8vhN/wHAM/YoQRgDtgAAAABJRU5ErkJggg==",
+                            "contentType": "image/png",
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    255,
+                                    0,
+                                    0,
+                                    255
+                                ],
+                                "width": 1
+                            },
+                            "width": 42,
+                            "height": 42,
+                            "angle": 0,
+                            "xoffset": 0,
+                            "yoffset": 0,
+                            "xscale": 1,
+                            "yscale": 1
+                        },
+                        "value": "AO-3",
+                        "label": "AO-3",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSForwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    0,
+                                    112,
+                                    255,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "L",
+                        "label": "L",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 1",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 1 E",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 1 W",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 2",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 2 A",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 2 B",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 2 C",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 2 D",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 2 E",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 2 F",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 3",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 3 A",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 3 B",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 3 C",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSBackwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    115,
+                                    255,
+                                    223,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UCD 4",
+                        "label": "UC",
+                        "description": ""
+                    },
+                    {
+                        "symbol": {
+                            "type": "esriSFS",
+                            "style": "esriSFSForwardDiagonal",
+                            "color": [
+                                0,
+                                208,
+                                219,
+                                255
+                            ],
+                            "outline": {
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid",
+                                "color": [
+                                    0,
+                                    230,
+                                    169,
+                                    255
+                                ],
+                                "width": 1
+                            }
+                        },
+                        "value": "UN",
+                        "label": "UN",
+                        "description": ""
+                    }
+                ]
+            },
+            "transparency": 0,
+            "labelingInfo": null
+        },
+        "defaultVisibility": true,
+        "extent": {
+            "xmin": 1374524.3392499983,
+            "ymin": 494286.04200000316,
+            "xmax": 1418161.7010000013,
+            "ymax": 525857.6349999979,
+            "spatialReference": {
+                "wkid": 102697,
+                "latestWkid": 102697
+            }
+        },
+        "hasAttachments": false,
+        "htmlPopupType": "esriServerHTMLPopupTypeNone",
+        "displayField": "PLANZONE",
+        "typeIdField": null,
+        "fields": [
+            {
+                "name": "OBJECTID",
+                "type": "esriFieldTypeOID",
+                "alias": "OBJECTID",
+                "domain": null
+            },
+            {
+                "name": "PLANZONE",
+                "type": "esriFieldTypeString",
+                "alias": "Overlay Zoning District",
+                "length": 8,
+                "domain": {
+                    "type": "codedValue",
+                    "name": "ZoningDistricts_3",
+                    "codedValues": [
+                        {
+                            "name": "Single-Family Residential",
+                            "code": "R-SF"
+                        },
+                        {
+                            "name": "Townhouse Residential",
+                            "code": "R-TH"
+                        },
+                        {
+                            "name": "Low-Density Multi-Family Residential",
+                            "code": "R-LD"
+                        },
+                        {
+                            "name": "Medium-Density Multi-Family Residential",
+                            "code": "R-MD"
+                        },
+                        {
+                            "name": "High-Density Multi-Family Residential",
+                            "code": "R-HD"
+                        },
+                        {
+                            "name": "Manufactured Home Community",
+                            "code": "R-MHC"
+                        },
+                        {
+                            "name": "Government and Institutional",
+                            "code": "GI"
+                        },
+                        {
+                            "name": "Planned Development",
+                            "code": "PD"
+                        },
+                        {
+                            "name": "Limited Business",
+                            "code": "LB"
+                        },
+                        {
+                            "name": "General Retail",
+                            "code": "GR"
+                        },
+                        {
+                            "name": "Highway Commercial",
+                            "code": "HC"
+                        },
+                        {
+                            "name": "Commercial Service",
+                            "code": "CS"
+                        },
+                        {
+                            "name": "Center City",
+                            "code": "CC"
+                        },
+                        {
+                            "name": "Restricted Industrial",
+                            "code": "RI"
+                        },
+                        {
+                            "name": "Light Industrial",
+                            "code": "LI"
+                        },
+                        {
+                            "name": "General Manufacturing",
+                            "code": "GM"
+                        },
+                        {
+                            "name": "Heavy Manufacturing",
+                            "code": "HM"
+                        },
+                        {
+                            "name": "Industrial Commercial",
+                            "code": "IC"
+                        },
+                        {
+                            "name": "University Combining",
+                            "code": "UN"
+                        },
+                        {
+                            "name": "Urban Conservation",
+                            "code": "UC"
+                        },
+                        {
+                            "name": "Landmarks",
+                            "code": "L"
+                        },
+                        {
+                            "name": "Airport Overlay District-1",
+                            "code": "AO-1"
+                        },
+                        {
+                            "name": "Airport Overlay District-2",
+                            "code": "AO-2"
+                        },
+                        {
+                            "name": "Airport Overlay District-3",
+                            "code": "AO-3"
+                        },
+                        {
+                            "name": "Office (O-1)",
+                            "code": "O-1"
+                        },
+                        {
+                            "name": "Office (O-2)",
+                            "code": "O-2"
+                        },
+                        {
+                            "name": "Agriculture",
+                            "code": "CNTY-A-1"
+                        },
+                        {
+                            "name": "Agriculture-Residence",
+                            "code": "CNTY-A-R"
+                        },
+                        {
+                            "name": "Suburban Residence",
+                            "code": "CNTY-R-1"
+                        },
+                        {
+                            "name": "One and Two Family Residence",
+                            "code": "CNTY-R-2"
+                        },
+                        {
+                            "name": "Multi-Family Residence (R-3)",
+                            "code": "CNTY-R-3"
+                        },
+                        {
+                            "name": "Multi-Family Residence (R-4)",
+                            "code": "CNTY-R-4"
+                        },
+                        {
+                            "name": "Professional Office",
+                            "code": "CNTY-O-1"
+                        },
+                        {
+                            "name": "General Office",
+                            "code": "CNTY-O-2"
+                        },
+                        {
+                            "name": "Neighborhood Commercial",
+                            "code": "CNTY-C-1"
+                        },
+                        {
+                            "name": "General Commercial",
+                            "code": "CNTY-C-2"
+                        },
+                        {
+                            "name": "Rural Commercial",
+                            "code": "CNTY-C-3"
+                        },
+                        {
+                            "name": "Light Manufacturing or Industrial",
+                            "code": "CNTY-M-1"
+                        },
+                        {
+                            "name": "General Manufacturing or Industrial",
+                            "code": "CNTY-M-2"
+                        },
+                        {
+                            "name": "Plot Assignment District",
+                            "code": "CNTY-PAD"
+                        },
+                        {
+                            "name": "No Designation",
+                            "code": "NONE"
+                        },
+                        {
+                            "name": "Conditional Overlay District",
+                            "code": "COD"
+                        },
+                        {
+                            "name": "Manufactured Home Park or Subdivision",
+                            "code": "CNTY-MH1"
+                        },
+                        {
+                            "name": "Commercial Street Zone 1",
+                            "code": "COM-1"
+                        },
+                        {
+                            "name": "Commercial Street Zone 2",
+                            "code": "COM-2"
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Shape",
+                "type": "esriFieldTypeGeometry",
+                "alias": "Shape",
+                "domain": null
+            },
+            {
+                "name": "SHAPE_STArea__",
+                "type": "esriFieldTypeDouble",
+                "alias": "SHAPE_STArea__",
+                "domain": null
+            },
+            {
+                "name": "SHAPE_STLength__",
+                "type": "esriFieldTypeDouble",
+                "alias": "SHAPE_STLength__",
+                "domain": null
+            },
+            {
+                "name": "Shape.STArea()",
+                "type": "esriFieldTypeDouble",
+                "alias": "Shape.STArea()",
+                "domain": null
+            },
+            {
+                "name": "Shape.STLength()",
+                "type": "esriFieldTypeDouble",
+                "alias": "Shape.STLength()",
+                "domain": null
+            }
+        ],
+        "relationships": [],
+        "canModifyLayer": false,
+        "canScaleSymbols": false,
+        "hasLabels": false,
+        "capabilities": "Map,Query,Data",
+        "maxRecordCount": 1000,
+        "supportsStatistics": true,
+        "supportsAdvancedQueries": true,
+        "supportedQueryFormats": "JSON, AMF",
+        "ownershipBasedAccessControlForFeatures": {
+            "allowOthersToQuery": true
+        },
+        "advancedQueryCapabilities": {
+            "useStandardizedQueries": false,
+            "supportsStatistics": true,
+            "supportsOrderBy": true,
+            "supportsDistinct": true,
+            "supportsPagination": false,
+            "supportsTrueCurve": true,
+            "supportsReturningQueryExtent": true,
+            "supportsQueryWithDistance": true
+        }
+    };
+    function convertBackwardDiagonal() {
+        var converter = new ags_symbolizer_1.StyleConverter();
+        var inverse = new ol3_symbolizer_2.StyleConverter();
+        var sfsBackwardDiagonals = agsZones.drawingInfo.renderer.uniqueValueInfos
+            .filter(function (vi) { return vi.symbol.type === "esriSFS" && vi.symbol.style === "esriSFSBackwardDiagonal"; });
+        sfsBackwardDiagonals.forEach(function (symbolInfo) {
+            console.log("testing: " + symbolInfo.label + "='" + symbolInfo.value + "'");
+            var sy = symbolInfo.symbol;
+            var olStyle = converter.fromJson(sy);
+            var style = inverse.toJson(olStyle);
+            console.assert(style.fill.pattern.orientation === "backward", "backward orientation");
+            sy.color && console.assert(!!style.fill.pattern.color, "color defined");
+            if (sy.outline) {
+                switch (sy.outline.type) {
+                    case "esriSLS":
+                        console.assert(3 * style.stroke.width === 4 * sy.outline.width);
+                        break;
+                }
+            }
+        });
+    }
+    function run() {
+        convertBackwardDiagonal();
+    }
+    exports.run = run;
+});
+define("ol3-symbolizer/tests/index", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function run() {
+        var l = window.location;
+        var path = "" + l.origin + l.pathname + "?run=ol3-symbolizer/tests/";
+        var labs = "\n    index\n    backward-diagonal\n    ";
+        document.writeln("\n    <p>\n    Watch the console output for failed assertions (blank is good).\n    </p>\n    ");
+        document.writeln(labs
+            .split(/ /)
+            .map(function (v) { return v.trim(); })
+            .filter(function (v) { return !!v; })
+            .sort()
+            .map(function (lab) { return "<a href=" + path + lab + "&debug=1>" + lab + "</a>"; })
+            .join("<br/>"));
+    }
+    exports.run = run;
+    ;
 });
 define("ol3-symbolizer/tests/geom/multipoint", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
@@ -3486,23 +4428,5 @@ define("ol3-symbolizer/tests/geom/polyline", ["require", "exports", "openlayers"
             [-115.25532322799027, 36.18318333413792]
         ]
     ]);
-});
-define("ol3-symbolizer/tests/index", ["require", "exports"], function (require, exports) {
-    "use strict";
-    function run() {
-        var l = window.location;
-        var path = "" + l.origin + l.pathname + "?run=ol3-symbolizer/tests/";
-        var labs = "\n    index\n    ";
-        document.writeln("\n    <p>\n    Watch the console output for failed assertions (blank is good).\n    </p>\n    ");
-        document.writeln(labs
-            .split(/ /)
-            .map(function (v) { return v.trim(); })
-            .filter(function (v) { return !!v; })
-            .sort()
-            .map(function (lab) { return "<a href=" + path + lab + "&debug=1>" + lab + "</a>"; })
-            .join("<br/>"));
-    }
-    exports.run = run;
-    ;
 });
 //# sourceMappingURL=index.js.map

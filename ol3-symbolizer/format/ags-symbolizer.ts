@@ -1,11 +1,19 @@
 /**
  * Converts style information from arcgis.com into a format compatible with the symbolizer
- * The symbolizer converts the object to an actual ol3 style
+ * The symbolizer converts the object to an actual ol style
  */
 import Symbolizer = require("./ol3-symbolizer");
 
+/**
+ * Babysteps - at some point these interfaces should converge, 
+ */
+import { StyleTypes, SymbolTypes } from "../ags/ags-catalog";
+
 const symbolizer = new Symbolizer.StyleConverter();
 
+/**
+ * Need a single definition, prefer the one in ags-catalog
+ */
 export namespace ArcGisFeatureServerLayer {
 
     export type SpatialReference = {
@@ -15,13 +23,6 @@ export namespace ArcGisFeatureServerLayer {
     export type Extent = {
         xmin: number
     };
-
-    export type Styles =
-        "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX"
-        | "esriSFSSolid" | "esriSFSBackwardDiagonal" | "esriSFSForwardDiagonal"
-        | "esriSLSSolid" | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
-
-    export type SymbolTypes = "esriSMS" | "esriSLS" | "esriSFS" | "esriPMS" | "esriPFS" | "esriTS";
 
     export type Color = number[];
 
@@ -33,7 +34,7 @@ export namespace ArcGisFeatureServerLayer {
     }
 
     export interface Outline {
-        style?: Styles;
+        style?: StyleTypes;
         color?: number[];
         width?: number;
         type?: SymbolTypes;
@@ -49,7 +50,7 @@ export namespace ArcGisFeatureServerLayer {
 
     export interface Symbol {
         type: SymbolTypes;
-        style?: Styles;
+        style?: StyleTypes;
         color?: number[];
         outline?: Outline;
         width?: number;
@@ -166,7 +167,7 @@ export namespace ArcGisFeatureServerLayer {
         templates: Template[];
     }
 
-    export interface RootObject {
+    export interface FeatureLayerInfo {
         currentVersion: string | number;
         id: number;
         name: string;
@@ -470,6 +471,9 @@ export class StyleConverter {
         throw "not-implemented";
     }
 
+    /**
+     * Converts the ags symbol to an openlayers style, then the openlayers style to a JSON representation
+     */
     public fromJson(symbol: ArcGisFeatureServerLayer.Symbol) {
         let style = <Symbolizer.Format.Style>{};
         this.fromSymbol(symbol, style);
@@ -508,7 +512,9 @@ export class StyleConverter {
         }
     }
 
-    // convert drawing info into a symbology rule
+    /**
+     * convert drawing info into a symbology rule
+     */
     public fromRenderer(renderer: ArcGisFeatureServerLayer.Renderer, args: {
         url: string
     }) {

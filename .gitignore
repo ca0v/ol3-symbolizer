@@ -1,6 +1,4 @@
 .vscode
-dist
-bower_components
-jspm_packages
-typings
+built
+node_modules
 *.log

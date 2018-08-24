@@ -1,6 +1,5 @@
 import ol = require("openlayers");
-import { doif, getParameterByName, html as asHtml } from "ol3-fun";
-import { Popup } from "ol3-popup";
+import { doif, getParameterByName, html as asHtml } from "ol3-fun/index";
 import { ArcGisVectorSourceFactory } from "../ags/ags-source";
 
 function parse<T>(v: string, type: T): T {
@@ -119,45 +118,7 @@ export function run() {
         where: options.where,
         layers: options.layers.reverse()
     }).then(agsLayers => {
-
         agsLayers.forEach(agsLayer => map.addLayer(agsLayer));
-
-        let popup = new Popup({
-            css: `
-            .ol-popup {
-                background-color: white;
-            }
-            .ol-popup .page {
-                max-height: 200px;
-                overflow-y: auto;
-            }
-            `
-        });
-        map.addOverlay(popup);
-
-        map.on("click", (event: { coordinate: any; pixel: any }) => {
-            console.log("click");
-            let coord = event.coordinate;
-            popup.hide();
-
-            let pageNum = 0;
-            map.forEachFeatureAtPixel(event.pixel, (feature: ol.Feature, layer) => {
-                let page = document.createElement('p');
-                let keys = Object.keys(feature.getProperties()).filter(key => {
-                    let v = feature.get(key);
-                    if (typeof v === "string") return true;
-                    if (typeof v === "number") return true;
-                    return false;
-                });
-                page.title = "" + ++pageNum;
-                page.innerHTML = `<table>${keys.map(k => `<tr><td>${k}</td><td>${feature.get(k)}</td></tr>`).join("")}</table>`;
-                popup.pages.add(page, feature.getGeometry());
-            });
-
-            popup.show(coord, `<label>${pageNum} Features Found</label>`);
-            popup.pages.goto(0);
-        });
-
     });
 
 

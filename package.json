@@ -1,0 +1,33 @@
+{
+  "name": "ol3-symbolizer",
+  "version": "5.1.3",
+  "description": "Deserialize ol3 styles",
+  "main": "built/index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/jquery": "^3.3.6",
+    "@types/ol": "^4.6.2",
+    "@types/requirejs": "^2.1.31",
+    "typescript": "^3.0.1",
+    "uglify-js": "^3.4.8",
+    "live-server": "^1.2.0",
+    "ol3-fun": "https://github.com/ca0v/ol3-fun/tarball/v5.1.3"
+  },
+  "scripts": {
+    "clean": "rmdir .\\built /s/q & del test\\*.js /s",
+    "uglify": "pushd built && uglifyjs index.max.js --source-map \"content='index.max.js.map',url='index.js.map'\" --output=index.js --compress --mangle && popd",
+    "build-for-rawgit": "tsc -p tsconfig-examples.json",
+    "live": "live-server --port=5000 --wait=2000 --ignorePattern=.*\\.ts --entry-file=rawgit.html?debug=1",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ca0v/ol3-symbolizer.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ca0v/ol3-symbolizer/issues"
+  },
+  "homepage": "https://github.com/ca0v/ol3-symbolizer#readme"
+}

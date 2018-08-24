@@ -36,7 +36,7 @@
                 "jquery": "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery" + (!debug ? ".min" : "")
             },
             deps: [
-                "built/index"
+                debug ? "built/index.max" : "built/index"
             ],
             callback: () => {
                 require([run], test => {

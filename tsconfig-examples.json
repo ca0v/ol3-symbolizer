@@ -15,6 +15,5 @@
         "ol3-symbolizer/**/*.ts"
     ],
     "exclude": [
-        "ol3-symbolizer/labs"
     ]
 }

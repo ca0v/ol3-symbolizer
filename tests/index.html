@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ol-layerswitcher spec runner</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="../node_modules/mocha/mocha.css">
+    <link rel="stylesheet" href="https://openlayers.org/en/v5.1.3/css/ol.css" />
+    <link rel="stylesheet" type="text/css" href="../src/ol-layerswitcher.css">
+</head>
+
+<body>
+    <div id="mocha"></div>
+    <script type="text/javascript" src="../node_modules/requirejs/require.js"></script>
+    <!-- <script type="text/javascript" src="../node_modules/underscore/underscore.js"></script>
+<script type="text/javascript" src="../node_modules/expect/build-es5/index.js"></script>
+<script type="text/javascript" src="../node_modules/mocha/mocha.js"></script> -->
+    <!-- <script type="text/javascript" src="../node_modules/should/should.js"></script> -->
+    <!-- <script src="../node_modules/ol/style/Style.js"></script> -->
+    <script>
+        requirejs.config({
+            packages: [
+            {
+                    name: 'ol',
+                    location: '../node_modules/ol',
+                    main: 'index'
+                },
+                {
+                    name: 'mocha',
+                    location: '../node_modules/mocha',
+                    main: 'mocha'
+                },
+                {
+                    name: 'should',
+                    location: '../node_modules/should',
+                    main: 'should'
+                }
+            ],
+            deps: ["spec/index"],
+            callback: function () {
+                require(["mocha"], function () {
+                    let Mocha = window["mocha"];
+
+                    let mocha = Mocha.setup({
+                        timeout: 6000,
+                        ui: 'bdd',
+                        bail: true
+                    });
+
+                    require(["tests/common"], () => mocha.run());
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -4,6 +4,7 @@ import Style from "ol/style/Style";
 import { assign } from "../ol3-symbolizer/common/assign";
 import { mixin } from "../ol3-symbolizer/common/mixin";
 import { defaults } from "../ol3-symbolizer/common/defaults";
+//import {describe, it} from "mocha";
 
 describe("assign tests", function () {
     it("assign empty", function () {

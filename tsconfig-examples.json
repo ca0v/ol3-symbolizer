@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "allowJs": true,
         "removeComments": false,
         "declaration": false,
         "module": "amd",

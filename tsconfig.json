@@ -11,8 +11,7 @@
         "baseUrl": "./node_modules"
     },
     "include": [
-        "index.ts",
-        "ol3-symbolizer/**/*.ts"
+        "index.ts"
     ],
     "exclude": [
         "ol3-symbolizer/labs"

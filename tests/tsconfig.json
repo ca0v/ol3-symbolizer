@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "removeComments": true,
+        "declaration": false,
+        "module": "amd",
+        "target": "es5",
+        "noImplicitAny": true,
+        "sourceMap": false,
+        "outDir": "./built",
+        "moduleResolution": "classic",
+        "baseUrl": "../node_modules"
+    },
+    "files": [
+        "./test.ts"
+    ]
+}

@@ -6,19 +6,30 @@
   "dependencies": {},
   "devDependencies": {
     "@types/jquery": "^3.3.6",
+    "@types/mocha": "^5.2.5",
     "@types/ol": "^4.6.2",
     "@types/requirejs": "^2.1.31",
-    "typescript": "^3.0.1",
-    "uglify-js": "^3.4.8",
+    "karma": "^3.0.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-mocha": "^1.3.0",
+    "karma-requirejs": "^1.1.0",
     "live-server": "^1.2.0",
-    "ol3-fun": "https://github.com/ca0v/ol3-fun/tarball/v5.1.3"
+    "mocha": "^5.2.0",
+    "ol3-fun": "https://github.com/ca0v/ol3-fun/tarball/v5.1.3",
+    "typescript": "^3.0.1",
+    "uglify-js": "^3.4.8"
   },
   "scripts": {
     "clean": "rmdir .\\built /s/q & del test\\*.js /s",
-    "uglify": "pushd built && uglifyjs index.max.js --source-map \"content='index.max.js.map',url='index.js.map'\" --output=index.js --compress --mangle && popd",
+    "uglify-for-amd": "pushd built && uglifyjs index.max.js --source-map \"content='index.max.js.map',url='index.js.map'\" --output=index.js --compress --mangle && popd",
+    "uglify-for-rawgit": "pushd built && uglifyjs examples.max.js --source-map \"content='examples.max.js.map',url='examples.js.map'\" --output=examples.js --compress --mangle && popd",
+    "build-for-amd": "tsc",
     "build-for-rawgit": "tsc -p tsconfig-examples.json",
+    "build-for-karma": "tsc -p tests/tsconfig.json",
+    "karma": "npm run build-for-karma && start npm run start-karma && npm run build-for-karma -- -w",
     "live": "live-server --port=5000 --wait=2000 --ignorePattern=.*\\.ts --entry-file=rawgit.html?debug=1",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "npm run build-for-rawgit & npm run uglify-for-rawgit & start npm run live & start npm run build-for-rawgit -- -w",
+    "test": "npm run build-for-karma && npm run start-karma -- --single-run"
   },
   "repository": {
     "type": "git",

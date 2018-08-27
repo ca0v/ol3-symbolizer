@@ -100,7 +100,7 @@ export function run() {
             zoom: options.zoom
         }),
         layers: [
-            new ol.layer.Tile({
+            new ol.layer.Tile(<any>{
                 title: "OSM",
                 type: 'base',
                 opacity: 0.8,
@@ -109,7 +109,7 @@ export function run() {
             })]
     });
 
-    ArcGisVectorSourceFactory.create({
+    ArcGisVectorSourceFactory.create(<any>{
         tileSize: 256,
         map: map,
         services: options.services,

@@ -7,6 +7,7 @@
  * Good Grief!
  * http://openlayers.org/en/latest/examples/render-geometry.html
  */
+declare var require: any;
 
 import ol = require("openlayers");
 import $ = require("jquery");
@@ -195,7 +196,7 @@ export function run() {
     let style = getParameterByName("style") || "fill/gradient";
 
     let save = () => {
-        let style = JSON.stringify(JSON.parse($(".style").val()));
+        let style = JSON.stringify(JSON.parse($(".style").val() + ""));
         let loc = window.location;
         let url = `${loc.origin}${loc.pathname}?run=ol3-symbolizer/labs/style-viewer&geom=${geom}&style=${encodeURI(style)}`;
         history.replaceState({}, "Changes", url);
@@ -212,7 +213,7 @@ export function run() {
 
             setInterval(() => {
                 try {
-                    let style = JSON.parse($(".style").val());
+                    let style = JSON.parse($(".style").val() + "");
                     renderers.forEach(r => r.draw(style));
                     save();
                 } catch (ex) {

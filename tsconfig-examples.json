@@ -6,12 +6,11 @@
         "target": "es5",
         "noImplicitAny": true,
         "sourceMap": true,
-        "outFile": "./built/index.max.js",
+        "outFile": "./built/examples.max.js",
         "moduleResolution": "classic",
         "baseUrl": "./node_modules"
     },
     "include": [
-        "index.ts",
         "ol3-symbolizer/**/*.ts"
     ],
     "exclude": [

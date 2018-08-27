@@ -24,22 +24,6 @@ interface Path2D {
     rect(x: number, y: number, w: number, h: number): void;
 }
 
-// Constructor
-interface Path2DConstructor {
-    new(): Path2D;
-    new(d: string): Path2D;
-    new(path: Path2D, fillRule?: string): Path2D;
-    prototype: Path2D;
-}
-declare var Path2D: Path2DConstructor;
-
-// Extend CanvasRenderingContext2D
-interface CanvasRenderingContext2D {
-    fill(path: Path2D): void;
-    stroke(path: Path2D): void;
-    clip(path: Path2D, fillRule?: string): void;
-}
-
 export namespace Format {
 
     export type Color = number[] | string;
@@ -60,8 +44,11 @@ export namespace Format {
             repitition?: string;
         };
         image?: {
+            src?: any;
             imageData?: string;
             imgSize?: Size;
+            "anchor-x": any;
+            "anchor-y": any;
         };
     }
 
@@ -167,8 +154,8 @@ export namespace Format {
     export interface Svg {
         anchor?: Offset;
         anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
-        anchorXUnits?: string;
-        anchorYUnits?: string;
+        anchorXUnits?: "fraction" | "pixels";
+        anchorYUnits?: "fraction" | "pixels";
         color?: Color;
         crossOrigin?: string;
         img?: string;
@@ -196,7 +183,7 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
     /**
      * uses the interior point of a polygon when rendering a 'point' style
      */
-    public setGeometry(feature: ol.Feature) {
+    public setGeometry(feature: ol.Feature | ol.render.Feature) {
         let geom = feature.getGeometry();
         if (geom instanceof ol.geom.Polygon) {
             geom = geom.getInteriorPoint();
@@ -385,7 +372,7 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
             json.anchor = [json["anchor-x"] || 0.5, json["anchor-y"] || 0.5];
         }
 
-        let image = new ol.style.Icon({
+        let image = new ol.style.Icon(<any>{
             anchor: json.anchor || [0.5, 0.5],
             anchorOrigin: json.anchorOrigin || "top-left",
             anchorXUnits: json.anchorXUnits || "fraction",
@@ -408,7 +395,7 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
         return image;
     }
 
-    private deserializeSvg(json: Format.Svg & Format.Icon) {
+    private deserializeSvg(json: Partial<Format.Svg & Format.Icon>) {
         json.rotation = json.rotation || 0;
         json.scale = json.scale || 1;
 
@@ -464,7 +451,7 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
 
         }
 
-        let icon = new ol.style.Icon({
+        let icon = new ol.style.Icon(<any>{
             img: canvas,
             imgSize: [canvas.width, canvas.height],
             rotation: json.rotation,

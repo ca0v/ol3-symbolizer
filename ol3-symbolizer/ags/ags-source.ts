@@ -140,7 +140,7 @@ export class ArcGisVectorSourceFactory {
 
             catalog.aboutLayer(layerId).then(layerInfo => {
 
-                let layer = new ol.layer.Vector({
+                let layer = new ol.layer.Vector(<any>{
                     title: layerInfo.name,
                     source: source
                 })

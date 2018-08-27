@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
-        "removeComments": true,
-        "declaration": true,
+        "removeComments": false,
+        "declaration": false,
         "module": "amd",
         "target": "es5",
         "noImplicitAny": true,

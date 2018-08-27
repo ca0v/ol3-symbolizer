@@ -1,4 +1,5 @@
 import Ajax = require("../common/ajax");
+import { defaults } from "../common/defaults";
 
 export type StyleTypes = "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX" | "esriSFSSolid" | "esriSFSBackwardDiagonal" | "esriSFSForwardDiagonal" | "esriSLSSolid" | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
 export type SymbolTypes = "esriSMS" | "esriSLS" | "esriSFS" | "esriPMS" | "esriPFS" | "esriTS";
@@ -317,16 +318,6 @@ export interface MapServerInfo {
     supportedExtensions: string;
 }
 
-
-/**
- * assigns undefined values
- */
-function defaults<A extends { [name: string]: any }, B extends { [name: string]: any }>(a: A, ...b: B[]): A & B {
-    b.filter(b => !!b).forEach(b => {
-        Object.keys(b).filter(k => a[k] === undefined).forEach(k => a[k] = b[k]);
-    });
-    return <A & B>a;
-}
 
 export class Catalog {
     private ajax: Ajax;

@@ -1,14 +1,8 @@
 import ol = require("openlayers");
 import Serializer = require("./base");
-
-function doif<T>(v: T, cb: (v: T) => void) {
-    if (v !== undefined && v !== null) cb(v);
-}
-
-function mixin<A extends any, B extends any>(a: A, b: B) {
-    Object.keys(b).forEach(k => a[k] = b[k]);
-    return <A & B>a;
-}
+import { assign } from "../common/assign";
+import { mixin } from "../common/mixin";
+import { doif } from "../common/doif";
 
 // Class
 interface Path2D {
@@ -183,30 +177,12 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
     /**
      * uses the interior point of a polygon when rendering a 'point' style
      */
-    public setGeometry(feature: ol.Feature | ol.render.Feature) {
+    public getGeometry(feature: ol.Feature | ol.render.Feature) {
         let geom = feature.getGeometry();
         if (geom instanceof ol.geom.Polygon) {
             geom = geom.getInteriorPoint();
         }
         return geom;
-    }
-
-    private assign(obj: any, prop: string, value: Object) {
-        //let getter = prop[0].toUpperCase() + prop.substring(1);
-        if (value === null) return;
-        if (value === undefined) return;
-        if (typeof value === "object") {
-            if (Object.keys(value).length === 0) return;
-        }
-        if (prop === "image") {
-            if (value.hasOwnProperty("radius")) {
-                prop = "circle";
-            }
-            if (value.hasOwnProperty("points")) {
-                prop = "star";
-            }
-        }
-        obj[prop] = value;
     }
 
     private serializeStyle(style: ol.style.Style & any) {
@@ -217,44 +193,44 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
         if (typeof style === "number") return style;
 
         if (style.getColor) mixin(s, this.serializeColor(style.getColor()));
-        if (style.getImage) this.assign(s, "image", this.serializeStyle(style.getImage()));
-        if (style.getFill) this.assign(s, "fill", this.serializeFill(style.getFill()));
-        if (style.getOpacity) this.assign(s, "opacity", style.getOpacity());
-        if (style.getStroke) this.assign(s, "stroke", this.serializeStyle(style.getStroke()));
-        if (style.getText) this.assign(s, "text", this.serializeStyle(style.getText()));
-        if (style.getWidth) this.assign(s, "width", style.getWidth());
-        if (style.getOffsetX) this.assign(s, "offset-x", style.getOffsetX());
-        if (style.getOffsetY) this.assign(s, "offset-y", style.getOffsetY());
-        if (style.getWidth) this.assign(s, "width", style.getWidth());
-        if (style.getFont) this.assign(s, "font", style.getFont());
-        if (style.getRadius) this.assign(s, "radius", style.getRadius());
-        if (style.getRadius2) this.assign(s, "radius2", style.getRadius2());
-        if (style.getPoints) this.assign(s, "points", style.getPoints());
-        if (style.getAngle) this.assign(s, "angle", style.getAngle());
-        if (style.getRotation) this.assign(s, "rotation", style.getRotation());
-        if (style.getOrigin) this.assign(s, "origin", style.getOrigin());
-        if (style.getScale) this.assign(s, "scale", style.getScale());
-        if (style.getSize) this.assign(s, "size", style.getSize());
+        if (style.getImage) assign(s, "image", this.serializeStyle(style.getImage()));
+        if (style.getFill) assign(s, "fill", this.serializeFill(style.getFill()));
+        if (style.getOpacity) assign(s, "opacity", style.getOpacity());
+        if (style.getStroke) assign(s, "stroke", this.serializeStyle(style.getStroke()));
+        if (style.getText) assign(s, "text", this.serializeStyle(style.getText()));
+        if (style.getWidth) assign(s, "width", style.getWidth());
+        if (style.getOffsetX) assign(s, "offset-x", style.getOffsetX());
+        if (style.getOffsetY) assign(s, "offset-y", style.getOffsetY());
+        if (style.getWidth) assign(s, "width", style.getWidth());
+        if (style.getFont) assign(s, "font", style.getFont());
+        if (style.getRadius) assign(s, "radius", style.getRadius());
+        if (style.getRadius2) assign(s, "radius2", style.getRadius2());
+        if (style.getPoints) assign(s, "points", style.getPoints());
+        if (style.getAngle) assign(s, "angle", style.getAngle());
+        if (style.getRotation) assign(s, "rotation", style.getRotation());
+        if (style.getOrigin) assign(s, "origin", style.getOrigin());
+        if (style.getScale) assign(s, "scale", style.getScale());
+        if (style.getSize) assign(s, "size", style.getSize());
 
         if (style.getAnchor) {
-            this.assign(s, "anchor", style.getAnchor());
+            assign(s, "anchor", style.getAnchor());
             "anchorXUnits,anchorYUnits,anchorOrigin".split(",").forEach(k => {
-                this.assign(s, k, style[`${k}_`]);
+                assign(s, k, style[`${k}_`]);
             });
         }
 
         // "svg"
         if (style.path) {
-            if (style.path) this.assign(s, "path", style.path);
-            if (style.getImageSize) this.assign(s, "imgSize", style.getImageSize());
-            if (style.stroke) this.assign(s, "stroke", style.stroke);
-            if (style.fill) this.assign(s, "fill", style.fill);
-            if (style.scale) this.assign(s, "scale", style.scale); // getScale and getImgSize are modified in deserializer               
-            if (style.imgSize) this.assign(s, "imgSize", style.imgSize);
+            if (style.path) assign(s, "path", style.path);
+            if (style.getImageSize) assign(s, "imgSize", style.getImageSize());
+            if (style.stroke) assign(s, "stroke", style.stroke);
+            if (style.fill) assign(s, "fill", style.fill);
+            if (style.scale) assign(s, "scale", style.scale); // getScale and getImgSize are modified in deserializer               
+            if (style.imgSize) assign(s, "imgSize", style.imgSize);
         }
 
         // "icon"
-        if (style.getSrc) this.assign(s, "src", style.getSrc());
+        if (style.getSrc) assign(s, "src", style.getSrc());
 
         if (s.points && s.radius !== s.radius2) s.points /= 2; // ol3 defect doubles point count when r1 <> r2  
         return s;
@@ -312,7 +288,7 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
             stroke: stroke
         });
 
-        image && s.setGeometry(feature => this.setGeometry(feature));
+        image && s.setGeometry(feature => this.getGeometry(feature));
 
         return s;
     }

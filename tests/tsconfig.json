@@ -6,11 +6,11 @@
         "target": "es5",
         "noImplicitAny": true,
         "sourceMap": false,
-        "outDir": "./built",
-        "moduleResolution": "classic",
+        "outDir": "../built",
+        "moduleResolution": "node",
         "baseUrl": "../node_modules"
     },
-    "files": [
-        "./test.ts"
+    "include": [
+        "**/*.ts"
     ]
 }

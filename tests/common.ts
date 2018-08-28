@@ -1,11 +1,20 @@
-import { should } from "should";
-
+declare var window: any;
+/**
+// ol/style/Style will only load when using webpack...the common-js syntax isn't amd-compatible and 
+// TSC may transpile most of this code but with the ".js" in the MID's it might not work and some commonjs syntax in dependent projects won't work w/ TSC
+// I tried @babel/plugin-transform-modules-amd but it also preserves the ".js" extensions so I might be stuck with webpack or rollup for concatination.
+// There is a legacy build process that will produce ol.js (600kb), which can be used for AMD tests but not webpack
+// SUMMARY: use ol.js for AMD, use node_modules/ol for webpack until ol is converted to ts, at which point
+// I'll have the option of doing module-based builds akin to webpack...other options is to modify TSC to build commonjs
+// and then transpile again via webpack.  That's probably the best option for 2018.import { should } from "should";
+ */
 import Style from "ol/style/Style";
+
+
 import { assign } from "../ol3-symbolizer/common/assign";
 import { mixin } from "../ol3-symbolizer/common/mixin";
 import { defaults } from "../ol3-symbolizer/common/defaults";
-
-//import {describe, it} from "mocha";
+import { should } from "./base";
 
 describe("assign tests", function () {
     it("assign empty", function () {
@@ -15,23 +24,23 @@ describe("assign tests", function () {
     it("assign number", function () {
         let target = <any>{};
         assign(target, "a", 100);
-        should.assert(target.a === 100); // how to show message on failure?
+        should(target.a === 100, ""); // how to show message on failure?
     });
 
     it("assign object", function () {
         let target = <any>{};
         assign(target, "a", { "a": 100 });
-        should.assert(target.a.a === 100); // how to show message on failure?
+        should(target.a.a === 100, ""); // how to show message on failure?
     });
 });
 
 describe("defaults tests", () => {
 
     it("defaults number", () => {
-        should.assert(defaults({}, { a: 100 }).a === 100);
-        should.assert(defaults(defaults({}, { a: 100 }), { a: 200 }).a === 100);
+        should(defaults({}, { a: 100 }).a === 100, "");
+        should(defaults(defaults({}, { a: 100 }), { a: 200 }).a === 100, "");
         let a = defaults({}, { a: 1 });
-        should.assert(a === defaults(a, { a: 2 }));
+        should(a === defaults(a, { a: 2 }), "");
     });
 
 });
@@ -39,17 +48,17 @@ describe("defaults tests", () => {
 describe("mixin tests", () => {
 
     it("mixin number", () => {
-        should.assert(mixin({}, { a: 100 }).a === 100);
-        should.assert(mixin(mixin({}, { a: 100 }), { a: 200 }).a === 200);
+        should(mixin({}, { a: 100 }).a === 100, "");
+        should(mixin(mixin({}, { a: 100 }), { a: 200 }).a === 200, "");
         let a = mixin({}, { a: 1 });
-        should.assert(a === mixin(a, { a: 2 }));
+        should(a === mixin(a, { a: 2 }), "");
     });
 
 });
 
-describe("test accessing openlayers using webpack", function () {
+!window["require"] && describe("test accessing openlayers using webpack", function () {
     it("log ol.style.Style", function () {
-        should.assert(!!Style);
+        should(!!Style, "");
         console.log(Style.toString());
     });
 });
@@ -58,7 +67,7 @@ describe("test accessing openlayers using amd", function () {
     it("log ol.style.Style", function () {
         require(["openlayers"], (ol: any) => {
             let style = ol.style.Style;
-            should.assert(!!style);
+            should(!!style, "");
             console.log(style.toString());
         });
     });

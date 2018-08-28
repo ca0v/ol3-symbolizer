@@ -2,25 +2,31 @@
 <html>
 
 <head>
-    <title>ol-layerswitcher spec runner</title>
+    <title>ol3-symbolizer amd-based spec runner</title>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="../node_modules/mocha/mocha.css">
-    <link rel="stylesheet" href="https://openlayers.org/en/v5.1.3/css/ol.css" />
-    <link rel="stylesheet" type="text/css" href="../src/ol-layerswitcher.css">
+    <link rel="stylesheet" href="../node_modules/ol/ol.css" />
 </head>
 
 <body>
     <div id="mocha"></div>
     <script type="text/javascript" src="../node_modules/requirejs/require.js"></script>
-    <!-- <script type="text/javascript" src="../node_modules/underscore/underscore.js"></script>
-<script type="text/javascript" src="../node_modules/expect/build-es5/index.js"></script>
-<script type="text/javascript" src="../node_modules/mocha/mocha.js"></script> -->
-    <!-- <script type="text/javascript" src="../node_modules/should/should.js"></script> -->
-    <!-- <script src="../node_modules/ol/style/Style.js"></script> -->
     <script>
+        // setup require js packaging system and load the "spec" before running mocha
         requirejs.config({
+            shim: {
+                // no need to wrap ol in a define method when using a shim
+                // build this using the "npm run build-legacy" (see ol package.json)
+                "openlayers": {
+                    deps: [], // no dependencies, needs path to indicate where to find "openlayers"
+                    exports: "ol", // tell requirejs which global this library defines
+                }
+            },
+            paths: {
+                "openlayers": "../static/openlayers/index"
+            },
             packages: [
-            {
+                {
                     name: 'ol',
                     location: '../node_modules/ol',
                     main: 'index'
@@ -47,7 +53,8 @@
                         bail: false
                     });
 
-                    require(["tests/common"], () => mocha.run());
+                    // execute "describe" and "it" methods before running mocha
+                    require(["tests/index"], () => mocha.run());
                 });
             }
         });

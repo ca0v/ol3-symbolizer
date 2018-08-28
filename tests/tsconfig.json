@@ -6,15 +6,12 @@
         "module": "amd",
         "target": "es3",
         "noImplicitAny": true,
-        "sourceMap": false,
+        "sourceMap": true,
         "outFile": "./spec/index.js",
         "moduleResolution": "node",
         "baseUrl": "../node_modules"
     },
     "include": [
-        "**/*.ts"
-    ],
-    "exclude": [
-        "karma.conf.ts"
+        "index.ts"
     ]
 }

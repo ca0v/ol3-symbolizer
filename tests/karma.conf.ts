@@ -15,9 +15,14 @@ module.exports = function (karma: any) {
                 pattern: '**/*',
                 included: true,
                 watched: false
-            }
+            },            {
+                pattern: '**/index.js',
+                included: false,
+                watched: false
+            },
         ],
         exclude: [
+            "**/index.js"
         ],
         proxies: {
             '/rendering/': '/base/rendering/',

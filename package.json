@@ -1,69 +1,69 @@
 {
-  "name": "ol3-symbolizer",
-  "version": "5.1.3",
-  "description": "Deserialize ol3 styles",
-  "main": "built/index.js",
-  "scripts": {
-    "npm-clear": "npm cache clean",
-    "clean": "rmdir .\\built /s/q",
-    "before-push": "npm run clean & npm run build & karma start built/tests/karma.conf.js --single-run",
+    "name": "ol3-symbolizer",
+    "version": "5.1.3",
+    "description": "Deserialize ol3 styles",
+    "main": "built/index.js",
+    "scripts": {
+        "npm-clear": "npm cache clean",
+        "clean": "rmdir .\\built /s/q",
+        "before-push": "npm run clean & npm run build & karma start built/tests/karma.conf.js --single-run",
 
-    "build-for-amd": "tsc & mv ./built/index.max.d.ts ./built/index.d.ts",
+        "build-for-amd": "tsc & mv ./built/index.max.d.ts ./built/index.d.ts",
 
-    "build-for-tests": "tsc -p tests/tsconfig.json",
-    "live-for-tests": "live-server --port=5000 --wait=2000 --ignorePattern=.*\\.ts --open=./tests/index.html --browser=CHROME",
-    "dev-for-tests": "npm run build-for-tests & start npm run live-for-tests & npm run build-for-tests -- -w",
+        "build-for-tests": "tsc -p tests/tsconfig.json",
+        "live-for-tests": "live-server --port=5000 --wait=2000 --ignorePattern=.*\\.ts --open=./tests/index.html --browser=CHROME",
+        "dev-for-tests": "npm run build-for-tests & start npm run live-for-tests & npm run build-for-tests -- -w",
 
-    "build-for-examples": "tsc -p tsconfig-examples.json",
-    "live-for-examples": "live-server --port=5000 --wait=2000 --ignorePattern=.*\\.ts --open=tests/index.html",
-    "dev-for-examples": "npm run build-for-examples & npm run uglify-for-examples & start npm run live-for-examples & start npm run build-for-examples -- -w",
+        "build-for-examples": "tsc -p tsconfig-examples.json",
+        "live-for-examples": "live-server --port=5000 --wait=2000 --ignorePattern=.*\\.ts --open=tests/index.html",
+        "dev-for-examples": "npm run build-for-examples & npm run uglify-for-examples & start npm run live-for-examples & start npm run build-for-examples -- -w",
 
-    "uglify-for-amd": "pushd built && uglifyjs index.max.js --source-map \"content='index.max.js.map',url='index.js.map'\" --output=index.js --compress --mangle && popd",
-    "uglify-for-examples": "pushd built && uglifyjs examples.max.js --source-map \"content='examples.max.js.map',url='examples.js.map'\" --output=examples.js --compress --mangle && popd",
-    "uglify": "npm run build-for-amd & npm run uglify-for-amd & npm run build-for-examples & npm run uglify-for-examples",
+        "uglify-for-amd": "pushd built && uglifyjs index.max.js --source-map \"content='index.max.js.map',url='index.js.map'\" --output=index.js --compress --mangle && popd",
+        "uglify-for-examples": "pushd built && uglifyjs examples.max.js --source-map \"content='examples.max.js.map',url='examples.js.map'\" --output=examples.js --compress --mangle && popd",
+        "uglify": "npm run build-for-amd & npm run uglify-for-amd & npm run build-for-examples & npm run uglify-for-examples",
 
-    "start-karma": "karma start built/tests/karma.conf.js",
-    "build-for-karma": "tsc tests/karma.conf.ts -outFile built/tests/karma.conf.js & tsc -p tests/tsconfig-karma.json",
-    "dev-for-karma": "npm run build-for-karma && start npm run start-karma && npm run build-for-karma -- -w",
-
-    "build": "npm run uglify && npm run build-for-tests && npm run build-for-karma",
-    "install": "npm run build-for-amd",
-    "test": "npm run build-for-karma && npm run start-karma -- --single-run"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ca0v/ol3-symbolizer.git"
-  },
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/ca0v/ol3-symbolizer/issues"
-  },
-  "homepage": "https://github.com/ca0v/ol3-symbolizer#readme",
-  "dependencies": {},
-  "devDependencies": {
-    "@types/jquery": "^3.3.6",
-    "@types/mocha": "^5.2.5",
-    "@types/ol": "^4.6.2",
-    "@types/requirejs": "^2.1.31",
-    "@types/should": "^13.0.0",
-    "buble": "^0.19.3",
-    "buble-loader": "^0.5.1",
-    "expect": "^23.5.0",
-    "karma": "^3.0.0",
-    "karma-chrome-launcher": "^2.2.0",
-    "karma-mocha": "^1.3.0",
-    "karma-requirejs": "^1.1.0",
-    "karma-sourcemap-loader": "^0.3.7",
-    "karma-webpack": "^3.0.0",
-    "live-server": "^1.2.0",
-    "mocha": "^5.2.0",
-    "ol3-fun": "https://github.com/ca0v/ol3-fun/tarball/v5.1.3",
-    "should": "^13.2.3",
-    "sourcemap": "^0.1.0",
-    "typescript": "^3.0.1",
-    "uglify-js": "^3.4.8",
-    "underscore": "^1.9.1",
-    "webpack": "^4.17.1"
-  }
+        "start-karma": "karma start built/tests/karma.conf.js",
+        "build-for-karma": "tsc tests/karma.conf.ts -outFile built/tests/karma.conf.js & tsc -p tests/tsconfig-karma.json",
+        "dev-for-karma": "npm run build-for-karma && start npm run build-for-karma -- -w && npm run start-karma",
+        
+        "build": "npm run uglify && npm run build-for-tests && npm run build-for-karma",
+        "install": "npm run build-for-amd",
+        "test": "npm run build-for-karma && npm run start-karma -- --single-run"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ca0v/ol3-symbolizer.git"
+    },
+    "author": "",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/ca0v/ol3-symbolizer/issues"
+    },
+    "homepage": "https://github.com/ca0v/ol3-symbolizer#readme",
+    "dependencies": {},
+    "devDependencies": {
+        "@types/jquery": "^3.3.6",
+        "@types/mocha": "^5.2.5",
+        "@types/ol": "^4.6.2",
+        "@types/requirejs": "^2.1.31",
+        "@types/should": "^13.0.0",
+        "buble": "^0.19.3",
+        "buble-loader": "^0.5.1",
+        "expect": "^23.5.0",
+        "karma": "^3.0.0",
+        "karma-chrome-launcher": "^2.2.0",
+        "karma-mocha": "^1.3.0",
+        "karma-requirejs": "^1.1.0",
+        "karma-sourcemap-loader": "^0.3.7",
+        "karma-webpack": "^3.0.0",
+        "live-server": "^1.2.0",
+        "mocha": "^5.2.0",
+        "ol3-fun": "https://github.com/ca0v/ol3-fun/tarball/v5.1.3",
+        "should": "^13.2.3",
+        "sourcemap": "^0.1.0",
+        "typescript": "^3.0.1",
+        "uglify-js": "^3.4.8",
+        "underscore": "^1.9.1",
+        "webpack": "^4.17.1"
+    }
 }

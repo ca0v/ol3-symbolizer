@@ -1,3 +1,5 @@
+import * as Dashes from "../ol3-symbolizer/styles/stroke/linedash";
+
 import { describe, it, should, shouldEqual } from "./base";
 
 import { Format, StyleConverter } from "../ol3-symbolizer/format/ol3-symbolizer";
@@ -68,27 +70,58 @@ describe("StyleConverter Json Tests", () => {
     let converter = new StyleConverter();
 
     it("Circle Tests", () => {
-        let style = converter.fromJson({
-            circle: {
-                radius: 10
+
+        let baseline: Format.Style = {
+            "circle": {
+                "fill": {
+                    "color": "rgba(197,37,84,0.90)"
+                },
+                "opacity": 1,
+                "stroke": {
+                    "color": "rgba(227,83,105,1)",
+                    "width": 4.4
+                },
+                "radius": 7.3
+            },
+            "text": {
+                "fill": {
+                    "color": "rgba(205,86,109,0.9)"
+                },
+                "stroke": {
+                    "color": "rgba(252,175,131,0.5)",
+                    "width": 2
+                },
+                "text": "Test",
+                "offset-x": 0,
+                "offset-y": 20,
+                "font": "18px fantasy"
             }
-        });
+        };
+
+        let style = converter.fromJson(baseline);
 
         let circleStyle = style.getImage() as ol.style.Circle;
         should(circleStyle !== null, "getImage returns a style");
-        should(circleStyle.getRadius() === 10, "getImage is a circle and radius is correct");
+        shouldEqual(circleStyle.getRadius(), baseline.circle.radius, "getImage is a circle and radius");
 
         let circleJson = converter.toJson(style);
         should(circleJson.circle !== null, "json contains a circle");
-        should(circleJson.circle.radius === 10, "circle radius is correct");
+        shouldEqual(circleJson.circle.radius, baseline.circle.radius, "circle radius");
     });
 
     it("Star Tests", () => {
-        let baseline = <Format.Style>{
-            star: {
-                radius: 10,
-                radius2: 5,
-                points: 10, // must be even
+        let baseline: Format.Style = {
+            "star": {
+                "fill": {
+                    "color": "rgba(54,47,234,1)"
+                },
+                "stroke": {
+                    "color": "rgba(75,92,105,0.85)",
+                    "width": 4
+                },
+                "radius": 9,
+                "radius2": 0,
+                "points": 6
             }
         };
 
@@ -96,23 +129,87 @@ describe("StyleConverter Json Tests", () => {
 
         let starStyle = style.getImage() as ol.style.RegularShape;
         should(starStyle !== null, "getImage returns a style");
-        shouldEqual(starStyle.getRadius(), baseline.star.radius, "getImage is a star and radius is correct");
+        shouldEqual(starStyle.getRadius(), baseline.star.radius, "starStyle radius");
+        shouldEqual(starStyle.getRadius2(), baseline.star.radius2, "starStyle radius2");
+        shouldEqual(starStyle.getPoints(), baseline.star.points, "starStyle points");
 
         let starJson = converter.toJson(style);
         should(starJson.star !== null, "json contains a star");
-        shouldEqual(starJson.star.radius, baseline.star.radius, "star radius is correct");
-        shouldEqual(starJson.star.radius2, baseline.star.radius2, "star radius2 is correct");
-        shouldEqual(starJson.star.points, baseline.star.points, "star point count is correct");
+        shouldEqual(starJson.star.radius, baseline.star.radius, "starJson radius");
+        shouldEqual(starJson.star.radius2, baseline.star.radius2, "starJson radius2");
+        shouldEqual(starJson.star.points, baseline.star.points, "starJson point count"); // <-- failing, 3 != 6
     });
+
+    it("Fill Test", () => {
+        let baseline: Format.Style = {
+            "fill": {
+                "gradient": {
+                    "type": "linear(200,0,201,0)",
+                    "stops": "rgba(255,0,0,.1) 0%;rgba(255,0,0,0.8) 100%"
+                }
+            }
+        };
+
+        let style = converter.fromJson(baseline);
+        let fillStyle = style.getFill();
+        should(fillStyle !== null, "fillStyle exists");
+        let gradient = fillStyle.getColor() as CanvasGradient & { stops: string, type: string }; // stops & type might be writeonly?
+        shouldEqual(gradient.stops, baseline.fill.gradient.stops, "fillStyle color");
+        shouldEqual(gradient.type, baseline.fill.gradient.type, "fillStyle color");
+    });
+
+    it("Stroke Test", () => {
+        let baseline: Format.Style = {
+            "stroke": {
+                "color": "orange",
+                "width": 2,
+                "lineDash": Dashes.longdashdotdot
+            }
+        };
+
+        let style = converter.fromJson(baseline);
+        let strokeStyle = style.getStroke();
+        should(strokeStyle !== null, "strokeStyle exists");
+        shouldEqual(strokeStyle.getColor(), baseline.stroke.color, "strokeStyle color");
+        shouldEqual(strokeStyle.getWidth(), baseline.stroke.width, "strokeStyle width");
+        shouldEqual(strokeStyle.getLineDash().join(), baseline.stroke.lineDash.join(), "strokeStyle lineDash");
+
+    });
+
+    it("Text Test", () => {
+
+        let baseline: Format.Style = {
+            "text": {
+                "fill": {
+                    "color": "rgba(75,92,85,0.85)"
+                },
+                "stroke": {
+                    "color": "rgba(255,255,255,1)",
+                    "width": 5
+                },
+                "offset-x": 5,
+                "offset-y": 10,
+                offsetX: 15, // ignored, why are they here?
+                offsetY: 20, // ignored, why are they here?
+                "text": "fantasy light",
+                "font": "18px serif"
+            }
+        };
+
+        let style = converter.fromJson(baseline);
+        let textStyle = style.getText();
+        should(textStyle !== null, "textStyle exists");
+        shouldEqual(textStyle.getFill().getColor(), baseline.text.fill.color, "textStyle text color");
+        shouldEqual(textStyle.getText(), baseline.text.text, "textStyle text");
+        shouldEqual(textStyle.getOffsetX(), baseline.text["offset-x"], "textStyle color");
+        shouldEqual(textStyle.getOffsetY(), baseline.text["offset-y"], "textStyle color");
+        shouldEqual(textStyle.getFont(), baseline.text.font, "textStyle font");
+    });
+
 
 });
 
-describe("", () => {
-    it("", () => {
-    });
-});
-
-describe("", () => {
-    it("", () => {
+describe("NEXT", () => {
+    it("NEXT", () => {
     });
 });

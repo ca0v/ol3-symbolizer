@@ -6,8 +6,9 @@ import ol = require("openlayers");
 import $ = require("jquery");
 import Snapshot = require("ol3-fun/ol3-fun/snapshot");
 import { getParameterByName } from "ol3-fun/index";
-import { Format, StyleConverter } from "../format/ol3-symbolizer";
+import { StyleConverter } from "../format/ol3-symbolizer";
 import pointStyle = require("../styles/icon/png");
+import { Format } from "../format/@types/formats";
 
 const html = `
 <div class='style-to-canvas'>

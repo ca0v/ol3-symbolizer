@@ -142,10 +142,6 @@ define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/
     }());
     exports.Catalog = Catalog;
 });
-define("ol3-symbolizer/format/base", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-});
 define("ol3-symbolizer/common/assign", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -156,7 +152,6 @@ define("ol3-symbolizer/common/assign", ["require", "exports"], function (require
      * @param value The property value
      */
     function assign(obj, prop, value) {
-        //let getter = prop[0].toUpperCase() + prop.substring(1);
         if (value === null)
             return;
         if (value === undefined)
@@ -170,7 +165,10 @@ define("ol3-symbolizer/common/assign", ["require", "exports"], function (require
                 prop = "circle";
             }
             if (value.hasOwnProperty("points")) {
-                prop = "star";
+                var points = value["points"];
+                if (points < Infinity) {
+                    prop = "star";
+                }
             }
         }
         obj[prop] = value;
@@ -201,17 +199,283 @@ define("ol3-symbolizer/common/doif", ["require", "exports"], function (require, 
     }
     exports.doif = doif;
 });
-define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers", "ol3-symbolizer/common/assign", "ol3-symbolizer/common/mixin", "ol3-symbolizer/common/doif"], function (require, exports, ol, assign_1, mixin_1, doif_1) {
+define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Shapeshifter = /** @class */ (function () {
+        function Shapeshifter() {
+        }
+        /**
+         * @param style does this style represent a cross?
+         */
+        Shapeshifter.is = function (style) {
+            //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
+            if (!style)
+                return false;
+            if (!style.star)
+                return false;
+            if (!style.star.radius)
+                return false;
+            if (4 !== style.star.points)
+                return false;
+            if (0 != style.star.radius2)
+                return false;
+            if (0 != style.star.angle)
+                return false;
+            return true;
+        };
+        /**
+         *
+         * @param style return this style as a cross json encoding
+         */
+        Shapeshifter.as = function (style) {
+            var star = style.star;
+            if (!star)
+                throw "star expected";
+            var result = {
+                cross: {
+                    size: style.star.radius * 2,
+                    fill: star.fill,
+                    opacity: star.opacity,
+                    rotateWithView: star.rotateWithView,
+                    rotation: star.rotation,
+                    scale: star.scale,
+                    snapToPixel: star.snapToPixel,
+                    stroke: star.stroke,
+                }
+            };
+            return result;
+        };
+        return Shapeshifter;
+    }());
+    exports.Shapeshifter = Shapeshifter;
+});
+define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Shapeshifter = /** @class */ (function () {
+        function Shapeshifter() {
+        }
+        /**
+         * @param style does this style represent a square?
+         */
+        Shapeshifter.is = function (style) {
+            //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
+            if (!style)
+                return false;
+            if (!style.star)
+                return false;
+            if (!style.star.radius)
+                return false;
+            if (4 !== style.star.points)
+                return false;
+            if (undefined !== style.star.radius2)
+                return false;
+            if (0.7853981633974483 != style.star.angle)
+                return false;
+            return true;
+        };
+        /**
+         *
+         * @param style return this style as a cross json encoding
+         */
+        Shapeshifter.as = function (style) {
+            var star = style.star;
+            if (!star)
+                throw "star expected";
+            var result = {
+                square: {
+                    size: style.star.radius * 2,
+                    fill: star.fill,
+                    opacity: star.opacity,
+                    rotateWithView: star.rotateWithView,
+                    rotation: star.rotation,
+                    scale: star.scale,
+                    snapToPixel: star.snapToPixel,
+                    stroke: star.stroke,
+                }
+            };
+            return result;
+        };
+        return Shapeshifter;
+    }());
+    exports.Shapeshifter = Shapeshifter;
+});
+define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Shapeshifter = /** @class */ (function () {
+        function Shapeshifter() {
+        }
+        /**
+         * @param style does this style represent a diamond?
+         */
+        Shapeshifter.is = function (style) {
+            //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
+            if (!style)
+                return false;
+            if (!style.star)
+                return false;
+            if (!style.star.radius)
+                return false;
+            if (4 !== style.star.points)
+                return false;
+            if (undefined !== style.star.radius2)
+                return false;
+            if (0 != style.star.angle)
+                return false;
+            return true;
+        };
+        /**
+         *
+         * @param style return this style as a cross json encoding
+         */
+        Shapeshifter.as = function (style) {
+            var star = style.star;
+            if (!star)
+                throw "star expected";
+            var result = {
+                diamond: {
+                    size: style.star.radius * 2,
+                    fill: star.fill,
+                    opacity: star.opacity,
+                    rotateWithView: star.rotateWithView,
+                    rotation: star.rotation,
+                    scale: star.scale,
+                    snapToPixel: star.snapToPixel,
+                    stroke: star.stroke,
+                }
+            };
+            return result;
+        };
+        return Shapeshifter;
+    }());
+    exports.Shapeshifter = Shapeshifter;
+});
+define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Shapeshifter = /** @class */ (function () {
+        function Shapeshifter() {
+        }
+        /**
+         * @param style does this style represent a triangle?
+         */
+        Shapeshifter.is = function (style) {
+            if (!style)
+                return false;
+            if (!style.star)
+                return false;
+            if (!style.star.radius)
+                return false;
+            if (3 !== style.star.points)
+                return false;
+            if (undefined != style.star.radius2)
+                return false;
+            if (0 != style.star.angle)
+                return false;
+            return true;
+        };
+        /**
+         *
+         * @param style return this style as a cross json encoding
+         */
+        Shapeshifter.as = function (style) {
+            var star = style.star;
+            if (!star)
+                throw "star expected";
+            var result = {
+                triangle: {
+                    size: style.star.radius * 2,
+                    fill: star.fill,
+                    opacity: star.opacity,
+                    rotateWithView: star.rotateWithView,
+                    rotation: star.rotation,
+                    scale: star.scale,
+                    snapToPixel: star.snapToPixel,
+                    stroke: star.stroke,
+                }
+            };
+            return result;
+        };
+        return Shapeshifter;
+    }());
+    exports.Shapeshifter = Shapeshifter;
+});
+define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Shapeshifter = /** @class */ (function () {
+        function Shapeshifter() {
+        }
+        /**
+         * @param style does this style represent a X?
+         */
+        Shapeshifter.is = function (style) {
+            if (!style)
+                return false;
+            if (!style.star)
+                return false;
+            if (!style.star.radius)
+                return false;
+            if (4 !== style.star.points)
+                return false;
+            if (0 != style.star.radius2)
+                return false;
+            if (0.7853981633974483 != style.star.angle)
+                return false;
+            return true;
+        };
+        /**
+         *
+         * @param style return this style as a cross json encoding
+         */
+        Shapeshifter.as = function (style) {
+            var star = style.star;
+            if (!star)
+                throw "star expected";
+            var result = {
+                x: {
+                    size: style.star.radius * 2,
+                    fill: star.fill,
+                    opacity: star.opacity,
+                    rotateWithView: star.rotateWithView,
+                    rotation: star.rotation,
+                    scale: star.scale,
+                    snapToPixel: star.snapToPixel,
+                    stroke: star.stroke,
+                }
+            };
+            return result;
+        };
+        return Shapeshifter;
+    }());
+    exports.Shapeshifter = Shapeshifter;
+});
+define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers", "ol3-symbolizer/common/assign", "ol3-symbolizer/common/mixin", "ol3-symbolizer/common/doif", "ol3-symbolizer/format/plugins/as-cross", "ol3-symbolizer/format/plugins/as-square", "ol3-symbolizer/format/plugins/as-diamond", "ol3-symbolizer/format/plugins/as-triangle", "ol3-symbolizer/format/plugins/as-x"], function (require, exports, ol, assign_1, mixin_1, doif_1, as_cross_1, as_square_1, as_diamond_1, as_triangle_1, as_x_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var StyleConverter = /** @class */ (function () {
+        /**
+         * Register shape shifters
+         */
         function StyleConverter() {
+            this.converters = [];
+            this.converters.push(as_cross_1.Shapeshifter);
+            this.converters.push(as_square_1.Shapeshifter);
+            this.converters.push(as_diamond_1.Shapeshifter);
+            this.converters.push(as_triangle_1.Shapeshifter);
+            this.converters.push(as_x_1.Shapeshifter);
+            //this.converters.push(StarShapeshifter);
         }
         StyleConverter.prototype.fromJson = function (json) {
             return this.deserializeStyle(json);
         };
         StyleConverter.prototype.toJson = function (style) {
-            return this.serializeStyle(style);
+            // to be encoded as a collection of encoders, each in it's own module
+            var result = this.serializeStyle(style);
+            this.converters.some(function (c) { return c.is(result) && !!(result = c.as(result)); });
+            return result;
         };
         /**
          * uses the interior point of a polygon when rendering a 'point' style
@@ -228,21 +492,21 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             if (!style)
                 return null;
             if (typeof style === "string")
-                return style;
+                throw style;
             if (typeof style === "number")
-                return style;
+                throw style;
             if (style.getColor)
                 mixin_1.mixin(s, this.serializeColor(style.getColor()));
             if (style.getImage)
-                assign_1.assign(s, "image", this.serializeStyle(style.getImage()));
+                assign_1.assign(s, "image", this.serializeImage(style.getImage()));
             if (style.getFill)
                 assign_1.assign(s, "fill", this.serializeFill(style.getFill()));
             if (style.getOpacity)
                 assign_1.assign(s, "opacity", style.getOpacity());
             if (style.getStroke)
-                assign_1.assign(s, "stroke", this.serializeStyle(style.getStroke()));
+                assign_1.assign(s, "stroke", this.serializeStroke(style.getStroke()));
             if (style.getText)
-                assign_1.assign(s, "text", this.serializeStyle(style.getText()));
+                assign_1.assign(s, "text", this.serializeText(style.getText()));
             if (style.getWidth)
                 assign_1.assign(s, "width", style.getWidth());
             if (style.getOffsetX)
@@ -293,9 +557,24 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             // "icon"
             if (style.getSrc)
                 assign_1.assign(s, "src", style.getSrc());
-            if (s.points && s.radius !== s.radius2)
-                s.points /= 2; // ol3 defect doubles point count when r1 <> r2  
             return s;
+        };
+        StyleConverter.prototype.serializeImage = function (style) {
+            if (typeof style === "string")
+                throw style;
+            if (typeof style === "number")
+                throw style;
+            return this.serializeStyle(style);
+        };
+        StyleConverter.prototype.serializeStroke = function (style) {
+            if (typeof style === "string")
+                throw style;
+            if (typeof style === "number")
+                throw style;
+            return this.serializeStyle(style);
+        };
+        StyleConverter.prototype.serializeText = function (style) {
+            return style;
         };
         StyleConverter.prototype.serializeColor = function (color) {
             if (color instanceof Array) {
@@ -638,7 +917,9 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var symbolizer = new Symbolizer.StyleConverter();
-    // esri -> ol mappings
+    // esri -> ol mappings (add keyof to get proper definitions, not sure how)
+    // function agsStyleMapper(index : keyof(StyleTypes)) {
+    // }
     var styleMap = {
         "esriSMSCircle": "circle",
         "esriSMSDiamond": "diamond",

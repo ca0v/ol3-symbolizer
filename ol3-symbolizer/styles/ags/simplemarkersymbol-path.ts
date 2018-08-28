@@ -1,4 +1,4 @@
-import { ArcGisFeatureServerLayer } from "../../format/ags-symbolizer";
+import { ArcGisFeatureServerLayer } from "../../format/@types/ArcGisFeatureServerLayer";
 
 export = <ArcGisFeatureServerLayer.Symbol[]>
     // from https://developers.arcgis.com/javascript/3/samples/playground/main.html#/config=symbols/SimpleMarkerSymbol.json

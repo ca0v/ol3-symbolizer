@@ -6,7 +6,7 @@
     "scripts": {
         "npm-clear": "npm cache clean",
         "clean": "rmdir .\\built /s/q",
-        "before-push": "npm run clean & npm run build & karma start built/tests/karma.conf.js --single-run",
+        "before-push": "npm run clean & npm run build & npm run live-for-tests",
 
         "build-for-amd": "tsc & mv ./built/index.max.d.ts ./built/index.d.ts",
 

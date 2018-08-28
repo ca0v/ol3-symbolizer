@@ -1,4 +1,4 @@
-import { ArcGisFeatureServerLayer } from "../../format/ags-symbolizer";
+import { ArcGisFeatureServerLayer } from "../../format/@types/ArcGisFeatureServerLayer";
 
 let symbol = () => (<ArcGisFeatureServerLayer.Symbol>{
     "color": [

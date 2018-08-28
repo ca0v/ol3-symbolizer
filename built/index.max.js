@@ -2,17 +2,51 @@ define("ol3-symbolizer/format/base", ["require", "exports"], function (require, 
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers"], function (require, exports, ol) {
+define("ol3-symbolizer/common/assign", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function assign(obj, prop, value) {
+        if (value === null)
+            return;
+        if (value === undefined)
+            return;
+        if (typeof value === "object") {
+            if (Object.keys(value).length === 0)
+                return;
+        }
+        if (prop === "image") {
+            if (value.hasOwnProperty("radius")) {
+                prop = "circle";
+            }
+            if (value.hasOwnProperty("points")) {
+                prop = "star";
+            }
+        }
+        obj[prop] = value;
+    }
+    exports.assign = assign;
+});
+define("ol3-symbolizer/common/mixin", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function mixin(a, b) {
+        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
+        return a;
+    }
+    exports.mixin = mixin;
+});
+define("ol3-symbolizer/common/doif", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function doif(v, cb) {
         if (v !== undefined && v !== null)
             cb(v);
     }
-    function mixin(a, b) {
-        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
-        return a;
-    }
+    exports.doif = doif;
+});
+define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers", "ol3-symbolizer/common/assign", "ol3-symbolizer/common/mixin", "ol3-symbolizer/common/doif"], function (require, exports, ol, assign_1, mixin_1, doif_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var StyleConverter = (function () {
         function StyleConverter() {
         }
@@ -22,34 +56,14 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
         StyleConverter.prototype.toJson = function (style) {
             return this.serializeStyle(style);
         };
-        StyleConverter.prototype.setGeometry = function (feature) {
+        StyleConverter.prototype.getGeometry = function (feature) {
             var geom = feature.getGeometry();
             if (geom instanceof ol.geom.Polygon) {
                 geom = geom.getInteriorPoint();
             }
             return geom;
         };
-        StyleConverter.prototype.assign = function (obj, prop, value) {
-            if (value === null)
-                return;
-            if (value === undefined)
-                return;
-            if (typeof value === "object") {
-                if (Object.keys(value).length === 0)
-                    return;
-            }
-            if (prop === "image") {
-                if (value.hasOwnProperty("radius")) {
-                    prop = "circle";
-                }
-                if (value.hasOwnProperty("points")) {
-                    prop = "star";
-                }
-            }
-            obj[prop] = value;
-        };
         StyleConverter.prototype.serializeStyle = function (style) {
-            var _this = this;
             var s = {};
             if (!style)
                 return null;
@@ -58,65 +72,65 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             if (typeof style === "number")
                 return style;
             if (style.getColor)
-                mixin(s, this.serializeColor(style.getColor()));
+                mixin_1.mixin(s, this.serializeColor(style.getColor()));
             if (style.getImage)
-                this.assign(s, "image", this.serializeStyle(style.getImage()));
+                assign_1.assign(s, "image", this.serializeStyle(style.getImage()));
             if (style.getFill)
-                this.assign(s, "fill", this.serializeFill(style.getFill()));
+                assign_1.assign(s, "fill", this.serializeFill(style.getFill()));
             if (style.getOpacity)
-                this.assign(s, "opacity", style.getOpacity());
+                assign_1.assign(s, "opacity", style.getOpacity());
             if (style.getStroke)
-                this.assign(s, "stroke", this.serializeStyle(style.getStroke()));
+                assign_1.assign(s, "stroke", this.serializeStyle(style.getStroke()));
             if (style.getText)
-                this.assign(s, "text", this.serializeStyle(style.getText()));
+                assign_1.assign(s, "text", this.serializeStyle(style.getText()));
             if (style.getWidth)
-                this.assign(s, "width", style.getWidth());
+                assign_1.assign(s, "width", style.getWidth());
             if (style.getOffsetX)
-                this.assign(s, "offset-x", style.getOffsetX());
+                assign_1.assign(s, "offset-x", style.getOffsetX());
             if (style.getOffsetY)
-                this.assign(s, "offset-y", style.getOffsetY());
+                assign_1.assign(s, "offset-y", style.getOffsetY());
             if (style.getWidth)
-                this.assign(s, "width", style.getWidth());
+                assign_1.assign(s, "width", style.getWidth());
             if (style.getFont)
-                this.assign(s, "font", style.getFont());
+                assign_1.assign(s, "font", style.getFont());
             if (style.getRadius)
-                this.assign(s, "radius", style.getRadius());
+                assign_1.assign(s, "radius", style.getRadius());
             if (style.getRadius2)
-                this.assign(s, "radius2", style.getRadius2());
+                assign_1.assign(s, "radius2", style.getRadius2());
             if (style.getPoints)
-                this.assign(s, "points", style.getPoints());
+                assign_1.assign(s, "points", style.getPoints());
             if (style.getAngle)
-                this.assign(s, "angle", style.getAngle());
+                assign_1.assign(s, "angle", style.getAngle());
             if (style.getRotation)
-                this.assign(s, "rotation", style.getRotation());
+                assign_1.assign(s, "rotation", style.getRotation());
             if (style.getOrigin)
-                this.assign(s, "origin", style.getOrigin());
+                assign_1.assign(s, "origin", style.getOrigin());
             if (style.getScale)
-                this.assign(s, "scale", style.getScale());
+                assign_1.assign(s, "scale", style.getScale());
             if (style.getSize)
-                this.assign(s, "size", style.getSize());
+                assign_1.assign(s, "size", style.getSize());
             if (style.getAnchor) {
-                this.assign(s, "anchor", style.getAnchor());
+                assign_1.assign(s, "anchor", style.getAnchor());
                 "anchorXUnits,anchorYUnits,anchorOrigin".split(",").forEach(function (k) {
-                    _this.assign(s, k, style[k + "_"]);
+                    assign_1.assign(s, k, style[k + "_"]);
                 });
             }
             if (style.path) {
                 if (style.path)
-                    this.assign(s, "path", style.path);
+                    assign_1.assign(s, "path", style.path);
                 if (style.getImageSize)
-                    this.assign(s, "imgSize", style.getImageSize());
+                    assign_1.assign(s, "imgSize", style.getImageSize());
                 if (style.stroke)
-                    this.assign(s, "stroke", style.stroke);
+                    assign_1.assign(s, "stroke", style.stroke);
                 if (style.fill)
-                    this.assign(s, "fill", style.fill);
+                    assign_1.assign(s, "fill", style.fill);
                 if (style.scale)
-                    this.assign(s, "scale", style.scale);
+                    assign_1.assign(s, "scale", style.scale);
                 if (style.imgSize)
-                    this.assign(s, "imgSize", style.imgSize);
+                    assign_1.assign(s, "imgSize", style.imgSize);
             }
             if (style.getSrc)
-                this.assign(s, "src", style.getSrc());
+                assign_1.assign(s, "src", style.getSrc());
             if (s.points && s.radius !== s.radius2)
                 s.points /= 2;
             return s;
@@ -179,7 +193,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 fill: fill,
                 stroke: stroke
             });
-            image && s.setGeometry(function (feature) { return _this.setGeometry(feature); });
+            image && s.setGeometry(function (feature) { return _this.getGeometry(feature); });
             return s;
         };
         StyleConverter.prototype.deserializeText = function (json) {
@@ -222,8 +236,8 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 fill: json.fill && this.deserializeFill(json.fill),
                 stroke: json.stroke && this.deserializeStroke(json.stroke)
             });
-            doif(json.rotation, function (v) { return image.setRotation(v); });
-            doif(json.opacity, function (v) { return image.setOpacity(v); });
+            doif_1.doif(json.rotation, function (v) { return image.setRotation(v); });
+            doif_1.doif(json.opacity, function (v) { return image.setOpacity(v); });
             return image;
         };
         StyleConverter.prototype.deserializeIcon = function (json) {
@@ -314,7 +328,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 size: [canvas.width, canvas.height],
                 src: undefined
             });
-            return mixin(icon, {
+            return mixin_1.mixin(icon, {
                 path: json.path,
                 stroke: json.stroke,
                 fill: json.fill,
@@ -330,12 +344,12 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
         };
         StyleConverter.prototype.deserializeStroke = function (json) {
             var stroke = new ol.style.Stroke();
-            doif(json.color, function (v) { return stroke.setColor(v); });
-            doif(json.lineCap, function (v) { return stroke.setLineCap(v); });
-            doif(json.lineDash, function (v) { return stroke.setLineDash(v); });
-            doif(json.lineJoin, function (v) { return stroke.setLineJoin(v); });
-            doif(json.miterLimit, function (v) { return stroke.setMiterLimit(v); });
-            doif(json.width, function (v) { return stroke.setWidth(v); });
+            doif_1.doif(json.color, function (v) { return stroke.setColor(v); });
+            doif_1.doif(json.lineCap, function (v) { return stroke.setLineCap(v); });
+            doif_1.doif(json.lineDash, function (v) { return stroke.setLineDash(v); });
+            doif_1.doif(json.lineJoin, function (v) { return stroke.setLineJoin(v); });
+            doif_1.doif(json.miterLimit, function (v) { return stroke.setMiterLimit(v); });
+            doif_1.doif(json.width, function (v) { return stroke.setWidth(v); });
             return stroke;
         };
         StyleConverter.prototype.deserializeColor = function (fill) {
@@ -353,7 +367,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                     gradient_1 = this.deserializeRadialGradient(fill.gradient);
                 }
                 if (fill.gradient.stops) {
-                    mixin(gradient_1, {
+                    mixin_1.mixin(gradient_1, {
                         stops: fill.gradient.stops
                     });
                     var stops = fill.gradient.stops.split(";");
@@ -406,7 +420,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                         }
                         break;
                 }
-                return mixin(context_1.createPattern(canvas, repitition), fill.pattern);
+                return mixin_1.mixin(context_1.createPattern(canvas, repitition), fill.pattern);
             }
             if (fill.image) {
                 var canvas = document.createElement('canvas');
@@ -428,7 +442,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             canvas.height = Math.max(y0, y1);
             var context = canvas.getContext('2d');
             var gradient = context.createLinearGradient(x0, y0, x1, y1);
-            mixin(gradient, {
+            mixin_1.mixin(gradient, {
                 type: "linear(" + [x0, y0, x1, y1].join(",") + ")"
             });
             return gradient;
@@ -441,7 +455,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             canvas.height = 2 * Math.max(y0, y1);
             var context = canvas.getContext('2d');
             var gradient = context.createRadialGradient(x0, y0, r0, x1, y1, r1);
-            mixin(gradient, {
+            mixin_1.mixin(gradient, {
                 type: "radial(" + [x0, y0, r0, x1, y1, r1].join(",") + ")"
             });
             return gradient;

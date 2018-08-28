@@ -232,7 +232,6 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
         // "icon"
         if (style.getSrc) assign(s, "src", style.getSrc());
 
-        if (s.points && s.radius !== s.radius2) s.points /= 2; // ol3 defect doubles point count when r1 <> r2  
         return s;
     }
 

@@ -12,8 +12,8 @@ import Style from "ol/style/Style";
 
 
 import { assign } from "../ol3-symbolizer/common/assign";
-import { mixin } from "../ol3-symbolizer/common/mixin";
-import { defaults } from "../ol3-symbolizer/common/defaults";
+import { mixin } from "../ol3-symbolizer/common/mixin"; // replace with ol-fun/mixin
+import { defaults } from "../ol3-symbolizer/common/defaults"; // replace with ol-fun/defaults
 import { should } from "./base";
 
 describe("assign tests", function () {

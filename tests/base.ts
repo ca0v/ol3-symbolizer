@@ -18,3 +18,7 @@ export function shouldEqual<T>(a: T, b: T, message: string) {
     if (a != b) console.warn(a, b);
     should(a == b, message);
 }
+
+export function stringify(o: Object) {
+    return JSON.stringify(o, null, "\t");
+}

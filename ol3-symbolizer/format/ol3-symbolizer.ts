@@ -128,6 +128,11 @@ export namespace Format {
         text?: Text;
         fill?: Fill;
         stroke?: Stroke;
+        cross?: Image & {
+            size: number; 
+            fill?: Fill;
+            stroke?: Stroke;
+        }
     }
 
     export interface Icon {
@@ -164,6 +169,48 @@ export namespace Format {
 
 }
 
+/**
+ * @param style does this style represent a square?
+ */
+function isSquare(style: ol.style.Style) {
+
+}
+
+/**
+ * @param style does this style represent a cross?
+ */
+function isCross(style: Format.Style) {
+    //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
+    if (!style) return false;
+    if (!style.star) return false;
+    if (4 !== style.star.points) return false;
+    if (0 != style.star.radius2) return false;
+    if (0 != style.star.angle) return false;
+    return true;
+}
+
+/**
+ * 
+ * @param style return this style as a cross json encoding
+ */
+function asCross(style: Format.Style) {
+    let result: Format.Style = {
+        cross: {
+            size: style.star.radius,
+        }
+    };
+    result.cross.fill = style.star.fill;
+    result.cross.opacity = style.star.opacity;
+    result.cross.rotateWithView = style.star.rotateWithView;
+    result.cross.rotation = style.star.rotation;
+    result.cross.scale = style.star.scale;
+    result.cross.size = style.star.radius * 2;
+    result.cross.snapToPixel = style.star.snapToPixel;
+    result.cross.stroke = style.star.stroke;
+
+    return result;
+}
+
 export class StyleConverter implements Serializer.IConverter<Format.Style> {
 
     fromJson(json: Format.Style) {
@@ -171,7 +218,10 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
     }
 
     toJson(style: ol.style.Style) {
-        return <Format.Style>this.serializeStyle(style);
+        // to be encoded as a collection of encoders, each in it's own module
+        let result = <Format.Style>this.serializeStyle(style);
+        if (isCross(result)) result = asCross(result);
+        return result;
     }
 
     /**

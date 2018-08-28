@@ -1,10 +1,14 @@
 import * as Dashes from "../ol3-symbolizer/styles/stroke/linedash";
 
-import { describe, it, should, shouldEqual } from "./base";
+import { describe, it, should, shouldEqual, stringify } from "./base";
 
 import { Format, StyleConverter } from "../ol3-symbolizer/format/ol3-symbolizer";
 
-describe("Format Tests", () => {
+import basic = require("../ol3-symbolizer/styles/basic");
+
+let converter = new StyleConverter();
+
+describe("OL Format Tests", () => {
 
     it("Ensures interface does not break", () => {
         let circle = <Format.Circle>{};
@@ -55,7 +59,7 @@ describe("Format Tests", () => {
 
 });
 
-describe("StyleConverter API Tests", () => {
+describe("OL StyleConverter API Tests", () => {
 
     it("StyleConverter API", () => {
         let converter = new StyleConverter();
@@ -65,9 +69,7 @@ describe("StyleConverter API Tests", () => {
 
 });
 
-describe("StyleConverter Json Tests", () => {
-
-    let converter = new StyleConverter();
+describe("OL StyleConverter Json Tests", () => {
 
     it("Circle Tests", () => {
 
@@ -209,7 +211,132 @@ describe("StyleConverter Json Tests", () => {
 
 });
 
-describe("NEXT", () => {
+describe("OL Basic shapes", () => {
+
+    it("cross", () => {
+
+        let cross = {
+            "star": {
+                "opacity": 0.5,
+                "fill": {
+                    "color": "red"
+                },
+                "stroke": {
+                    "color": "black",
+                    "width": 2
+                },
+                "points": 4,
+                "radius": 10,
+                "radius2": 0,
+                "angle": 0
+            }
+        };
+
+        let square = {
+            "star": {
+                "fill": {
+                    "color": "red"
+                },
+                "stroke": {
+                    "color": "black",
+                    "width": 2
+                },
+                "points": 4,
+                "radius": 10,
+                "angle": 0.7853981633974483
+            }
+        };
+
+        let diamond = {
+            "star": {
+                "fill": {
+                    "color": "red"
+                },
+                "stroke": {
+                    "color": "black",
+                    "width": 2
+                },
+                "points": 4,
+                "radius": 10,
+                "angle": 0
+            }
+        };
+
+        let star = {
+            "star": {
+                "fill": {
+                    "color": "red"
+                },
+                "stroke": {
+                    "color": "black",
+                    "width": 2
+                },
+                "points": 5,
+                "radius": 10,
+                "radius2": 4,
+                "angle": 0
+            }
+        };
+
+        let triangle = {
+            "star": {
+                "fill": {
+                    "color": "red"
+                },
+                "stroke": {
+                    "color": "black",
+                    "width": 2
+                },
+                "points": 3,
+                "radius": 10,
+                "angle": 0
+            }
+        };
+
+        let x = {
+            "star": {
+                "fill": {
+                    "color": "red"
+                },
+                "stroke": {
+                    "color": "black",
+                    "width": 2
+                },
+                "points": 4,
+                "radius": 10,
+                "radius2": 0,
+                "angle": 0.7853981633974483
+            }
+        };
+
+        let crossJson = converter.toJson(converter.fromJson(cross));
+        let squareJson = converter.toJson(converter.fromJson(square));
+        let diamondJson = converter.toJson(converter.fromJson(diamond));
+        let starJson = converter.toJson(converter.fromJson(star));
+        let triangleJson = converter.toJson(converter.fromJson(triangle));
+        let xJson = converter.toJson(converter.fromJson(x));
+
+        // the above re-translations should be now be in a friendlier encoding
+        // likewise fromJson should work on the following:
+        // {cross: {size: 10}}
+        // {square: {size: 10}}
+        // {diamond: {size: 10}}
+        // {star: {size: 10}}
+        // {triangle: {size: 10}}
+        // {x: {size: 10}}
+        // the usecase being a simplification of styling
+        /**
+         * Before going too far down this road, remind yourself of the ogc styling used by geoserver...I recall it was
+         * terse and powerful and css-like and ol probably has support for it already
+         */
+        should(!!crossJson.cross, "cross exists");
+        shouldEqual(crossJson.cross.size, cross.star.radius * 2, "cross size");
+
+    })
+});
+
+
+describe("OL NEXT", () => {
     it("NEXT", () => {
     });
 });

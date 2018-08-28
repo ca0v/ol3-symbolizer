@@ -1,7 +1,15 @@
 import Ajax = require("../common/ajax");
 import { defaults } from "../common/defaults";
 
-export type StyleTypes = "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX" | "esriSFSSolid" | "esriSFSBackwardDiagonal" | "esriSFSForwardDiagonal" | "esriSLSSolid" | "esriSLSDot" | "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot";
+type esriSLSStyles = "esriSLSDash" | "esriSLSDashDot" | "esriSLSDashDotDot" | "esriSLSDot" | "esriSLSLongDash" | "esriSLSLongDashDot" | "esriSLSShortDash" | "esriSLSShortDashDot" | "esriSLSShortDashDotDot" | "esriSLSShortDot" | "esriSLSSolid";
+type esriSMSStyles = "esriSMSCircle" | "esriSMSCross" | "esriSMSDiamond" | "esriSMSPath" | "esriSMSSquare" | "esriSMSX";
+type esriSFSStyles = "esriSFSSolid" | "esriSFSBackwardDiagonal" | "esriSFSForwardDiagonal";
+type esriPMSStyles = "esriPMSTodo"; // todo
+type esriPFSStyles = "esriPFSTodo"; // todo
+type esriTSStyles = "esriTSTodo"; // todo
+
+export type StyleTypes =  esriSMSStyles | esriSLSStyles | esriSFSStyles | esriPMSStyles | esriPFSStyles | esriTSStyles;
+
 export type SymbolTypes = "esriSMS" | "esriSLS" | "esriSFS" | "esriPMS" | "esriPFS" | "esriTS";
 
 export interface Service {

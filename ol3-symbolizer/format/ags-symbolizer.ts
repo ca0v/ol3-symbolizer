@@ -66,152 +66,157 @@ export namespace ArcGisFeatureServerLayer {
         angle?: number;
         imageData?: string;
         path?: string;
-    }
+        cap?: "esriLCSButt" | "esriLCSRound" | "esriLCSSquare";
+        join?: "esriLJSBevel" | "esriLJSMiter" | "esriLJSRound";
+        miterLimit?: number;
+}
 
-    export interface UniqueValueInfo {
-        symbol: Symbol;
-        value?: string;
-        label?: string;
-        description?: string;
-    }
+export interface UniqueValueInfo {
+    symbol: Symbol;
+    value?: string;
+    label?: string;
+    description?: string;
+}
 
-    export interface VisualVariable {
-        type: string;
-        field: string;
-        valueUnit: string;
-        minSize: number;
-        maxSize: number;
-        minDataValue: number;
-        maxDataValue: number;
-        minSliderValue: number;
-        maxSliderValue: number;
-    }
+export interface VisualVariable {
+    type: string;
+    field: string;
+    valueUnit: string;
+    minSize: number;
+    maxSize: number;
+    minDataValue: number;
+    maxDataValue: number;
+    minSliderValue: number;
+    maxSliderValue: number;
+}
 
-    export interface ClassBreakInfo {
-        symbol: Symbol;
-        classMaxValue: number;
-    }
+export interface ClassBreakInfo {
+    symbol: Symbol;
+    classMaxValue: number;
+}
 
-    export interface Renderer extends Attributes {
-        type: string;
-        label?: string;
-        description?: string;
-        field1?: string;
-        field2?: string;
-        field3?: string;
-        fieldDelimiter?: string;
-        defaultSymbol?: Symbol;
-        defaultLabel?: any;
-        symbol?: Symbol;
-        uniqueValueInfos?: UniqueValueInfo[];
-    }
+export interface Renderer extends Attributes {
+    type: string;
+    label?: string;
+    description?: string;
+    field1?: string;
+    field2?: string;
+    field3?: string;
+    fieldDelimiter?: string;
+    defaultSymbol?: Symbol;
+    defaultLabel?: any;
+    symbol?: Symbol;
+    uniqueValueInfos?: UniqueValueInfo[];
+}
 
-    export interface ClassBreakRenderer extends Renderer {
-        field?: string;
-        minValue?: number;
-        classBreakInfos?: ClassBreakInfo[];
-        visualVariables?: VisualVariable[];
-        authoringInfo: { visualVariables: VisualVariable[] }
-    }
+export interface ClassBreakRenderer extends Renderer {
+    field?: string;
+    minValue?: number;
+    classBreakInfos?: ClassBreakInfo[];
+    visualVariables?: VisualVariable[];
+    authoringInfo: { visualVariables: VisualVariable[] }
+}
 
-    export interface DrawingInfo {
-        renderer: Renderer;
-        transparency?: number;
-        labelingInfo?: any;
-    }
+export interface DrawingInfo {
+    renderer: Renderer;
+    transparency?: number;
+    labelingInfo?: any;
+}
 
-    export interface CodedValue {
-        name: string;
-        code: string;
-    }
+export interface CodedValue {
+    name: string;
+    code: string;
+}
 
-    export interface Domain {
-        type: string;
-        name: string;
-        codedValues: CodedValue[];
-    }
+export interface Domain {
+    type: string;
+    name: string;
+    codedValues: CodedValue[];
+}
 
-    export interface Field {
-        name: string;
-        type: string;
-        alias: string;
-        domain: Domain;
-        editable: boolean;
-        nullable: boolean;
-        length?: number;
-    }
+export interface Field {
+    name: string;
+    type: string;
+    alias: string;
+    domain: Domain;
+    editable: boolean;
+    nullable: boolean;
+    length?: number;
+}
 
 
-    export interface Domains {
-    }
+export interface Domains {
+}
 
-    export interface Attributes {
-        [attribute: string]: any;
-    }
+export interface Attributes {
+    [attribute: string]: any;
+}
 
-    export interface Prototype {
-        attributes: Attributes;
-    }
+export interface Prototype {
+    attributes: Attributes;
+}
 
-    export interface Template {
-        name: string;
-        description: string;
-        prototype: Prototype;
-        drawingTool: string;
-    }
+export interface Template {
+    name: string;
+    description: string;
+    prototype: Prototype;
+    drawingTool: string;
+}
 
-    export interface Type {
-        id: string;
-        name: string;
-        domains: Domains;
-        templates: Template[];
-    }
+export interface Type {
+    id: string;
+    name: string;
+    domains: Domains;
+    templates: Template[];
+}
 
-    export interface FeatureLayerInfo {
-        currentVersion: string | number;
-        id: number;
-        name: string;
-        type: string;
-        description: string;
-        copyrightText: string;
-        defaultVisibility: boolean;
-        editFieldsInfo?: any;
-        ownershipBasedAccessControlForFeatures?: any;
-        syncCanReturnChanges: boolean;
-        relationships: any[];
-        isDataVersioned: boolean;
-        supportsRollbackOnFailureParameter: boolean;
-        supportsStatistics: boolean;
-        supportsAdvancedQueries: boolean;
-        advancedQueryCapabilities: AdvancedQueryCapabilities;
-        geometryType: string;
-        minScale: number;
-        maxScale: number;
-        extent: Extent;
-        drawingInfo: DrawingInfo;
-        hasM: boolean;
-        hasZ: boolean;
-        allowGeometryUpdates: boolean;
-        hasAttachments: boolean;
-        htmlPopupType: string;
-        objectIdField: string;
-        globalIdField: string;
-        displayField: string;
-        typeIdField: string;
-        fields: Field[];
-        types: Type[];
-        templates: any[];
-        maxRecordCount: number;
-        supportedQueryFormats: string;
-        capabilities: string;
-        useStandardizedQueries: boolean;
-        spatialReference?: SpatialReference;
-        displayFieldName?: string;
-    }
+export interface FeatureLayerInfo {
+    currentVersion: string | number;
+    id: number;
+    name: string;
+    type: string;
+    description: string;
+    copyrightText: string;
+    defaultVisibility: boolean;
+    editFieldsInfo?: any;
+    ownershipBasedAccessControlForFeatures?: any;
+    syncCanReturnChanges: boolean;
+    relationships: any[];
+    isDataVersioned: boolean;
+    supportsRollbackOnFailureParameter: boolean;
+    supportsStatistics: boolean;
+    supportsAdvancedQueries: boolean;
+    advancedQueryCapabilities: AdvancedQueryCapabilities;
+    geometryType: string;
+    minScale: number;
+    maxScale: number;
+    extent: Extent;
+    drawingInfo: DrawingInfo;
+    hasM: boolean;
+    hasZ: boolean;
+    allowGeometryUpdates: boolean;
+    hasAttachments: boolean;
+    htmlPopupType: string;
+    objectIdField: string;
+    globalIdField: string;
+    displayField: string;
+    typeIdField: string;
+    fields: Field[];
+    types: Type[];
+    templates: any[];
+    maxRecordCount: number;
+    supportedQueryFormats: string;
+    capabilities: string;
+    useStandardizedQueries: boolean;
+    spatialReference?: SpatialReference;
+    displayFieldName?: string;
+}
 
 }
 
-// esri -> ol mappings
+// esri -> ol mappings (add keyof to get proper definitions, not sure how)
+// function agsStyleMapper(index : keyof(StyleTypes)) {
+// }
 const styleMap = {
     "esriSMSCircle": "circle",
     "esriSMSDiamond": "diamond",

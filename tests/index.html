@@ -44,7 +44,7 @@
                     let mocha = Mocha.setup({
                         timeout: 6000,
                         ui: 'bdd',
-                        bail: true
+                        bail: false
                     });
 
                     require(["tests/common"], () => mocha.run());

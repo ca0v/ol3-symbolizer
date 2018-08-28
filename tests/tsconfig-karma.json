@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "allowJs": false,
+        "removeComments": true,
+        "declaration": false,
+        "module": "commonjs",
+        "target": "es3",
+        "noImplicitAny": true,
+        "sourceMap": false,
+        "outDir": "../built",
+        "moduleResolution": "node",
+        "baseUrl": "../node_modules"
+    },
+    "include": [
+        "**/*.ts"
+    ]
+}

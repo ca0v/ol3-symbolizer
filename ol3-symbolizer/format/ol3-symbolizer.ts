@@ -4,6 +4,13 @@ import { assign } from "../common/assign";
 import { mixin } from "../common/mixin";
 import { doif } from "../common/doif";
 
+import { Format } from "./@types/formats";
+import { Shapeshifter as CrossShapeshifter } from "./plugins/as-cross";
+import { Shapeshifter as SquareShapeshifter } from "./plugins/as-square";
+import { Shapeshifter as DiamondShapeshifter } from "./plugins/as-diamond";
+import { Shapeshifter as TriangleShapeshifter } from "./plugins/as-triangle";
+import { Shapeshifter as XShapeshifter } from "./plugins/as-x";
+
 // Class
 interface Path2D {
     addPath(path: Path2D, transform?: SVGMatrix): void;
@@ -18,200 +25,25 @@ interface Path2D {
     rect(x: number, y: number, w: number, h: number): void;
 }
 
-export namespace Format {
-
-    export type Color = number[] | string;
-    export type Size = number[];
-    export type Offset = number[];
-    export type LineDash = number[];
-
-    export interface Fill {
-        color?: string;
-        gradient?: {
-            type?: string;
-            stops?: string;
-        };
-        pattern?: {
-            color?: any;
-            orientation?: "backward" | "forward" | "diagonal" | "horizontal" | "vertical" | "cross";
-            spacing?: number;
-            repitition?: string;
-        };
-        image?: {
-            src?: any;
-            imageData?: string;
-            imgSize?: Size;
-            "anchor-x": any;
-            "anchor-y": any;
-        };
-    }
-
-    export interface Stroke {
-        color?: string;
-        width?: number;
-        lineCap?: string;
-        lineJoin?: string;
-        lineDash?: LineDash;
-        miterLimit?: number;
-    }
-
-    export interface Style {
-        //geometry?: string | ol.geom.Geometry | ol.style.GeometryFunction;
-        fill?: Fill;
-        image?: Image & Icon & Svg;
-        stroke?: Stroke;
-        text?: Text;
-        zIndex?: number;
-    }
-
-    export interface Image {
-        opacity?: number;
-        rotateWithView?: boolean;
-        rotation?: number;
-        scale?: number;
-        snapToPixel?: boolean;
-    }
-
-    export interface Circle {
-        radius: number;
-        stroke?: Stroke;
-        fill?: Fill;
-        snapToPixel?: boolean;
-    }
-
-    export interface Star extends Image {
-        angle?: number;
-        fill?: Fill;
-        points?: number;
-        stroke?: Stroke;
-        radius?: number;
-        radius2?: number;
-    }
-
-    export interface Icon extends Image {
-        anchor?: Offset;
-        anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
-        anchorXUnits?: "fraction" | "pixels";
-        anchorYUnits?: "fraction" | "pixels";
-        color?: Color;
-        crossOrigin?: string;
-        src?: string; // same as img.src?
-        offset?: Offset;
-        offsetOrigin?: 'top_left' | 'top_right' | 'bottom-left' | 'bottom-right';
-        size?: Size; // same as image size?
-    }
-
-    export interface Text {
-        fill?: Fill;
-        font?: string;
-        offsetX?: number;
-        offsetY?: number;
-        rotation?: number;
-        scale?: number;
-        stroke?: Stroke;
-        text?: string;
-        textAlign?: string;
-        textBaseline?: string;
-    }
-
-}
-
-// these are extensions from ol3
-export namespace Format {
-
-    export interface Style {
-        image?: Image & Icon & Svg; // if 'image' specified must auto-detect icon or svg 
-        icon?: Icon;
-        svg?: Svg;
-        star?: Star;
-        circle?: Circle;
-        text?: Text;
-        fill?: Fill;
-        stroke?: Stroke;
-        cross?: Image & {
-            size: number; 
-            fill?: Fill;
-            stroke?: Stroke;
-        }
-    }
-
-    export interface Icon {
-        "anchor-x"?: number;
-        "anchor-y"?: number;
-    }
-
-    export interface Text {
-        "offset-x"?: number;
-        "offset-y"?: number;
-    }
-
-    export interface Circle {
-        opacity?: number;
-    }
-
-    // icon + path - src    
-    export interface Svg {
-        anchor?: Offset;
-        anchorOrigin?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
-        anchorXUnits?: "fraction" | "pixels";
-        anchorYUnits?: "fraction" | "pixels";
-        color?: Color;
-        crossOrigin?: string;
-        img?: string;
-        imgSize?: Size;
-        offset?: Offset;
-        offsetOrigin?: 'top_left' | 'top_right' | 'bottom-left' | 'bottom-right';
-        path?: string;
-        stroke?: Stroke;
-        fill?: Fill;
-        rotation?: number;
-    }
-
-}
-
-/**
- * @param style does this style represent a square?
- */
-function isSquare(style: ol.style.Style) {
-
-}
-
-/**
- * @param style does this style represent a cross?
- */
-function isCross(style: Format.Style) {
-    //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
-    if (!style) return false;
-    if (!style.star) return false;
-    if (4 !== style.star.points) return false;
-    if (0 != style.star.radius2) return false;
-    if (0 != style.star.angle) return false;
-    return true;
-}
-
-/**
- * 
- * @param style return this style as a cross json encoding
- */
-function asCross(style: Format.Style) {
-    let result: Format.Style = {
-        cross: {
-            size: style.star.radius,
-        }
-    };
-    result.cross.fill = style.star.fill;
-    result.cross.opacity = style.star.opacity;
-    result.cross.rotateWithView = style.star.rotateWithView;
-    result.cross.rotation = style.star.rotation;
-    result.cross.scale = style.star.scale;
-    result.cross.size = style.star.radius * 2;
-    result.cross.snapToPixel = style.star.snapToPixel;
-    result.cross.stroke = style.star.stroke;
-
-    return result;
-}
-
 export class StyleConverter implements Serializer.IConverter<Format.Style> {
+
+    private converters: Array<{
+        is: (s: Format.Style) => boolean;
+        as: (s: Format.Style) => Format.Style;
+    }>;
+
+    /**
+     * Register shape shifters
+     */
+    constructor() {
+        this.converters = [];
+        this.converters.push(CrossShapeshifter);
+        this.converters.push(SquareShapeshifter);
+        this.converters.push(DiamondShapeshifter);
+        this.converters.push(TriangleShapeshifter);
+        this.converters.push(XShapeshifter);
+        //this.converters.push(StarShapeshifter);
+    }
 
     fromJson(json: Format.Style) {
         return this.deserializeStyle(json);
@@ -219,8 +51,8 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
 
     toJson(style: ol.style.Style) {
         // to be encoded as a collection of encoders, each in it's own module
-        let result = <Format.Style>this.serializeStyle(style);
-        if (isCross(result)) result = asCross(result);
+        let result = this.serializeStyle(style);
+        this.converters.some(c => c.is(result) && !!(result = c.as(result)));
         return result;
     }
 
@@ -235,19 +67,19 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
         return geom;
     }
 
-    private serializeStyle(style: ol.style.Style & any) {
-        let s = <any>{};
+    private serializeStyle(style: ol.style.Style & any): Format.Style {
+        let s = <Format.Style>{};
         if (!style) return null;
 
-        if (typeof style === "string") return style;
-        if (typeof style === "number") return style;
+        if (typeof style === "string") throw style;
+        if (typeof style === "number") throw style;
 
         if (style.getColor) mixin(s, this.serializeColor(style.getColor()));
-        if (style.getImage) assign(s, "image", this.serializeStyle(style.getImage()));
+        if (style.getImage) assign(s, "image", this.serializeImage(style.getImage()));
         if (style.getFill) assign(s, "fill", this.serializeFill(style.getFill()));
         if (style.getOpacity) assign(s, "opacity", style.getOpacity());
-        if (style.getStroke) assign(s, "stroke", this.serializeStyle(style.getStroke()));
-        if (style.getText) assign(s, "text", this.serializeStyle(style.getText()));
+        if (style.getStroke) assign(s, "stroke", this.serializeStroke(style.getStroke()));
+        if (style.getText) assign(s, "text", this.serializeText(style.getText()));
         if (style.getWidth) assign(s, "width", style.getWidth());
         if (style.getOffsetX) assign(s, "offset-x", style.getOffsetX());
         if (style.getOffsetY) assign(s, "offset-y", style.getOffsetY());
@@ -283,6 +115,22 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
         if (style.getSrc) assign(s, "src", style.getSrc());
 
         return s;
+    }
+
+    private serializeImage(style: any) {
+        if (typeof style === "string") throw style;
+        if (typeof style === "number") throw style;
+        return this.serializeStyle(style);
+    }
+
+    private serializeStroke(style: any) {
+        if (typeof style === "string") throw style;
+        if (typeof style === "number") throw style;
+        return this.serializeStyle(style);
+    }
+
+    private serializeText(style: string) {
+        return style;
     }
 
     private serializeColor(color: string | [number, number, number, number] | CanvasGradient | CanvasPattern): Object {

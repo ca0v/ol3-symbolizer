@@ -329,10 +329,24 @@ describe("OL Basic shapes", () => {
          * Before going too far down this road, remind yourself of the ogc styling used by geoserver...I recall it was
          * terse and powerful and css-like and ol probably has support for it already
          */
+
         should(!!crossJson.cross, "cross exists");
         shouldEqual(crossJson.cross.size, cross.star.radius * 2, "cross size");
 
-    })
+        should(!!squareJson.square, "square exists");
+        shouldEqual(squareJson.square.size, square.star.radius * 2, "square size");
+
+        should(!!diamondJson.diamond, "diamond exists");
+        shouldEqual(diamondJson.diamond.size, diamond.star.radius * 2, "diamond size");
+
+        should(!!triangleJson.triangle, "triangle exists");
+        shouldEqual(triangleJson.triangle.size, triangle.star.radius * 2, "triangle size");
+
+        should(!!xJson.x, "x exists");
+        shouldEqual(xJson.x.size, x.star.radius * 2, "x size");
+
+
+    });
 });
 
 

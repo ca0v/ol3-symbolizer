@@ -12,6 +12,6 @@
         "baseUrl": "../node_modules"
     },
     "include": [
-        "index.ts"
+        "index.ts", "../ol3-symbolizer/format/@types/base.d.ts", "../ol3-symbolizer/format/@types/base.ts"
     ]
 }

@@ -1,10 +1,7 @@
 import * as Dashes from "../ol3-symbolizer/styles/stroke/linedash";
-
 import { describe, it, should, shouldEqual, stringify } from "./base";
-
-import { Format, StyleConverter } from "../ol3-symbolizer/format/ol3-symbolizer";
-
-import basic = require("../ol3-symbolizer/styles/basic");
+import { StyleConverter } from "../ol3-symbolizer/format/ol3-symbolizer";
+import { Format } from "../ol3-symbolizer/format/@types/formats";
 
 let converter = new StyleConverter();
 

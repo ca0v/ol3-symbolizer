@@ -1,5 +1,5 @@
 import ol = require("openlayers");
-import Serializer = require("./base");
+import Serializer = require("./@types/base");
 import { assign } from "../common/assign";
 import { mixin } from "../common/mixin";
 import { doif } from "../common/doif";

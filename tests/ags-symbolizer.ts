@@ -1,7 +1,8 @@
 import { describe, it, should, shouldEqual, stringify } from "./base";
 
-import { ArcGisFeatureServerLayer, StyleConverter } from "../ol3-symbolizer/format/ags-symbolizer";
+import { StyleConverter } from "../ol3-symbolizer/format/ags-symbolizer";
 import { StyleConverter as ToJsonConverter } from "../ol3-symbolizer/format/ol3-symbolizer";
+import { ArcGisFeatureServerLayer } from "../ol3-symbolizer/format/@types/ArcGisFeatureServerLayer";
 
 let fromJson = (() => {
     let fromJsonConverter = new StyleConverter();

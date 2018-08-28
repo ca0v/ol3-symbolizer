@@ -3,216 +3,11 @@
  * The symbolizer converts the object to an actual ol style
  */
 import Symbolizer = require("./ol3-symbolizer");
+import { Format } from "./@types/formats";
 
-/**
- * Babysteps - at some point these interfaces should converge, 
- */
-import { StyleTypes, SymbolTypes } from "../ags/ags-catalog";
+import { ArcGisFeatureServerLayer } from "./@types/ArcGisFeatureServerLayer";
 
 const symbolizer = new Symbolizer.StyleConverter();
-
-/**
- * Need a single definition, prefer the one in ags-catalog
- */
-export namespace ArcGisFeatureServerLayer {
-
-    export type SpatialReference = {
-        wkid: string
-    };
-
-    export type Extent = {
-        xmin: number
-    };
-
-    export type Color = number[];
-
-    export interface AdvancedQueryCapabilities {
-        supportsPagination: boolean;
-        supportsStatistics: boolean;
-        supportsOrderBy: boolean;
-        supportsDistinct: boolean;
-    }
-
-    export interface Outline {
-        style?: StyleTypes;
-        color?: number[];
-        width?: number;
-        type?: SymbolTypes;
-        d?: Date;
-    }
-
-    export interface Font {
-        weight: string;
-        style: string;
-        family: string;
-        size: number;
-    }
-
-    export interface Symbol {
-        type: SymbolTypes;
-        style?: StyleTypes;
-        color?: number[];
-        outline?: Outline;
-        width?: number;
-        horizontalAlignment?: string;
-        verticalAlignment?: string;
-        font?: Font;
-        height?: number;
-        xoffset?: number;
-        yoffset?: number;
-        contentType?: string;
-        url?: string;
-        size?: number;
-        angle?: number;
-        imageData?: string;
-        path?: string;
-        cap?: "esriLCSButt" | "esriLCSRound" | "esriLCSSquare";
-        join?: "esriLJSBevel" | "esriLJSMiter" | "esriLJSRound";
-        miterLimit?: number;
-}
-
-export interface UniqueValueInfo {
-    symbol: Symbol;
-    value?: string;
-    label?: string;
-    description?: string;
-}
-
-export interface VisualVariable {
-    type: string;
-    field: string;
-    valueUnit: string;
-    minSize: number;
-    maxSize: number;
-    minDataValue: number;
-    maxDataValue: number;
-    minSliderValue: number;
-    maxSliderValue: number;
-}
-
-export interface ClassBreakInfo {
-    symbol: Symbol;
-    classMaxValue: number;
-}
-
-export interface Renderer extends Attributes {
-    type: string;
-    label?: string;
-    description?: string;
-    field1?: string;
-    field2?: string;
-    field3?: string;
-    fieldDelimiter?: string;
-    defaultSymbol?: Symbol;
-    defaultLabel?: any;
-    symbol?: Symbol;
-    uniqueValueInfos?: UniqueValueInfo[];
-}
-
-export interface ClassBreakRenderer extends Renderer {
-    field?: string;
-    minValue?: number;
-    classBreakInfos?: ClassBreakInfo[];
-    visualVariables?: VisualVariable[];
-    authoringInfo: { visualVariables: VisualVariable[] }
-}
-
-export interface DrawingInfo {
-    renderer: Renderer;
-    transparency?: number;
-    labelingInfo?: any;
-}
-
-export interface CodedValue {
-    name: string;
-    code: string;
-}
-
-export interface Domain {
-    type: string;
-    name: string;
-    codedValues: CodedValue[];
-}
-
-export interface Field {
-    name: string;
-    type: string;
-    alias: string;
-    domain: Domain;
-    editable: boolean;
-    nullable: boolean;
-    length?: number;
-}
-
-
-export interface Domains {
-}
-
-export interface Attributes {
-    [attribute: string]: any;
-}
-
-export interface Prototype {
-    attributes: Attributes;
-}
-
-export interface Template {
-    name: string;
-    description: string;
-    prototype: Prototype;
-    drawingTool: string;
-}
-
-export interface Type {
-    id: string;
-    name: string;
-    domains: Domains;
-    templates: Template[];
-}
-
-export interface FeatureLayerInfo {
-    currentVersion: string | number;
-    id: number;
-    name: string;
-    type: string;
-    description: string;
-    copyrightText: string;
-    defaultVisibility: boolean;
-    editFieldsInfo?: any;
-    ownershipBasedAccessControlForFeatures?: any;
-    syncCanReturnChanges: boolean;
-    relationships: any[];
-    isDataVersioned: boolean;
-    supportsRollbackOnFailureParameter: boolean;
-    supportsStatistics: boolean;
-    supportsAdvancedQueries: boolean;
-    advancedQueryCapabilities: AdvancedQueryCapabilities;
-    geometryType: string;
-    minScale: number;
-    maxScale: number;
-    extent: Extent;
-    drawingInfo: DrawingInfo;
-    hasM: boolean;
-    hasZ: boolean;
-    allowGeometryUpdates: boolean;
-    hasAttachments: boolean;
-    htmlPopupType: string;
-    objectIdField: string;
-    globalIdField: string;
-    displayField: string;
-    typeIdField: string;
-    fields: Field[];
-    types: Type[];
-    templates: any[];
-    maxRecordCount: number;
-    supportedQueryFormats: string;
-    capabilities: string;
-    useStandardizedQueries: boolean;
-    spatialReference?: SpatialReference;
-    displayFieldName?: string;
-}
-
-}
 
 // esri -> ol mappings (add keyof to get proper definitions, not sure how)
 // function agsStyleMapper(index : keyof(StyleTypes)) {
@@ -266,14 +61,14 @@ export class StyleConverter {
         return "#" + color.map(v => ("0" + v.toString(16)).substr(0, 2)).join("");
     }
 
-    private fromSFSSolid(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSFSSolid(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         style.fill = {
             color: this.asColor(symbol.color)
         };
         this.fromSLS(symbol.outline, style);
     }
 
-    private fromSFSForwardDiagonal(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSFSForwardDiagonal(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         style.fill = {
             pattern: {
                 color: this.asColor(symbol.color),
@@ -285,7 +80,7 @@ export class StyleConverter {
         this.fromSLS(symbol.outline, style);
     }
 
-    private fromSFSBackwardDiagonal(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSFSBackwardDiagonal(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         style.fill = {
             pattern: {
                 color: this.asColor(symbol.color),
@@ -297,7 +92,7 @@ export class StyleConverter {
         this.fromSLS(symbol.outline, style);
     }
 
-    private fromSFS(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSFS(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         switch (symbol.style) {
             case "esriSFSSolid":
                 this.fromSFSSolid(symbol, style);
@@ -313,7 +108,7 @@ export class StyleConverter {
         }
     }
 
-    private fromSMSCircle(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSMSCircle(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         style.circle = {
             opacity: 1,
             radius: this.asWidth(symbol.size / 2),
@@ -326,7 +121,7 @@ export class StyleConverter {
         this.fromSLS(symbol.outline, style.circle);
     }
 
-    private fromSMSCross(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSMSCross(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         style.star = {
             points: 4,
             angle: 0,
@@ -337,7 +132,7 @@ export class StyleConverter {
         this.fromSLS(symbol.outline, style.star);
     }
 
-    private fromSMSDiamond(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSMSDiamond(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         style.star = {
             points: 4,
             angle: 0,
@@ -348,7 +143,7 @@ export class StyleConverter {
         this.fromSLS(symbol.outline, style.star);
     }
 
-    private fromSMSPath(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSMSPath(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         let size = 2 * this.asWidth(symbol.size);
         style.svg = {
             imgSize: [size, size],
@@ -359,7 +154,7 @@ export class StyleConverter {
         this.fromSLS(symbol.outline, style.svg);
     }
 
-    private fromSMSSquare(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSMSSquare(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         style.star = {
             points: 4,
             angle: Math.PI / 4,
@@ -370,7 +165,7 @@ export class StyleConverter {
         this.fromSLS(symbol.outline, style.star);
     }
 
-    private fromSMSX(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSMSX(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         style.star = {
             points: 4,
             angle: Math.PI / 4,
@@ -381,7 +176,7 @@ export class StyleConverter {
         this.fromSLS(symbol.outline, style.star);
     }
 
-    private fromSMS(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSMS(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         switch (symbol.style) {
             case "esriSMSCircle":
                 this.fromSMSCircle(symbol, style);
@@ -406,7 +201,7 @@ export class StyleConverter {
         }
     }
 
-    private fromPMS(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromPMS(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         style.image = {};
         style.image.src = symbol.url;
         if (symbol.imageData) {
@@ -417,7 +212,7 @@ export class StyleConverter {
         style.image.imgSize = [this.asWidth(symbol.width), this.asWidth(symbol.height)];
     }
 
-    private fromSLSSolid(symbol: ArcGisFeatureServerLayer.Outline, style: Symbolizer.Format.Style) {
+    private fromSLSSolid(symbol: ArcGisFeatureServerLayer.Outline, style: Format.Style) {
         style.stroke = {
             color: this.asColor(symbol.color),
             width: this.asWidth(symbol.width),
@@ -427,7 +222,7 @@ export class StyleConverter {
         };
     }
 
-    private fromSLS(symbol: ArcGisFeatureServerLayer.Outline, style: Symbolizer.Format.Style) {
+    private fromSLS(symbol: ArcGisFeatureServerLayer.Outline, style: Format.Style) {
         switch (symbol.style) {
             case "esriSLSSolid":
                 this.fromSLSSolid(symbol, style);
@@ -457,7 +252,7 @@ export class StyleConverter {
     }
 
     // picture fill symbol (does not render the picture due to drawPolygon limitation)
-    private fromPFS(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromPFS(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         // TODO drawPolygon does not call setImageStyle so this is being ignored
         style.fill = {
             image: {
@@ -472,7 +267,7 @@ export class StyleConverter {
         this.fromSLS(symbol.outline, style);
     }
 
-    private fromTS(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromTS(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
         throw "not-implemented";
     }
 
@@ -480,12 +275,12 @@ export class StyleConverter {
      * Converts the ags symbol to an openlayers style, then the openlayers style to a JSON representation
      */
     public fromJson(symbol: ArcGisFeatureServerLayer.Symbol) {
-        let style = <Symbolizer.Format.Style>{};
+        let style = <Format.Style>{};
         this.fromSymbol(symbol, style);
         return symbolizer.fromJson(style);
     }
 
-    private fromSymbol(symbol: ArcGisFeatureServerLayer.Symbol, style: Symbolizer.Format.Style) {
+    private fromSymbol(symbol: ArcGisFeatureServerLayer.Symbol, style: Format.Style) {
 
         switch (symbol.type) {
             case "esriSFS":

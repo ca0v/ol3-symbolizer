@@ -4,6 +4,7 @@ import Style from "ol/style/Style";
 import { assign } from "../ol3-symbolizer/common/assign";
 import { mixin } from "../ol3-symbolizer/common/mixin";
 import { defaults } from "../ol3-symbolizer/common/defaults";
+
 //import {describe, it} from "mocha";
 
 describe("assign tests", function () {
@@ -29,8 +30,8 @@ describe("defaults tests", () => {
     it("defaults number", () => {
         should.assert(defaults({}, { a: 100 }).a === 100);
         should.assert(defaults(defaults({}, { a: 100 }), { a: 200 }).a === 100);
-        let a = defaults({}, {a: 1});
-        should.assert(a === defaults(a, {a: 2}));
+        let a = defaults({}, { a: 1 });
+        should.assert(a === defaults(a, { a: 2 }));
     });
 
 });
@@ -40,8 +41,8 @@ describe("mixin tests", () => {
     it("mixin number", () => {
         should.assert(mixin({}, { a: 100 }).a === 100);
         should.assert(mixin(mixin({}, { a: 100 }), { a: 200 }).a === 200);
-        let a = mixin({}, {a: 1});
-        should.assert(a === mixin(a, {a: 2}));
+        let a = mixin({}, { a: 1 });
+        should.assert(a === mixin(a, { a: 2 }));
     });
 
 });
@@ -50,6 +51,16 @@ describe("test accessing openlayers using webpack", function () {
     it("log ol.style.Style", function () {
         should.assert(!!Style);
         console.log(Style.toString());
+    });
+});
+
+describe("test accessing openlayers using amd", function () {
+    it("log ol.style.Style", function () {
+        require(["openlayers"], (ol: any) => {
+            let style = ol.style.Style;
+            should.assert(!!style);
+            console.log(style.toString());
+        });
     });
 });
 

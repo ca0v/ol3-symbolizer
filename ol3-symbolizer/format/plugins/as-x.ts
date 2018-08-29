@@ -27,7 +27,6 @@ export class Shapeshifter {
         let result: Format.Style = {
             x: {
                 size: star.radius * 2,
-                fill: star.fill,
                 opacity: star.opacity,
                 rotateWithView: star.rotateWithView,
                 rotation: star.rotation,
@@ -50,7 +49,6 @@ export class Shapeshifter {
                 radius2: 0,
                 points: 4,
                 angle: 0.7853981633974483,
-                fill: x.fill,
                 opacity: x.opacity,
                 rotateWithView: x.rotateWithView,
                 rotation: x.rotation,

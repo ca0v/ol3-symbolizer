@@ -52,6 +52,8 @@ define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], functio
         Shapeshifter.is = function (style) {
             if (!style)
                 return false;
+            if (!!style.cross)
+                return true;
             if (!style.star)
                 return false;
             if (!style.star.radius)
@@ -70,8 +72,7 @@ define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], functio
                 throw "star expected";
             var result = {
                 cross: {
-                    size: style.star.radius * 2,
-                    fill: star.fill,
+                    size: star.radius * 2,
                     opacity: star.opacity,
                     rotateWithView: star.rotateWithView,
                     rotation: star.rotation,
@@ -81,6 +82,25 @@ define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], functio
                 }
             };
             return result;
+        };
+        Shapeshifter.inverse = function (style) {
+            var cross = style.cross;
+            if (!cross)
+                return style;
+            return {
+                star: {
+                    radius: cross.size / 2,
+                    radius2: 0,
+                    points: 4,
+                    angle: 0,
+                    opacity: cross.opacity,
+                    rotateWithView: cross.rotateWithView,
+                    rotation: cross.rotation,
+                    scale: cross.scale,
+                    snapToPixel: cross.snapToPixel,
+                    stroke: cross.stroke,
+                }
+            };
         };
         return Shapeshifter;
     }());
@@ -95,6 +115,8 @@ define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], functi
         Shapeshifter.is = function (style) {
             if (!style)
                 return false;
+            if (!!style.square)
+                return true;
             if (!style.star)
                 return false;
             if (!style.star.radius)
@@ -113,7 +135,7 @@ define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], functi
                 throw "star expected";
             var result = {
                 square: {
-                    size: style.star.radius * 2,
+                    size: star.radius * 2,
                     fill: star.fill,
                     opacity: star.opacity,
                     rotateWithView: star.rotateWithView,
@@ -124,6 +146,26 @@ define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], functi
                 }
             };
             return result;
+        };
+        Shapeshifter.inverse = function (style) {
+            var square = style.square;
+            if (!square)
+                return style;
+            return {
+                star: {
+                    radius: square.size / 2,
+                    radius2: undefined,
+                    points: 4,
+                    angle: 0.7853981633974483,
+                    fill: square.fill,
+                    opacity: square.opacity,
+                    rotateWithView: square.rotateWithView,
+                    rotation: square.rotation,
+                    scale: square.scale,
+                    snapToPixel: square.snapToPixel,
+                    stroke: square.stroke,
+                }
+            };
         };
         return Shapeshifter;
     }());
@@ -138,6 +180,8 @@ define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], funct
         Shapeshifter.is = function (style) {
             if (!style)
                 return false;
+            if (!!style.diamond)
+                return true;
             if (!style.star)
                 return false;
             if (!style.star.radius)
@@ -168,6 +212,26 @@ define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], funct
             };
             return result;
         };
+        Shapeshifter.inverse = function (style) {
+            var diamond = style.diamond;
+            if (!diamond)
+                return style;
+            return {
+                star: {
+                    radius: diamond.size / 2,
+                    radius2: undefined,
+                    points: 4,
+                    angle: 0,
+                    fill: diamond.fill,
+                    opacity: diamond.opacity,
+                    rotateWithView: diamond.rotateWithView,
+                    rotation: diamond.rotation,
+                    scale: diamond.scale,
+                    snapToPixel: diamond.snapToPixel,
+                    stroke: diamond.stroke,
+                }
+            };
+        };
         return Shapeshifter;
     }());
     exports.Shapeshifter = Shapeshifter;
@@ -181,6 +245,8 @@ define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], func
         Shapeshifter.is = function (style) {
             if (!style)
                 return false;
+            if (!!style.triangle)
+                return true;
             if (!style.star)
                 return false;
             if (!style.star.radius)
@@ -199,7 +265,7 @@ define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], func
                 throw "star expected";
             var result = {
                 triangle: {
-                    size: style.star.radius * 2,
+                    size: star.radius * 2,
                     fill: star.fill,
                     opacity: star.opacity,
                     rotateWithView: star.rotateWithView,
@@ -210,6 +276,26 @@ define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], func
                 }
             };
             return result;
+        };
+        Shapeshifter.inverse = function (style) {
+            var triangle = style.triangle;
+            if (!triangle)
+                return style;
+            return {
+                star: {
+                    radius: triangle.size / 2,
+                    radius2: undefined,
+                    points: 3,
+                    angle: 0,
+                    fill: triangle.fill,
+                    opacity: triangle.opacity,
+                    rotateWithView: triangle.rotateWithView,
+                    rotation: triangle.rotation,
+                    scale: triangle.scale,
+                    snapToPixel: triangle.snapToPixel,
+                    stroke: triangle.stroke,
+                }
+            };
         };
         return Shapeshifter;
     }());
@@ -224,6 +310,8 @@ define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (r
         Shapeshifter.is = function (style) {
             if (!style)
                 return false;
+            if (!!style.x)
+                return true;
             if (!style.star)
                 return false;
             if (!style.star.radius)
@@ -242,8 +330,7 @@ define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (r
                 throw "star expected";
             var result = {
                 x: {
-                    size: style.star.radius * 2,
-                    fill: star.fill,
+                    size: star.radius * 2,
                     opacity: star.opacity,
                     rotateWithView: star.rotateWithView,
                     rotation: star.rotation,
@@ -253,6 +340,25 @@ define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (r
                 }
             };
             return result;
+        };
+        Shapeshifter.inverse = function (style) {
+            var x = style.x;
+            if (!x)
+                return style;
+            return {
+                star: {
+                    radius: x.size / 2,
+                    radius2: 0,
+                    points: 4,
+                    angle: 0.7853981633974483,
+                    opacity: x.opacity,
+                    rotateWithView: x.rotateWithView,
+                    rotation: x.rotation,
+                    scale: x.scale,
+                    snapToPixel: x.snapToPixel,
+                    stroke: x.stroke,
+                }
+            };
         };
         return Shapeshifter;
     }());
@@ -271,11 +377,12 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             this.converters.push(as_x_1.Shapeshifter);
         }
         StyleConverter.prototype.fromJson = function (json) {
+            this.converters.some(function (c) { return c.is(json) && c.inverse && !!(json = c.inverse(json)); });
             return this.deserializeStyle(json);
         };
         StyleConverter.prototype.toJson = function (style) {
             var result = this.serializeStyle(style);
-            this.converters.some(function (c) { return c.is(result) && !!(result = c.as(result)); });
+            this.converters.some(function (c) { return c.is(result) && c.as && !!(result = c.as(result)); });
             return result;
         };
         StyleConverter.prototype.getGeometry = function (feature) {

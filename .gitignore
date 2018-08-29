@@ -1,5 +1,6 @@
 .vscode
-built
+built/**
+!built/examples.max.*
 node_modules
 *.log
 *.js

@@ -12,6 +12,7 @@ declare module "ol3-symbolizer/format/plugins/as-cross" {
     export class Shapeshifter {
         static is(style: Format.Style): boolean;
         static as(style: Format.Style): Format.Style;
+        static inverse(style: Format.Style): Format.Style;
     }
 }
 declare module "ol3-symbolizer/format/plugins/as-square" {
@@ -19,6 +20,7 @@ declare module "ol3-symbolizer/format/plugins/as-square" {
     export class Shapeshifter {
         static is(style: Format.Style): boolean;
         static as(style: Format.Style): Format.Style;
+        static inverse(style: Format.Style): Format.Style;
     }
 }
 declare module "ol3-symbolizer/format/plugins/as-diamond" {
@@ -26,6 +28,7 @@ declare module "ol3-symbolizer/format/plugins/as-diamond" {
     export class Shapeshifter {
         static is(style: Format.Style): boolean;
         static as(style: Format.Style): Format.Style;
+        static inverse(style: Format.Style): Format.Style;
     }
 }
 declare module "ol3-symbolizer/format/plugins/as-triangle" {
@@ -33,6 +36,7 @@ declare module "ol3-symbolizer/format/plugins/as-triangle" {
     export class Shapeshifter {
         static is(style: Format.Style): boolean;
         static as(style: Format.Style): Format.Style;
+        static inverse(style: Format.Style): Format.Style;
     }
 }
 declare module "ol3-symbolizer/format/plugins/as-x" {
@@ -40,6 +44,7 @@ declare module "ol3-symbolizer/format/plugins/as-x" {
     export class Shapeshifter {
         static is(style: Format.Style): boolean;
         static as(style: Format.Style): Format.Style;
+        static inverse(style: Format.Style): Format.Style;
     }
 }
 declare module "ol3-symbolizer/format/ol3-symbolizer" {

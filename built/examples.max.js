@@ -212,6 +212,8 @@ define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], functio
             //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
             if (!style)
                 return false;
+            if (!!style.cross)
+                return true;
             if (!style.star)
                 return false;
             if (!style.star.radius)
@@ -234,8 +236,7 @@ define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], functio
                 throw "star expected";
             var result = {
                 cross: {
-                    size: style.star.radius * 2,
-                    fill: star.fill,
+                    size: star.radius * 2,
                     opacity: star.opacity,
                     rotateWithView: star.rotateWithView,
                     rotation: star.rotation,
@@ -245,6 +246,25 @@ define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], functio
                 }
             };
             return result;
+        };
+        Shapeshifter.inverse = function (style) {
+            var cross = style.cross;
+            if (!cross)
+                return style;
+            return {
+                star: {
+                    radius: cross.size / 2,
+                    radius2: 0,
+                    points: 4,
+                    angle: 0,
+                    opacity: cross.opacity,
+                    rotateWithView: cross.rotateWithView,
+                    rotation: cross.rotation,
+                    scale: cross.scale,
+                    snapToPixel: cross.snapToPixel,
+                    stroke: cross.stroke,
+                }
+            };
         };
         return Shapeshifter;
     }());
@@ -263,6 +283,8 @@ define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], functi
             //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
             if (!style)
                 return false;
+            if (!!style.square)
+                return true;
             if (!style.star)
                 return false;
             if (!style.star.radius)
@@ -285,7 +307,7 @@ define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], functi
                 throw "star expected";
             var result = {
                 square: {
-                    size: style.star.radius * 2,
+                    size: star.radius * 2,
                     fill: star.fill,
                     opacity: star.opacity,
                     rotateWithView: star.rotateWithView,
@@ -296,6 +318,26 @@ define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], functi
                 }
             };
             return result;
+        };
+        Shapeshifter.inverse = function (style) {
+            var square = style.square;
+            if (!square)
+                return style;
+            return {
+                star: {
+                    radius: square.size / 2,
+                    radius2: undefined,
+                    points: 4,
+                    angle: 0.7853981633974483,
+                    fill: square.fill,
+                    opacity: square.opacity,
+                    rotateWithView: square.rotateWithView,
+                    rotation: square.rotation,
+                    scale: square.scale,
+                    snapToPixel: square.snapToPixel,
+                    stroke: square.stroke,
+                }
+            };
         };
         return Shapeshifter;
     }());
@@ -314,6 +356,8 @@ define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], funct
             //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
             if (!style)
                 return false;
+            if (!!style.diamond)
+                return true;
             if (!style.star)
                 return false;
             if (!style.star.radius)
@@ -348,6 +392,26 @@ define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], funct
             };
             return result;
         };
+        Shapeshifter.inverse = function (style) {
+            var diamond = style.diamond;
+            if (!diamond)
+                return style;
+            return {
+                star: {
+                    radius: diamond.size / 2,
+                    radius2: undefined,
+                    points: 4,
+                    angle: 0,
+                    fill: diamond.fill,
+                    opacity: diamond.opacity,
+                    rotateWithView: diamond.rotateWithView,
+                    rotation: diamond.rotation,
+                    scale: diamond.scale,
+                    snapToPixel: diamond.snapToPixel,
+                    stroke: diamond.stroke,
+                }
+            };
+        };
         return Shapeshifter;
     }());
     exports.Shapeshifter = Shapeshifter;
@@ -364,6 +428,8 @@ define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], func
         Shapeshifter.is = function (style) {
             if (!style)
                 return false;
+            if (!!style.triangle)
+                return true;
             if (!style.star)
                 return false;
             if (!style.star.radius)
@@ -386,7 +452,7 @@ define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], func
                 throw "star expected";
             var result = {
                 triangle: {
-                    size: style.star.radius * 2,
+                    size: star.radius * 2,
                     fill: star.fill,
                     opacity: star.opacity,
                     rotateWithView: star.rotateWithView,
@@ -397,6 +463,26 @@ define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], func
                 }
             };
             return result;
+        };
+        Shapeshifter.inverse = function (style) {
+            var triangle = style.triangle;
+            if (!triangle)
+                return style;
+            return {
+                star: {
+                    radius: triangle.size / 2,
+                    radius2: undefined,
+                    points: 3,
+                    angle: 0,
+                    fill: triangle.fill,
+                    opacity: triangle.opacity,
+                    rotateWithView: triangle.rotateWithView,
+                    rotation: triangle.rotation,
+                    scale: triangle.scale,
+                    snapToPixel: triangle.snapToPixel,
+                    stroke: triangle.stroke,
+                }
+            };
         };
         return Shapeshifter;
     }());
@@ -414,6 +500,8 @@ define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (r
         Shapeshifter.is = function (style) {
             if (!style)
                 return false;
+            if (!!style.x)
+                return true;
             if (!style.star)
                 return false;
             if (!style.star.radius)
@@ -436,8 +524,7 @@ define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (r
                 throw "star expected";
             var result = {
                 x: {
-                    size: style.star.radius * 2,
-                    fill: star.fill,
+                    size: star.radius * 2,
                     opacity: star.opacity,
                     rotateWithView: star.rotateWithView,
                     rotation: star.rotation,
@@ -447,6 +534,25 @@ define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (r
                 }
             };
             return result;
+        };
+        Shapeshifter.inverse = function (style) {
+            var x = style.x;
+            if (!x)
+                return style;
+            return {
+                star: {
+                    radius: x.size / 2,
+                    radius2: 0,
+                    points: 4,
+                    angle: 0.7853981633974483,
+                    opacity: x.opacity,
+                    rotateWithView: x.rotateWithView,
+                    rotation: x.rotation,
+                    scale: x.scale,
+                    snapToPixel: x.snapToPixel,
+                    stroke: x.stroke,
+                }
+            };
         };
         return Shapeshifter;
     }());
@@ -469,12 +575,13 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             //this.converters.push(StarShapeshifter);
         }
         StyleConverter.prototype.fromJson = function (json) {
+            this.converters.some(function (c) { return c.is(json) && c.inverse && !!(json = c.inverse(json)); });
             return this.deserializeStyle(json);
         };
         StyleConverter.prototype.toJson = function (style) {
             // to be encoded as a collection of encoders, each in it's own module
             var result = this.serializeStyle(style);
-            this.converters.some(function (c) { return c.is(result) && !!(result = c.as(result)); });
+            this.converters.some(function (c) { return c.is(result) && c.as && !!(result = c.as(result)); });
             return result;
         };
         /**
@@ -1287,24 +1394,10 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         return result;
     }
     exports.asArray = asArray;
-    /***
-     * ie11 compatible version of e.classList.toggle
-     * if class exists then remove it and return false, if not, then add it and return true.
-     * @param force true to add specified class value, false to remove it.
-     * @returns true if className exists.
-     */
-    function toggle(e, className, force) {
-        var exists = e.classList.contains(className);
-        if (exists && force !== true) {
-            e.classList.remove(className);
-            return false;
-        }
-        ;
-        if (!exists && force !== false) {
-            e.classList.add(className);
-            return true;
-        }
-        return exists;
+    // ie11 compatible
+    function toggle(e, className, toggle) {
+        if (toggle === void 0) { toggle = false; }
+        !toggle ? e.classList.remove(className) : e.classList.add(className);
     }
     exports.toggle = toggle;
     function parse(v, type) {
@@ -1415,7 +1508,7 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             };
             var callNow = immediate && !timeout;
             clearTimeout(timeout);
-            timeout = window.setTimeout(later, wait);
+            timeout = setTimeout(later, wait);
             if (callNow)
                 func.call(_this, args);
         });
@@ -1831,7 +1924,7 @@ define("ol3-symbolizer/labs/ags-style-converter", ["require", "exports", "openla
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var html = "\n<div class='style-to-canvas'>\n    <h3>Renders a feature on a canvas</h3>\n    <div class=\"area\">\n        <label>256 x 256 Canvas</label>\n        <div id='canvas-collection'></div>\n    </div>\n    <div class=\"area\">\n        <label>AGS Json Symbol</label>\n        <textarea class='style'>\n        </textarea>\n        <button class=\"save\">Save</button>\n    </div>\n</div>\n";
-    var css = "\n<style>\n    #map {\n        display: none;\n    }\n\n    .style-to-canvas {\n    }\n\n    .style-to-canvas .area label {\n        display: block;\n        vertical-align: top;\n    }\n\n    .style-to-canvas .area {\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    .style-to-canvas .area .style {\n        width: 100%;\n        height: 400px;\n    }\n\n    .style-to-canvas #canvas-collection canvas {\n        font-family: sans serif;\n        font-size: 20px;\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    div.colorramp {\n        display: inline-block;\n        background: linear-gradient(to right, rgba(250,0,0,0), rgba(250,0,0,1) 60%, rgba(250,100,0,1) 85%, rgb(250,250,0) 95%);\n        width:100%;\n    }\n\n    div.colorramp > input[type=range] {\n        -webkit-appearance: slider-horizontal;\n        display:block;\n        width:100%;\n        background-color:transparent;\n    }\n\n    div.colorramp > label {\n        display: inline-block;\n    }\n\n    div.colorramp > input[type='range'] {\n        box-shadow: 0 0 0 white;\n    }\n\n    div.colorramp > input[type=range]::-webkit-slider-runnable-track {\n        height: 0px;     \n    }\n\n    div.colorramp > input[type='range'].top::-webkit-slider-thumb {\n        margin-top: -10px;\n    }\n\n    div.colorramp > input[type='range'].bottom::-webkit-slider-thumb {\n        margin-top: -12px;\n    }\n    \n</style>\n";
+    var css = "\n<style>\n    #map {\n        display: none;\n    }\n\n    .style-to-canvas {\n    }\n\n    .style-to-canvas .area label {\n        display: block;\n        vertical-align: top;\n    }\n\n    .style-to-canvas .area {\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    .style-to-canvas .area .style {\n        width: 100%;\n        height: 400px;\n    }\n\n    .style-to-canvas #canvas-collection canvas {\n        font-family: sans serif;\n        font-size: 20px;\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n    \n</style>\n";
     var svg = "\n<div style='display:none'>\n<svg xmlns=\"http://www.w3.org/2000/svg\">\n<symbol viewBox=\"5 0 20 15\" id=\"lock\">\n    <title>lock</title>\n    <path d=\"M10.9,11.6c-0.3-0.6-0.3-2.3,0-2.8c0.4-0.6,3.4,1.4,3.4,1.4c0.9,0.4,0.9-6.1,0-5.7\n\tc0,0-3.1,2.1-3.4,1.4c-0.3-0.7-0.3-2.1,0-2.8C11.2,2.5,15,2.4,15,2.4C15,1.7,12.1,1,10.9,1S8.4,1.1,6.8,1.8C5.2,2.4,3.9,3.4,2.7,4.6\n\tS0,8.2,0,8.9s1.5,2.8,3.7,3.7s3.3,1.1,4.5,1.3c1.1,0.1,2.6,0,3.9-0.3c1-0.2,2.9-0.7,2.9-1.1C15,12.3,11.2,12.2,10.9,11.6z M4.5,9.3\n\tC3.7,9.3,3,8.6,3,7.8s0.7-1.5,1.5-1.5S6,7,6,7.8S5.3,9.3,4.5,9.3z\"\n    />\n</symbol>\n<symbol viewBox=\"0 0 37 37\" id=\"marker\">\n      <title>marker</title>\n      <path d=\"M19.75 2.75 L32.47792206135786 7.022077938642145 L36.75 19.75 L32.47792206135786 32.47792206135786 L19.75 36.75 L7.022077938642145 32.47792206135786 L2.75 19.750000000000004 L7.022077938642141 7.022077938642145 L19.749999999999996 2.75 Z\" /> </symbol>\n</svg>\n</div>\n";
     function loadStyle(name) {
         var d = $.Deferred();
@@ -2047,8 +2140,8 @@ define("ol3-symbolizer/labs/index", ["require", "exports"], function (require, e
 define("ol3-symbolizer/labs/style-viewer", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/snapshot", "node_modules/ol3-fun/index", "ol3-symbolizer/format/ol3-symbolizer", "ol3-symbolizer/styles/icon/png"], function (require, exports, ol, $, Snapshot, index_4, ol3_symbolizer_2, pointStyle) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var html = "\n<div class='style-to-canvas'>\n    <h3>Renders a feature on a canvas</h3>\n    <div class=\"area\">\n        <label>256 x 256 Canvas</label>\n        <div id='canvas-collection'></div>\n    </div>\n    <div class=\"area\">\n        <label>Style</label>\n        <textarea class='style'></textarea>\n        <button class=\"save\">Save</button>\n    </div>\n    <div class=\"area\">\n        <label>Potential control for setting linear gradient start/stop locations</label>\n        <div class=\"colorramp\">\n            <input class=\"top\" type=\"range\" min=\"0\" max=\"100\" value=\"20\"/>\n            <input class=\"bottom\" type=\"range\" min=\"0\" max=\"100\" value=\"80\"/>\n        </div>\n    </div>\n</div>\n";
-    var css = "\n<style>\n    #map {\n        display: none;\n    }\n\n    .style-to-canvas {\n    }\n\n    .style-to-canvas .area label {\n        display: block;\n        vertical-align: top;\n    }\n\n    .style-to-canvas .area {\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    .style-to-canvas .area .style {\n        width: 100%;\n        height: 400px;\n    }\n\n    .style-to-canvas #canvas-collection canvas {\n        font-family: sans serif;\n        font-size: 20px;\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    div.colorramp {\n        display: inline-block;\n        background: linear-gradient(to right, rgba(250,0,0,0), rgba(250,0,0,1) 60%, rgba(250,100,0,1) 85%, rgb(250,250,0) 95%);\n        width:100%;\n    }\n\n    div.colorramp > input[type=range] {\n        -webkit-appearance: slider-horizontal;\n        display:block;\n        width:100%;\n        background-color:transparent;\n    }\n\n    div.colorramp > label {\n        display: inline-block;\n    }\n\n    div.colorramp > input[type='range'] {\n        box-shadow: 0 0 0 white;\n    }\n\n    div.colorramp > input[type=range]::-webkit-slider-runnable-track {\n        height: 0px;     \n    }\n\n    div.colorramp > input[type='range'].top::-webkit-slider-thumb {\n        margin-top: -10px;\n    }\n\n    div.colorramp > input[type='range'].bottom::-webkit-slider-thumb {\n        margin-top: -12px;\n    }\n    \n</style>\n";
+    var html = "\n<div class='style-to-canvas'>\n    <h3>Renders a feature on a canvas</h3>\n    <div class=\"area\">\n        <label>256 x 256 Canvas</label>\n        <div id='canvas-collection'></div>\n    </div>\n    <div class=\"area\">\n        <label>Style</label>\n        <textarea class='style'></textarea>\n        <button class=\"save\">Save</button>\n    </div>\n</div>\n";
+    var css = "\n<style>\n    #map {\n        display: none;\n    }\n\n    .style-to-canvas {\n    }\n\n    .style-to-canvas .area label {\n        display: block;\n        vertical-align: top;\n    }\n\n    .style-to-canvas .area {\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    .style-to-canvas .area .style {\n        width: 100%;\n        height: 400px;\n    }\n\n    .style-to-canvas #canvas-collection canvas {\n        font-family: sans serif;\n        font-size: 20px;\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n    \n</style>\n";
     var svg = "\n<div style='display:none'>\n<svg xmlns=\"http://www.w3.org/2000/svg\">\n<symbol viewBox=\"5 0 20 15\" id=\"lock\">\n    <title>lock</title>\n    <path d=\"M10.9,11.6c-0.3-0.6-0.3-2.3,0-2.8c0.4-0.6,3.4,1.4,3.4,1.4c0.9,0.4,0.9-6.1,0-5.7\n\tc0,0-3.1,2.1-3.4,1.4c-0.3-0.7-0.3-2.1,0-2.8C11.2,2.5,15,2.4,15,2.4C15,1.7,12.1,1,10.9,1S8.4,1.1,6.8,1.8C5.2,2.4,3.9,3.4,2.7,4.6\n\tS0,8.2,0,8.9s1.5,2.8,3.7,3.7s3.3,1.1,4.5,1.3c1.1,0.1,2.6,0,3.9-0.3c1-0.2,2.9-0.7,2.9-1.1C15,12.3,11.2,12.2,10.9,11.6z M4.5,9.3\n\tC3.7,9.3,3,8.6,3,7.8s0.7-1.5,1.5-1.5S6,7,6,7.8S5.3,9.3,4.5,9.3z\"\n    />\n</symbol>\n<symbol viewBox=\"0 0 37 37\" id=\"marker\">\n      <title>marker</title>\n      <path d=\"M19.75 2.75 L32.47792206135786 7.022077938642145 L36.75 19.75 L32.47792206135786 32.47792206135786 L19.75 36.75 L7.022077938642145 32.47792206135786 L2.75 19.750000000000004 L7.022077938642141 7.022077938642145 L19.749999999999996 2.75 Z\" /> </symbol>\n</svg>\n</div>\n";
     function loadStyle(name) {
         var d = $.Deferred();

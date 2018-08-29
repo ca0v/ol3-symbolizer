@@ -110,7 +110,6 @@ export namespace Format {
         stroke?: Stroke;
         cross?: Image & {
             size: number; 
-            fill?: Fill;
             stroke?: Stroke;
         };
         square?: Image & {
@@ -130,7 +129,6 @@ export namespace Format {
         };
         x?: Image & {
             size: number; 
-            fill?: Fill;
             stroke?: Stroke;
         };
     }

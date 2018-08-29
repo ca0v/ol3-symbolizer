@@ -210,7 +210,7 @@ describe("OL StyleConverter Json Tests", () => {
 
 describe("OL Basic shapes", () => {
 
-    it("cross", () => {
+    it("cross, square, diamond, star, triangle, x", () => {
 
         let cross = {
             "star": {
@@ -342,7 +342,11 @@ describe("OL Basic shapes", () => {
         should(!!xJson.x, "x exists");
         shouldEqual(xJson.x.size, x.star.radius * 2, "x size");
 
+        let items = { crossJson, squareJson, diamondJson, triangleJson, xJson };
 
+        Object.keys(items).forEach((k: keyof (typeof items)) => {
+            shouldEqual(stringify(converter.toJson(converter.fromJson(items[k]))), stringify(items[k]), `${k} json->style->json`);
+        });
     });
 });
 

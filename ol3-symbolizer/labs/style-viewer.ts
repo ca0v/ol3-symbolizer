@@ -29,13 +29,6 @@ const html = `
         <textarea class='style'></textarea>
         <button class="save">Save</button>
     </div>
-    <div class="area">
-        <label>Potential control for setting linear gradient start/stop locations</label>
-        <div class="colorramp">
-            <input class="top" type="range" min="0" max="100" value="20"/>
-            <input class="bottom" type="range" min="0" max="100" value="80"/>
-        </div>
-    </div>
 </div>
 `;
 
@@ -70,39 +63,6 @@ const css = `
         border: 1px solid black;
         padding: 20px;
         margin: 20px;
-    }
-
-    div.colorramp {
-        display: inline-block;
-        background: linear-gradient(to right, rgba(250,0,0,0), rgba(250,0,0,1) 60%, rgba(250,100,0,1) 85%, rgb(250,250,0) 95%);
-        width:100%;
-    }
-
-    div.colorramp > input[type=range] {
-        -webkit-appearance: slider-horizontal;
-        display:block;
-        width:100%;
-        background-color:transparent;
-    }
-
-    div.colorramp > label {
-        display: inline-block;
-    }
-
-    div.colorramp > input[type='range'] {
-        box-shadow: 0 0 0 white;
-    }
-
-    div.colorramp > input[type=range]::-webkit-slider-runnable-track {
-        height: 0px;     
-    }
-
-    div.colorramp > input[type='range'].top::-webkit-slider-thumb {
-        margin-top: -10px;
-    }
-
-    div.colorramp > input[type='range'].bottom::-webkit-slider-thumb {
-        margin-top: -12px;
     }
     
 </style>

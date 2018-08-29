@@ -30,6 +30,7 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
     private converters: Array<{
         is: (s: Format.Style) => boolean;
         as: (s: Format.Style) => Format.Style;
+        inverse: (s: Format.Style) => Format.Style;
     }>;
 
     /**
@@ -46,13 +47,14 @@ export class StyleConverter implements Serializer.IConverter<Format.Style> {
     }
 
     fromJson(json: Format.Style) {
+        this.converters.some(c => c.is(json) && c.inverse && !!(json = c.inverse(json)));
         return this.deserializeStyle(json);
     }
 
     toJson(style: ol.style.Style) {
         // to be encoded as a collection of encoders, each in it's own module
         let result = this.serializeStyle(style);
-        this.converters.some(c => c.is(result) && !!(result = c.as(result)));
+        this.converters.some(c => c.is(result) && c.as && !!(result = c.as(result)));
         return result;
     }
 

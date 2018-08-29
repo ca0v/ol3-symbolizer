@@ -7,6 +7,7 @@ export class Shapeshifter {
      */
     static is(style: Format.Style) {
         if (!style) return false;
+        if (!!style.x) return true;
         if (!style.star) return false;
         if (!style.star.radius) return false;
         if (4 !== style.star.points) return false;
@@ -25,7 +26,7 @@ export class Shapeshifter {
         
         let result: Format.Style = {
             x: {
-                size: style.star.radius * 2,
+                size: star.radius * 2,
                 fill: star.fill,
                 opacity: star.opacity,
                 rotateWithView: star.rotateWithView,
@@ -36,8 +37,28 @@ export class Shapeshifter {
             }
         };
 
-
         return result;
+    }
+
+    static inverse(style: Format.Style) {
+        let x = style.x;
+        if (!x) return style;
+
+        return <Format.Style>{
+            star: {
+                radius: x.size / 2,
+                radius2: 0,
+                points: 4,
+                angle: 0.7853981633974483,
+                fill: x.fill,
+                opacity: x.opacity,
+                rotateWithView: x.rotateWithView,
+                rotation: x.rotation,
+                scale: x.scale,
+                snapToPixel: x.snapToPixel,
+                stroke: x.stroke,
+            }
+        };
     }
 
 }

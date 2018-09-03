@@ -11,13 +11,10 @@ Serialize and Deserialize OpenLayers styles, including adaptors for arcgis.
 * [index (master)](https://rawgit.com/ca0v/ol3-symbolizer/master/rawgit.html)
 
 ## Develop Tests
-
-* npm run karma
+* `npm run dev-for-tests`
 
 ## Develop Examples
-
-* npm run dev
+* `npm run dev-for-examples`
 
 ## Consume
-
 * `npm install https://github.com/ca0v/ol3-symbolizer/tarball/v5.1.3`

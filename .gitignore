@@ -1,7 +1,8 @@
 .vscode
 built/**
-!built/examples.max.*
 node_modules
 *.log
 *.js
 *.map
+!built/examples.max.*
+!static/require.js

@@ -810,6 +810,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
 });
 define("index", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
     "use strict";
-    return Symbolizer;
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.Symbolizer = Symbolizer;
 });
 //# sourceMappingURL=index.max.js.map

@@ -78,5 +78,6 @@ declare module "ol3-symbolizer/format/ol3-symbolizer" {
 }
 declare module "index" {
     import Symbolizer = require("ol3-symbolizer/format/ol3-symbolizer");
-    export = Symbolizer;
+    import { Format } from "./ol3-symbolizer/format/@types/formats";
+    export { Symbolizer, Format };
 }

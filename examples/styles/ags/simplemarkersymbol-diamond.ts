@@ -1,4 +1,4 @@
-import { ArcGisFeatureServerLayer } from "../../format/@types/ArcGisFeatureServerLayer";
+import { ArcGisFeatureServerLayer } from "../../../ol3-symbolizer/format/@types/ArcGisFeatureServerLayer";
 
 export = <ArcGisFeatureServerLayer.Symbol[]>
     [
@@ -14,7 +14,7 @@ export = <ArcGisFeatureServerLayer.Symbol[]>
             "xoffset": 0,
             "yoffset": 0,
             "type": "esriSMS",
-            "style": "esriSMSSquare",
+            "style": "esriSMSDiamond",
             "outline": {
                 "color": [
                     0,
@@ -27,4 +27,4 @@ export = <ArcGisFeatureServerLayer.Symbol[]>
                 "style": "esriSLSSolid"
             }
         }
-    ];
+    ]

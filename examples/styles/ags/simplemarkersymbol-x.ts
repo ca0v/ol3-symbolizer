@@ -1,4 +1,4 @@
-import { ArcGisFeatureServerLayer } from "../../format/@types/ArcGisFeatureServerLayer";
+import { ArcGisFeatureServerLayer } from "../../../ol3-symbolizer/format/@types/ArcGisFeatureServerLayer";
 
 export = <ArcGisFeatureServerLayer.Symbol[]>[{
     "color": [

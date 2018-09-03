@@ -1,4 +1,4 @@
-import { ArcGisFeatureServerLayer } from "../../format/@types/ArcGisFeatureServerLayer";
+import { ArcGisFeatureServerLayer } from "../../../ol3-symbolizer/format/@types/ArcGisFeatureServerLayer";
 
 let symbol = () => (<ArcGisFeatureServerLayer.Symbol>{
     "color": [

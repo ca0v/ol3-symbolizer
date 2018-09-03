@@ -1,6 +1,6 @@
 export function run() {
     let l = window.location;
-    let path = `${l.origin}${l.pathname}?run=ol3-symbolizer/tests/`;
+    let path = `${l.origin}${l.pathname}?run=examples/tests/`;
     let labs = `
     index
     backward-diagonal

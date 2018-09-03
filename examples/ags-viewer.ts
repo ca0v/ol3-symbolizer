@@ -1,6 +1,6 @@
 import ol = require("openlayers");
 import { doif, getParameterByName, html as asHtml } from "ol3-fun/index";
-import { ArcGisVectorSourceFactory } from "../ags/ags-source";
+import { ArcGisVectorSourceFactory } from "../ol3-symbolizer/ags/ags-source";
 
 function parse<T>(v: string, type: T): T {
     if (typeof type === "string") return <any>v;

@@ -6,9 +6,9 @@ import ol = require("openlayers");
 import $ = require("jquery");
 import Snapshot = require("ol3-fun/ol3-fun/snapshot");
 import { getParameterByName } from "ol3-fun/index";
-import { StyleConverter } from "../format/ol3-symbolizer";
-import pointStyle = require("../styles/icon/png");
-import { Format } from "../format/@types/formats";
+import { StyleConverter } from "../ol3-symbolizer/format/ol3-symbolizer";
+import pointStyle = require("./styles/icon/png");
+import { Format } from "../ol3-symbolizer/format/@types/formats";
 
 const html = `
 <div class='style-to-canvas'>
@@ -88,7 +88,7 @@ function loadStyle(name: string) {
         d.resolve(JSON.parse(name));
     } else {
         let mids = name.split(",").map(name => `../styles/${name}`);
-        require(mids, (...styles: T[]) => {
+        requirejs(mids, (...styles: T[]) => {
             let style = <T>[];
             styles.forEach(s => style = style.concat(s));
             d.resolve(style);
@@ -102,7 +102,7 @@ function loadGeom(name: string) {
     type T = ol.geom.Geometry[];
     let mids = name.split(",").map(name => `../tests/geom/${name}`);
     let d = $.Deferred<T>();
-    require(mids, (...geoms: ol.geom.Geometry[]) => {
+    requirejs(mids, (...geoms: ol.geom.Geometry[]) => {
         d.resolve(geoms);
     });
     return d;

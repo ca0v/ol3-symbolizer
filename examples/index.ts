@@ -1,6 +1,6 @@
 export function run() {
     let l = window.location;
-    let path = `${l.origin}${l.pathname}?run=ol3-symbolizer/labs/`;
+    let path = `${l.origin}${l.pathname}?run=examples/`;
     let labs = `    
   index
   ags-viewer
@@ -64,9 +64,4 @@ export function run() {
         .map(lab => `<div class='test'><a href='${path}${lab}'>${lab}</a></div>`)
         .join("\n");
 
-
-    let testDiv = document.createElement("div");
-    document.body.appendChild(testDiv);
-
-    testDiv.innerHTML = `<a href='${l.origin}${l.pathname}?run=ol3-symbolizer/tests/index'>tests</a>`;
-};
+  };

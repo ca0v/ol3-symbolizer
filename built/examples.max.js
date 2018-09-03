@@ -1,156 +1,374 @@
-define("ol3-symbolizer/common/ajax", ["require", "exports", "jquery"], function (require, exports, $) {
-    "use strict";
-    var Ajax = /** @class */ (function () {
-        function Ajax(url) {
-            this.url = url;
-            this.options = {
-                use_json: true,
-                use_cors: true
-            };
-        }
-        Ajax.prototype.jsonp = function (args, url) {
-            if (url === void 0) { url = this.url; }
-            var d = $.Deferred();
-            args["callback"] = "define";
-            var uri = url + "?" + Object.keys(args).map(function (k) { return k + "=" + args[k]; }).join('&');
-            require([uri], function (data) { return d.resolve(data); });
-            return d;
-        };
-        // http://www.html5rocks.com/en/tutorials/cors/    
-        Ajax.prototype.ajax = function (method, args, url) {
-            if (url === void 0) { url = this.url; }
-            var isData = method === "POST" || method === "PUT";
-            var isJson = this.options.use_json;
-            var isCors = this.options.use_cors;
-            var d = $.Deferred();
-            var client = new XMLHttpRequest();
-            if (isCors)
-                client.withCredentials = true;
-            var uri = url;
-            var data = null;
-            if (args) {
-                if (isData) {
-                    data = JSON.stringify(args);
-                }
-                else {
-                    uri += '?';
-                    var argcount = 0;
-                    for (var key in args) {
-                        if (args.hasOwnProperty(key)) {
-                            if (argcount++) {
-                                uri += '&';
-                            }
-                            uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
-                        }
-                    }
-                }
-            }
-            client.open(method, uri, true);
-            if (isData && isJson)
-                client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            client.send(data);
-            client.onload = function () {
-                console.log("content-type", client.getResponseHeader("Content-Type"));
-                if (client.status >= 200 && client.status < 300) {
-                    isJson = isJson || 0 === client.getResponseHeader("Content-Type").indexOf("application/json");
-                    d.resolve(isJson ? JSON.parse(client.response) : client.response);
-                }
-                else {
-                    d.reject(client.statusText);
-                }
-            };
-            client.onerror = function () { return d.reject(client.statusText); };
-            // Return the promise
-            return d;
-        };
-        Ajax.prototype.get = function (args) {
-            return this.ajax('GET', args);
-        };
-        Ajax.prototype.post = function (args) {
-            return this.ajax('POST', args);
-        };
-        Ajax.prototype.put = function (args) {
-            return this.ajax('PUT', args);
-        };
-        Ajax.prototype.delete = function (args) {
-            return this.ajax('DELETE', args);
-        };
-        return Ajax;
-    }());
-    return Ajax;
-});
-define("ol3-symbolizer/common/defaults", ["require", "exports"], function (require, exports) {
+define("examples/index", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    /**
-     * assigns undefined values
-     */
+    function run() {
+        var l = window.location;
+        var path = "" + l.origin + l.pathname + "?run=examples/";
+        var labs = "    \n  index\n  ags-viewer\n  ags-viewer&services=//maps.springfieldmo.gov/arcgis/rest/services&serviceType=MapServer&serviceName=Maps/Zoning&layers=6&center=-93.28,37.23\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&center=-122.49,37.738\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&center=-117.9,34.35\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&center=-117.2,32.7\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Hydrography/Watershed173811&layers=0,1&center=-96.53,38.37\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Petroleum/KSFields&layers=0&center=-98.93,38.55\n\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION=%27GREEN%27\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION%20IN(%27RED%27,%27GREEN%27)\n\n  style-viewer\n\n    style-viewer&geom=point&style=icon/png\n    style-viewer&geom=point&style=icon/png,text/text\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B45,45%5D,\"rotation\":0,\"stroke\":%7B\"color\":\"rgba(255,25,0,0.8)\",\"width\":3%7D,\"path\":\"M23%202%20L23%2023%20L43%2016.5%20L23%2023%20L35%2040%20L23%2023%20L11%2040%20L23%2023%20L3%2017%20L23%2023%20L23%202%20Z\"%7D%7D%5D\n\n    style-viewer&geom=point&style=%5B%7B\"circle\":%7B\"fill\":%7B\"gradient\":%7B\"type\":\"linear(32,32,96,96)\",\"stops\":\"rgba(0,255,0,0.1)%200%25;rgba(0,255,0,0.8)%20100%25\"%7D%7D,\"opacity\":1,\"stroke\":%7B\"color\":\"rgba(0,255,0,1)\",\"width\":1%7D,\"radius\":64%7D%7D,%7B\"image\":%7B\"anchor\":%5B16,48%5D,\"size\":%5B32,48%5D,\"anchorXUnits\":\"pixels\",\"anchorYUnits\":\"pixels\",\"src\":\"http://openlayers.org/en/v3.20.1/examples/data/icon.png\"%7D%7D,%7B\"text\":%7B\"fill\":%7B\"color\":\"rgba(75,92,85,0.85)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,255,255,1)\",\"width\":5%7D,\"offset-x\":0,\"offset-y\":16,\"text\":\"fantasy%20light\",\"font\":\"18px%20serif\"%7D%7D%5D    \n\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B13,21%5D,\"fill\":%7B\"color\":\"rgba(0,0,0,0.5)\"%7D,\"path\":\"M6.3,0C6.3,0,0,0.1,0,7.5c0,3.8,6.3,12.6,6.3,12.6s6.3-8.8,6.3-12.7C12.6,0.1,6.3,0,6.3,0z%20M6.3,8.8%20c-1.4,0-2.5-1.1-2.5-2.5c0-1.4,1.1-2.5,2.5-2.5c1.4,0,2.5,1.1,2.5,2.5C8.8,7.7,7.7,8.8,6.3,8.8z\"%7D%7D%5D\n\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B0,0.5%5D,\"fill\":%7B\"color\":\"rgba(255,0,0,0.1)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,0,0,1)\",\"width\":0.1%7D,\"scale\":8,\"rotation\":0.7,\"img\":\"lock\"%7D%7D,%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B100,0.5%5D,\"anchorXUnits\":\"pixels\",\"fill\":%7B\"color\":\"rgba(0,255,0,0.4)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,0,0,1)\",\"width\":0.1%7D,\"scale\":1.5,\"rotation\":0.7,\"img\":\"lock\"%7D%7D,%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B-10,0%5D,\"anchorXUnits\":\"pixels\",\"anchorOrigin\":\"top-right\",\"fill\":%7B\"color\":\"rgba(230,230,80,1)\"%7D,\"stroke\":%7B\"color\":\"rgba(0,0,0,1)\",\"width\":0.5%7D,\"scale\":2,\"rotation\":0.8,\"img\":\"lock\"%7D%7D%5D\n\n\n    style-viewer&geom=multipoint&style=icon/png\n\n    style-viewer&geom=polyline&style=stroke/dot\n\n    style-viewer&geom=polygon&style=fill/diagonal\n    style-viewer&geom=polygon&style=fill/horizontal,fill/vertical,stroke/dashdotdot\n    style-viewer&geom=polygon&style=stroke/solid,text/text\n    style-viewer&geom=polygon-with-holes&style=fill/cross,stroke/solid\n\n    style-viewer&geom=multipolygon&style=stroke/solid,fill/horizontal,text/text\n\n    style-viewer&geom=point&style=%5B%7B%22image%22:%7B%22imgSize%22:%5B15,15%5D,%22fill%22:%7B%22color%22:%22rgba(250,250,250,1)%22%7D,%22stroke%22:%7B%22color%22:%22rgba(0,0,0,1)%22,%22width%22:1%7D,%22path%22:%22M15,6.8182L15,8.5l-6.5-1l-0.3182,4.7727L11,14v1l-3.5-0.6818L4,15v-1l2.8182-1.7273L6.5,7.5L0,8.5V6.8182L6.5,4.5v-3c0,0,0-1.5,1-1.5s1,1.5,1,1.5v2.8182L15,6.8182z%22%7D%7D%5D\n    ";
+        var styles = document.createElement("style");
+        document.head.appendChild(styles);
+        styles.innerText += "\n    #map {\n        display: none;\n    }\n    .test {\n        margin: 20px;\n    }\n    ";
+        var labDiv = document.createElement("div");
+        document.body.appendChild(labDiv);
+        labDiv.innerHTML = labs
+            .split(/ /)
+            .map(function (v) { return v.trim(); })
+            .filter(function (v) { return !!v; })
+            .map(function (lab) { return "<div class='test'><a href='" + path + lab + "'>" + lab + "</a></div>"; })
+            .join("\n");
+    }
+    exports.run = run;
+    ;
+});
+define("node_modules/ol3-fun/ol3-fun/snapshot", ["require", "exports", "openlayers"], function (require, exports, ol) {
+    "use strict";
+    function getStyle(feature) {
+        var style = feature.getStyle();
+        if (!style) {
+            var styleFn = feature.getStyleFunction();
+            if (styleFn) {
+                style = styleFn(0);
+            }
+        }
+        if (!style) {
+            style = new ol.style.Style({
+                text: new ol.style.Text({
+                    text: "?"
+                })
+            });
+        }
+        if (!Array.isArray(style))
+            style = [style];
+        return style;
+    }
+    var Snapshot = (function () {
+        function Snapshot() {
+        }
+        Snapshot.render = function (canvas, feature) {
+            feature = feature.clone();
+            var geom = feature.getGeometry();
+            var extent = geom.getExtent();
+            var isPoint = extent[0] === extent[2];
+            var _a = ol.extent.getCenter(extent), dx = _a[0], dy = _a[1];
+            var scale = isPoint ? 1 : Math.min(canvas.width / ol.extent.getWidth(extent), canvas.height / ol.extent.getHeight(extent));
+            geom.translate(-dx, -dy);
+            geom.scale(scale, -scale);
+            geom.translate(canvas.width / 2, canvas.height / 2);
+            var vtx = ol.render.toContext(canvas.getContext("2d"));
+            var styles = getStyle(feature);
+            if (!Array.isArray(styles))
+                styles = [styles];
+            styles.forEach(function (style) { return vtx.drawFeature(feature, style); });
+        };
+        Snapshot.snapshot = function (feature) {
+            var canvas = document.createElement("canvas");
+            var geom = feature.getGeometry();
+            this.render(canvas, feature);
+            return canvas.toDataURL();
+        };
+        return Snapshot;
+    }());
+    return Snapshot;
+});
+define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function uuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+    exports.uuid = uuid;
+    function asArray(list) {
+        var result = new Array(list.length);
+        for (var i = 0; i < list.length; i++) {
+            result[i] = list[i];
+        }
+        return result;
+    }
+    exports.asArray = asArray;
+    function toggle(e, className, force) {
+        var exists = e.classList.contains(className);
+        if (exists && force !== true) {
+            e.classList.remove(className);
+            return false;
+        }
+        ;
+        if (!exists && force !== false) {
+            e.classList.add(className);
+            return true;
+        }
+        return exists;
+    }
+    exports.toggle = toggle;
+    function parse(v, type) {
+        if (typeof type === "string")
+            return v;
+        if (typeof type === "number")
+            return parseFloat(v);
+        if (typeof type === "boolean")
+            return (v === "1" || v === "true");
+        if (Array.isArray(type)) {
+            return (v.split(",").map(function (v) { return parse(v, type[0]); }));
+        }
+        throw "unknown type: " + type;
+    }
+    exports.parse = parse;
+    function getQueryParameters(options, url) {
+        if (url === void 0) { url = window.location.href; }
+        var opts = options;
+        Object.keys(opts).forEach(function (k) {
+            doif(getParameterByName(k, url), function (v) {
+                var value = parse(v, opts[k]);
+                if (value !== undefined)
+                    opts[k] = value;
+            });
+        });
+    }
+    exports.getQueryParameters = getQueryParameters;
+    function getParameterByName(name, url) {
+        if (url === void 0) { url = window.location.href; }
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"), results = regex.exec(url);
+        if (!results)
+            return null;
+        if (!results[2])
+            return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+    exports.getParameterByName = getParameterByName;
+    function doif(v, cb) {
+        if (v !== undefined && v !== null)
+            cb(v);
+    }
+    exports.doif = doif;
+    function mixin(a, b) {
+        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
+        return a;
+    }
+    exports.mixin = mixin;
     function defaults(a) {
         var b = [];
         for (var _i = 1; _i < arguments.length; _i++) {
             b[_i - 1] = arguments[_i];
         }
-        b.filter(function (b) { return !!b; }).forEach(function (b) {
+        b.forEach(function (b) {
             Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
         });
         return a;
     }
     exports.defaults = defaults;
+    function cssin(name, css) {
+        var id = "style-" + name;
+        var styleTag = document.getElementById(id);
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = id;
+            styleTag.type = "text/css";
+            document.head.appendChild(styleTag);
+            styleTag.appendChild(document.createTextNode(css));
+        }
+        var dataset = styleTag.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                styleTag.remove();
+            }
+        };
+    }
+    exports.cssin = cssin;
+    function debounce(func, wait, immediate) {
+        var _this = this;
+        if (wait === void 0) { wait = 50; }
+        if (immediate === void 0) { immediate = false; }
+        var timeout;
+        return (function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            var later = function () {
+                timeout = null;
+                if (!immediate)
+                    func.apply(_this, args);
+            };
+            var callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = window.setTimeout(later, wait);
+            if (callNow)
+                func.call(_this, args);
+        });
+    }
+    exports.debounce = debounce;
+    function html(html) {
+        var a = document.createElement("div");
+        a.innerHTML = html;
+        return (a.firstElementChild || a.firstChild);
+    }
+    exports.html = html;
+    function pair(a1, a2) {
+        var result = new Array(a1.length * a2.length);
+        var i = 0;
+        a1.forEach(function (v1) { return a2.forEach(function (v2) { return result[i++] = [v1, v2]; }); });
+        return result;
+    }
+    exports.pair = pair;
+    function range(n) {
+        var result = new Array(n);
+        for (var i = 0; i < n; i++)
+            result[i] = i;
+        return result;
+    }
+    exports.range = range;
+    function shuffle(array) {
+        var currentIndex = array.length;
+        var temporaryValue;
+        var randomIndex;
+        while (0 !== currentIndex) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+        return array;
+    }
+    exports.shuffle = shuffle;
 });
-define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/common/ajax", "ol3-symbolizer/common/defaults"], function (require, exports, Ajax, defaults_1) {
+define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, common_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Catalog = /** @class */ (function () {
-        function Catalog(url) {
-            this.ajax = new Ajax(url);
+    function zoomToFeature(map, feature, options) {
+        options = common_1.defaults(options || {}, {
+            duration: 1000,
+            padding: 256,
+            minResolution: 2 * map.getView().getMinResolution()
+        });
+        var view = map.getView();
+        var currentExtent = view.calculateExtent(map.getSize());
+        var targetExtent = feature.getGeometry().getExtent();
+        var doit = function (duration) {
+            view.fit(targetExtent, {
+                size: map.getSize(),
+                padding: [options.padding, options.padding, options.padding, options.padding],
+                minResolution: options.minResolution,
+                duration: duration
+            });
+        };
+        if (ol.extent.containsExtent(currentExtent, targetExtent)) {
+            doit(options.duration);
         }
-        Catalog.prototype.about = function (data) {
-            var req = defaults_1.defaults({
-                f: "pjson"
-            }, data);
-            return this.ajax.jsonp(req);
+        else if (ol.extent.containsExtent(currentExtent, targetExtent)) {
+            doit(options.duration);
+        }
+        else {
+            var fullExtent = ol.extent.createEmpty();
+            ol.extent.extend(fullExtent, currentExtent);
+            ol.extent.extend(fullExtent, targetExtent);
+            var dscale = ol.extent.getWidth(fullExtent) / ol.extent.getWidth(currentExtent);
+            var duration = 0.5 * options.duration;
+            view.fit(fullExtent, {
+                size: map.getSize(),
+                padding: [options.padding, options.padding, options.padding, options.padding],
+                minResolution: options.minResolution,
+                duration: duration
+            });
+            setTimeout(function () { return doit(0.5 * options.duration); }, duration);
+        }
+    }
+    exports.zoomToFeature = zoomToFeature;
+});
+define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function decDegFromMatch(m) {
+        var signIndex = {
+            "-": -1,
+            "N": 1,
+            "S": -1,
+            "E": 1,
+            "W": -1
         };
-        Catalog.prototype.aboutFolder = function (folder) {
-            var ajax = new Ajax(this.ajax.url + "/" + folder);
-            var req = {
-                f: "pjson"
-            };
-            return ajax.jsonp(req);
+        var latLonIndex = {
+            "-": "",
+            "N": "lat",
+            "S": "lat",
+            "E": "lon",
+            "W": "lon"
         };
-        Catalog.prototype.aboutFeatureServer = function (name) {
-            var ajax = new Ajax(this.ajax.url + "/" + name + "/FeatureServer");
-            var req = {
-                f: "pjson"
-            };
-            return defaults_1.defaults(ajax.jsonp(req), { url: ajax.url });
+        var degrees, minutes, seconds, sign, latLon;
+        sign = signIndex[m[2]] || signIndex[m[1]] || signIndex[m[6]] || 1;
+        degrees = Number(m[3]);
+        minutes = m[4] ? Number(m[4]) : 0;
+        seconds = m[5] ? Number(m[5]) : 0;
+        latLon = latLonIndex[m[1]] || latLonIndex[m[6]];
+        if (!inRange(degrees, 0, 180))
+            throw 'Degrees out of range';
+        if (!inRange(minutes, 0, 60))
+            throw 'Minutes out of range';
+        if (!inRange(seconds, 0, 60))
+            throw 'Seconds out of range';
+        return {
+            decDeg: sign * (degrees + minutes / 60 + seconds / 3600),
+            latLon: latLon
         };
-        Catalog.prototype.aboutMapServer = function (name) {
-            var ajax = new Ajax(this.ajax.url + "/" + name + "/MapServer");
-            var req = {
-                f: "pjson"
-            };
-            return defaults_1.defaults(ajax.jsonp(req), { url: ajax.url });
-        };
-        Catalog.prototype.aboutLayer = function (layer) {
-            var ajax = new Ajax(this.ajax.url + "/" + layer);
-            var req = {
-                f: "pjson"
-            };
-            return ajax.jsonp(req);
-        };
-        return Catalog;
-    }());
-    exports.Catalog = Catalog;
+    }
+    function inRange(value, a, b) {
+        return value >= a && value <= b;
+    }
+    function parse(dmsString) {
+        var _a;
+        dmsString = dmsString.trim();
+        var dmsRe = /([NSEW])?(-)?(\d+(?:\.\d+)?)[°º:d\s]?\s?(?:(\d+(?:\.\d+)?)['’‘′:]\s?(?:(\d{1,2}(?:\.\d+)?)(?:"|″|’’|'')?)?)?\s?([NSEW])?/i;
+        var dmsString2;
+        var m1 = dmsString.match(dmsRe);
+        if (!m1)
+            throw 'Could not parse string';
+        if (m1[1]) {
+            m1[6] = undefined;
+            dmsString2 = dmsString.substr(m1[0].length - 1).trim();
+        }
+        else {
+            dmsString2 = dmsString.substr(m1[0].length).trim();
+        }
+        var decDeg1 = decDegFromMatch(m1);
+        var m2 = dmsString2.match(dmsRe);
+        var decDeg2 = m2 && decDegFromMatch(m2);
+        if (typeof decDeg1.latLon === 'undefined') {
+            if (!isNaN(decDeg1.decDeg) && decDeg2 && isNaN(decDeg2.decDeg)) {
+                return decDeg1.decDeg;
+            }
+            else if (!isNaN(decDeg1.decDeg) && decDeg2 && !isNaN(decDeg2.decDeg)) {
+                decDeg1.latLon = 'lat';
+                decDeg2.latLon = 'lon';
+            }
+            else {
+                throw 'Could not parse string';
+            }
+        }
+        if (typeof decDeg2.latLon === 'undefined') {
+            decDeg2.latLon = decDeg1.latLon === 'lat' ? 'lon' : 'lat';
+        }
+        return _a = {},
+            _a[decDeg1.latLon] = decDeg1.decDeg,
+            _a[decDeg2.latLon] = decDeg2.decDeg,
+            _a;
+    }
+    exports.parse = parse;
+});
+define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms"], function (require, exports, common, navigation, dms) {
+    "use strict";
+    var index = common.defaults(common, {
+        dms: dms,
+        navigation: navigation
+    });
+    return index;
 });
 define("ol3-symbolizer/common/assign", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    /**
-     *
-     * @param obj The target object
-     * @param prop The property name
-     * @param value The property value
-     */
     function assign(obj, prop, value) {
         if (value === null)
             return;
@@ -178,12 +396,6 @@ define("ol3-symbolizer/common/assign", ["require", "exports"], function (require
 define("ol3-symbolizer/common/mixin", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    /**
-     * Shallow copies source into target, already available in numerous libraries including ol3-fun so does not belong here
-     * This implementation always overwrites the target with the source values (_.default does not replace values)
-     * @param a target
-     * @param b source
-     */
     function mixin(a, b) {
         Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
         return a;
@@ -202,14 +414,10 @@ define("ol3-symbolizer/common/doif", ["require", "exports"], function (require, 
 define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Shapeshifter = /** @class */ (function () {
+    var Shapeshifter = (function () {
         function Shapeshifter() {
         }
-        /**
-         * @param style does this style represent a cross?
-         */
         Shapeshifter.is = function (style) {
-            //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
             if (!style)
                 return false;
             if (!!style.cross)
@@ -226,10 +434,6 @@ define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], functio
                 return false;
             return true;
         };
-        /**
-         *
-         * @param style return this style as a cross json encoding
-         */
         Shapeshifter.as = function (style) {
             var star = style.star;
             if (!star)
@@ -273,14 +477,10 @@ define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], functio
 define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Shapeshifter = /** @class */ (function () {
+    var Shapeshifter = (function () {
         function Shapeshifter() {
         }
-        /**
-         * @param style does this style represent a square?
-         */
         Shapeshifter.is = function (style) {
-            //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
             if (!style)
                 return false;
             if (!!style.square)
@@ -297,10 +497,6 @@ define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], functi
                 return false;
             return true;
         };
-        /**
-         *
-         * @param style return this style as a cross json encoding
-         */
         Shapeshifter.as = function (style) {
             var star = style.star;
             if (!star)
@@ -346,14 +542,10 @@ define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], functi
 define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Shapeshifter = /** @class */ (function () {
+    var Shapeshifter = (function () {
         function Shapeshifter() {
         }
-        /**
-         * @param style does this style represent a diamond?
-         */
         Shapeshifter.is = function (style) {
-            //  "points": 4,"radius": >0,"radius2": 0,"angle": 0
             if (!style)
                 return false;
             if (!!style.diamond)
@@ -370,10 +562,6 @@ define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], funct
                 return false;
             return true;
         };
-        /**
-         *
-         * @param style return this style as a cross json encoding
-         */
         Shapeshifter.as = function (style) {
             var star = style.star;
             if (!star)
@@ -419,12 +607,9 @@ define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], funct
 define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Shapeshifter = /** @class */ (function () {
+    var Shapeshifter = (function () {
         function Shapeshifter() {
         }
-        /**
-         * @param style does this style represent a triangle?
-         */
         Shapeshifter.is = function (style) {
             if (!style)
                 return false;
@@ -442,10 +627,6 @@ define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], func
                 return false;
             return true;
         };
-        /**
-         *
-         * @param style return this style as a cross json encoding
-         */
         Shapeshifter.as = function (style) {
             var star = style.star;
             if (!star)
@@ -491,12 +672,9 @@ define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], func
 define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Shapeshifter = /** @class */ (function () {
+    var Shapeshifter = (function () {
         function Shapeshifter() {
         }
-        /**
-         * @param style does this style represent a X?
-         */
         Shapeshifter.is = function (style) {
             if (!style)
                 return false;
@@ -514,10 +692,6 @@ define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (r
                 return false;
             return true;
         };
-        /**
-         *
-         * @param style return this style as a cross json encoding
-         */
         Shapeshifter.as = function (style) {
             var star = style.star;
             if (!star)
@@ -561,10 +735,7 @@ define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (r
 define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers", "ol3-symbolizer/common/assign", "ol3-symbolizer/common/mixin", "ol3-symbolizer/common/doif", "ol3-symbolizer/format/plugins/as-cross", "ol3-symbolizer/format/plugins/as-square", "ol3-symbolizer/format/plugins/as-diamond", "ol3-symbolizer/format/plugins/as-triangle", "ol3-symbolizer/format/plugins/as-x"], function (require, exports, ol, assign_1, mixin_1, doif_1, as_cross_1, as_square_1, as_diamond_1, as_triangle_1, as_x_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var StyleConverter = /** @class */ (function () {
-        /**
-         * Register shape shifters
-         */
+    var StyleConverter = (function () {
         function StyleConverter() {
             this.converters = [];
             this.converters.push(as_cross_1.Shapeshifter);
@@ -572,21 +743,16 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             this.converters.push(as_diamond_1.Shapeshifter);
             this.converters.push(as_triangle_1.Shapeshifter);
             this.converters.push(as_x_1.Shapeshifter);
-            //this.converters.push(StarShapeshifter);
         }
         StyleConverter.prototype.fromJson = function (json) {
             this.converters.some(function (c) { return c.is(json) && c.inverse && !!(json = c.inverse(json)); });
             return this.deserializeStyle(json);
         };
         StyleConverter.prototype.toJson = function (style) {
-            // to be encoded as a collection of encoders, each in it's own module
             var result = this.serializeStyle(style);
             this.converters.some(function (c) { return c.is(result) && c.as && !!(result = c.as(result)); });
             return result;
         };
-        /**
-         * uses the interior point of a polygon when rendering a 'point' style
-         */
         StyleConverter.prototype.getGeometry = function (feature) {
             var geom = feature.getGeometry();
             if (geom instanceof ol.geom.Polygon) {
@@ -646,7 +812,6 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                     assign_1.assign(s, k, style[k + "_"]);
                 });
             }
-            // "svg"
             if (style.path) {
                 if (style.path)
                     assign_1.assign(s, "path", style.path);
@@ -657,11 +822,10 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 if (style.fill)
                     assign_1.assign(s, "fill", style.fill);
                 if (style.scale)
-                    assign_1.assign(s, "scale", style.scale); // getScale and getImgSize are modified in deserializer               
+                    assign_1.assign(s, "scale", style.scale);
                 if (style.imgSize)
                     assign_1.assign(s, "imgSize", style.imgSize);
             }
-            // "icon"
             if (style.getSrc)
                 assign_1.assign(s, "src", style.getSrc());
             return s;
@@ -797,7 +961,6 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 anchorOrigin: json.anchorOrigin || "top-left",
                 anchorXUnits: json.anchorXUnits || "fraction",
                 anchorYUnits: json.anchorYUnits || "fraction",
-                //crossOrigin?: string;
                 img: undefined,
                 imgSize: undefined,
                 offset: json.offset,
@@ -824,7 +987,6 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                     throw "unable to find svg element: " + json.img;
                 }
                 if (symbol) {
-                    // but just grab the path is probably good enough
                     var path = (symbol.getElementsByTagName("path")[0]);
                     if (path) {
                         if (symbol.viewBox) {
@@ -839,7 +1001,6 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             var canvas = document.createElement("canvas");
             if (json.path) {
                 {
-                    // rotate a rectangle and get the resulting extent
                     _a = json.imgSize.map(function (v) { return v * json.scale; }), canvas.width = _a[0], canvas.height = _a[1];
                     if (json.stroke && json.stroke.width) {
                         var dx = 2 * json.stroke.width * json.scale;
@@ -849,7 +1010,6 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 }
                 var ctx = canvas.getContext('2d');
                 var path2d = new Path2D(json.path);
-                // rotate  before it is in the canvas (avoids pixelation)
                 ctx.translate(canvas.width / 2, canvas.height / 2);
                 ctx.scale(json.scale, json.scale);
                 ctx.translate(-json.imgSize[0] / 2, -json.imgSize[1] / 2);
@@ -872,7 +1032,6 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 anchorOrigin: json.anchorOrigin,
                 anchorXUnits: json.anchorXUnits || "pixels",
                 anchorYUnits: json.anchorYUnits || "pixels",
-                //crossOrigin?: string;
                 offset: json.offset,
                 offsetOrigin: json.offsetOrigin,
                 opacity: json.opacity,
@@ -920,7 +1079,6 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                     gradient_1 = this.deserializeRadialGradient(fill.gradient);
                 }
                 if (fill.gradient.stops) {
-                    // preserve
                     mixin_1.mixin(gradient_1, {
                         stops: fill.gradient.stops
                     });
@@ -984,7 +1142,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 var image_1 = document.createElement("img");
                 image_1.src = fill.image.imageData;
                 image_1.onload = function () { return context_2.drawImage(image_1, 0, 0, w_1, h_1); };
-                return "rgba(255,255,255,0.1)"; // TODO
+                return "rgba(255,255,255,0.1)";
             }
             throw "invalid color configuration";
         };
@@ -992,7 +1150,6 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             var rx = /\w+\((.*)\)/m;
             var _a = JSON.parse(json.type.replace(rx, "[$1]")), x0 = _a[0], y0 = _a[1], x1 = _a[2], y1 = _a[3];
             var canvas = document.createElement('canvas');
-            // not correct, assumes points reside on edge
             canvas.width = Math.max(x0, x1);
             canvas.height = Math.max(y0, y1);
             var context = canvas.getContext('2d');
@@ -1006,7 +1163,6 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             var rx = /radial\((.*)\)/m;
             var _a = JSON.parse(json.type.replace(rx, "[$1]")), x0 = _a[0], y0 = _a[1], r0 = _a[2], x1 = _a[3], y1 = _a[4], r1 = _a[5];
             var canvas = document.createElement('canvas');
-            // not correct, assumes radial centered
             canvas.width = 2 * Math.max(x0, x1);
             canvas.height = 2 * Math.max(y0, y1);
             var context = canvas.getContext('2d');
@@ -1020,13 +1176,285 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
     }());
     exports.StyleConverter = StyleConverter;
 });
+define("examples/styles/icon/png", ["require", "exports"], function (require, exports) {
+    "use strict";
+    return [
+        {
+            "circle": {
+                "fill": {
+                    "gradient": {
+                        "type": "linear(32,32,96,96)",
+                        "stops": "rgba(0,255,0,0.1) 0%;rgba(0,255,0,0.8) 100%"
+                    }
+                },
+                "opacity": 1,
+                "stroke": {
+                    "color": "rgba(0,255,0,1)",
+                    "width": 1
+                },
+                "radius": 64
+            }
+        },
+        {
+            "image": {
+                "anchor": [16, 48],
+                "imgSize": [32, 48],
+                "anchorXUnits": "pixels",
+                "anchorYUnits": "pixels",
+                "src": "http://openlayers.org/en/v3.20.1/examples/data/icon.png"
+            }
+        }
+    ];
+});
+define("examples/ags-style-converter", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/snapshot", "node_modules/ol3-fun/index", "ol3-symbolizer/format/ol3-symbolizer", "examples/styles/icon/png"], function (require, exports, ol, $, Snapshot, index_1, ol3_symbolizer_1, pointStyle) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var html = "\n<div class='style-to-canvas'>\n    <h3>Renders a feature on a canvas</h3>\n    <div class=\"area\">\n        <label>256 x 256 Canvas</label>\n        <div id='canvas-collection'></div>\n    </div>\n    <div class=\"area\">\n        <label>AGS Json Symbol</label>\n        <textarea class='style'>\n        </textarea>\n        <button class=\"save\">Save</button>\n    </div>\n</div>\n";
+    var css = "\n<style>\n    #map {\n        display: none;\n    }\n\n    .style-to-canvas {\n    }\n\n    .style-to-canvas .area label {\n        display: block;\n        vertical-align: top;\n    }\n\n    .style-to-canvas .area {\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    .style-to-canvas .area .style {\n        width: 100%;\n        height: 400px;\n    }\n\n    .style-to-canvas #canvas-collection canvas {\n        font-family: sans serif;\n        font-size: 20px;\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n    \n</style>\n";
+    var svg = "\n<div style='display:none'>\n<svg xmlns=\"http://www.w3.org/2000/svg\">\n<symbol viewBox=\"5 0 20 15\" id=\"lock\">\n    <title>lock</title>\n    <path d=\"M10.9,11.6c-0.3-0.6-0.3-2.3,0-2.8c0.4-0.6,3.4,1.4,3.4,1.4c0.9,0.4,0.9-6.1,0-5.7\n\tc0,0-3.1,2.1-3.4,1.4c-0.3-0.7-0.3-2.1,0-2.8C11.2,2.5,15,2.4,15,2.4C15,1.7,12.1,1,10.9,1S8.4,1.1,6.8,1.8C5.2,2.4,3.9,3.4,2.7,4.6\n\tS0,8.2,0,8.9s1.5,2.8,3.7,3.7s3.3,1.1,4.5,1.3c1.1,0.1,2.6,0,3.9-0.3c1-0.2,2.9-0.7,2.9-1.1C15,12.3,11.2,12.2,10.9,11.6z M4.5,9.3\n\tC3.7,9.3,3,8.6,3,7.8s0.7-1.5,1.5-1.5S6,7,6,7.8S5.3,9.3,4.5,9.3z\"\n    />\n</symbol>\n<symbol viewBox=\"0 0 37 37\" id=\"marker\">\n      <title>marker</title>\n      <path d=\"M19.75 2.75 L32.47792206135786 7.022077938642145 L36.75 19.75 L32.47792206135786 32.47792206135786 L19.75 36.75 L7.022077938642145 32.47792206135786 L2.75 19.750000000000004 L7.022077938642141 7.022077938642145 L19.749999999999996 2.75 Z\" /> </symbol>\n</svg>\n</div>\n";
+    function loadStyle(name) {
+        var d = $.Deferred();
+        if ('[' === name[0]) {
+            d.resolve(JSON.parse(name));
+        }
+        else {
+            var mids = name.split(",").map(function (name) { return "../styles/" + name; });
+            requirejs(mids, function () {
+                var styles = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    styles[_i] = arguments[_i];
+                }
+                var style = [];
+                styles.forEach(function (s) { return style = style.concat(s); });
+                d.resolve(style);
+            });
+        }
+        return d;
+    }
+    function loadGeom(name) {
+        var mids = name.split(",").map(function (name) { return "../tests/geom/" + name; });
+        var d = $.Deferred();
+        requirejs(mids, function () {
+            var geoms = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                geoms[_i] = arguments[_i];
+            }
+            d.resolve(geoms);
+        });
+        return d;
+    }
+    var styles = {
+        point: pointStyle
+    };
+    var serializer = new ol3_symbolizer_1.StyleConverter();
+    var Renderer = (function () {
+        function Renderer(geom) {
+            this.feature = new ol.Feature(geom);
+            this.canvas = this.createCanvas();
+        }
+        Renderer.prototype.createCanvas = function (size) {
+            if (size === void 0) { size = 256; }
+            var canvas = document.createElement("canvas");
+            canvas.width = canvas.height = size;
+            return canvas;
+        };
+        Renderer.prototype.draw = function (styles) {
+            var canvas = this.canvas;
+            var feature = this.feature;
+            var style = styles.map(function (style) { return serializer.fromJson(style); });
+            feature.setStyle(style);
+            canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+            Snapshot.render(canvas, feature);
+        };
+        return Renderer;
+    }());
+    function run() {
+        $(html).appendTo("body");
+        $(svg).appendTo("body");
+        $(css).appendTo("head");
+        $(".style").val(JSON.stringify({
+            "type": "esriSFS",
+            "style": "esriSFSForwardDiagonal",
+            "color": [0, 255, 0, 255],
+            "outline": {
+                "type": "esriSLS",
+                "style": "esriSLSSolid",
+                "color": [0, 255, 0, 255],
+                "width": 0.4
+            }
+        }, null, '\t'));
+        var geom = index_1.getParameterByName("geom") || "polygon-with-holes";
+        var style = index_1.getParameterByName("style");
+        var save = function () {
+            var style = JSON.stringify(JSON.parse($(".style").val() + ""));
+            var loc = window.location;
+            var url = "" + loc.origin + loc.pathname + "?run=ol3-symbolizer/labs/ags-style-converter&geom=" + geom + "&style=" + encodeURI(style);
+            history.replaceState({}, "Changes", url);
+            return url;
+        };
+        style && loadStyle(style).then(function (styles) {
+            loadGeom(geom).then(function (geoms) {
+                var style = JSON.stringify(styles, null, ' ');
+                $(".style").val(style);
+                var renderers = geoms.map(function (g) { return new Renderer(g); });
+                renderers.forEach(function (r) { return $(r.canvas).appendTo("#canvas-collection"); });
+                setInterval(function () {
+                    try {
+                        var style_1 = JSON.parse($(".style").val() + "");
+                        renderers.forEach(function (r) { return r.draw(style_1); });
+                        save();
+                    }
+                    catch (ex) {
+                    }
+                }, 2000);
+            });
+        });
+    }
+    exports.run = run;
+});
+define("ol3-symbolizer/common/ajax", ["require", "exports", "jquery"], function (require, exports, $) {
+    "use strict";
+    var Ajax = (function () {
+        function Ajax(url) {
+            this.url = url;
+            this.options = {
+                use_json: true,
+                use_cors: true
+            };
+        }
+        Ajax.prototype.jsonp = function (args, url) {
+            if (url === void 0) { url = this.url; }
+            var d = $.Deferred();
+            args["callback"] = "define";
+            var uri = url + "?" + Object.keys(args).map(function (k) { return k + "=" + args[k]; }).join('&');
+            require([uri], function (data) { return d.resolve(data); });
+            return d;
+        };
+        Ajax.prototype.ajax = function (method, args, url) {
+            if (url === void 0) { url = this.url; }
+            var isData = method === "POST" || method === "PUT";
+            var isJson = this.options.use_json;
+            var isCors = this.options.use_cors;
+            var d = $.Deferred();
+            var client = new XMLHttpRequest();
+            if (isCors)
+                client.withCredentials = true;
+            var uri = url;
+            var data = null;
+            if (args) {
+                if (isData) {
+                    data = JSON.stringify(args);
+                }
+                else {
+                    uri += '?';
+                    var argcount = 0;
+                    for (var key in args) {
+                        if (args.hasOwnProperty(key)) {
+                            if (argcount++) {
+                                uri += '&';
+                            }
+                            uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
+                        }
+                    }
+                }
+            }
+            client.open(method, uri, true);
+            if (isData && isJson)
+                client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            client.send(data);
+            client.onload = function () {
+                console.log("content-type", client.getResponseHeader("Content-Type"));
+                if (client.status >= 200 && client.status < 300) {
+                    isJson = isJson || 0 === client.getResponseHeader("Content-Type").indexOf("application/json");
+                    d.resolve(isJson ? JSON.parse(client.response) : client.response);
+                }
+                else {
+                    d.reject(client.statusText);
+                }
+            };
+            client.onerror = function () { return d.reject(client.statusText); };
+            return d;
+        };
+        Ajax.prototype.get = function (args) {
+            return this.ajax('GET', args);
+        };
+        Ajax.prototype.post = function (args) {
+            return this.ajax('POST', args);
+        };
+        Ajax.prototype.put = function (args) {
+            return this.ajax('PUT', args);
+        };
+        Ajax.prototype.delete = function (args) {
+            return this.ajax('DELETE', args);
+        };
+        return Ajax;
+    }());
+    return Ajax;
+});
+define("ol3-symbolizer/common/defaults", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function defaults(a) {
+        var b = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            b[_i - 1] = arguments[_i];
+        }
+        b.filter(function (b) { return !!b; }).forEach(function (b) {
+            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
+        });
+        return a;
+    }
+    exports.defaults = defaults;
+});
+define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/common/ajax", "ol3-symbolizer/common/defaults"], function (require, exports, Ajax, defaults_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Catalog = (function () {
+        function Catalog(url) {
+            this.ajax = new Ajax(url);
+        }
+        Catalog.prototype.about = function (data) {
+            var req = defaults_1.defaults({
+                f: "pjson"
+            }, data);
+            return this.ajax.jsonp(req);
+        };
+        Catalog.prototype.aboutFolder = function (folder) {
+            var ajax = new Ajax(this.ajax.url + "/" + folder);
+            var req = {
+                f: "pjson"
+            };
+            return ajax.jsonp(req);
+        };
+        Catalog.prototype.aboutFeatureServer = function (name) {
+            var ajax = new Ajax(this.ajax.url + "/" + name + "/FeatureServer");
+            var req = {
+                f: "pjson"
+            };
+            return defaults_1.defaults(ajax.jsonp(req), { url: ajax.url });
+        };
+        Catalog.prototype.aboutMapServer = function (name) {
+            var ajax = new Ajax(this.ajax.url + "/" + name + "/MapServer");
+            var req = {
+                f: "pjson"
+            };
+            return defaults_1.defaults(ajax.jsonp(req), { url: ajax.url });
+        };
+        Catalog.prototype.aboutLayer = function (layer) {
+            var ajax = new Ajax(this.ajax.url + "/" + layer);
+            var req = {
+                f: "pjson"
+            };
+            return ajax.jsonp(req);
+        };
+        return Catalog;
+    }());
+    exports.Catalog = Catalog;
+});
 define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var symbolizer = new Symbolizer.StyleConverter();
-    // esri -> ol mappings (add keyof to get proper definitions, not sure how)
-    // function agsStyleMapper(index : keyof(StyleTypes)) {
-    // }
     var styleMap = {
         "esriSMSCircle": "circle",
         "esriSMSDiamond": "diamond",
@@ -1041,7 +1469,6 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
         "esriSFSBackwardDiagonal": "backward-diagonal",
         "esriSFSForwardDiagonal": "forward-diagonal",
     };
-    // esri -> ol mappings
     var typeMap = {
         "esriSMS": "sms",
         "esriSLS": "sls",
@@ -1059,14 +1486,12 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
     function clone(o) {
         return JSON.parse(JSON.stringify(o));
     }
-    // convert from ags style to an internal format
-    var StyleConverter = /** @class */ (function () {
+    var StyleConverter = (function () {
         function StyleConverter() {
         }
         StyleConverter.prototype.asWidth = function (v) {
-            return v * 4 / 3; // not sure why
+            return v * 4 / 3;
         };
-        // see ol.color.asString
         StyleConverter.prototype.asColor = function (color) {
             if (color.length === 4)
                 return "rgba(" + color[0] + "," + color[1] + "," + color[2] + "," + color[3] / 255 + ")";
@@ -1245,9 +1670,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                     break;
             }
         };
-        // picture fill symbol (does not render the picture due to drawPolygon limitation)
         StyleConverter.prototype.fromPFS = function (symbol, style) {
-            // TODO drawPolygon does not call setImageStyle so this is being ignored
             style.fill = {
                 image: {
                     src: symbol.url,
@@ -1262,9 +1685,6 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
         StyleConverter.prototype.fromTS = function (symbol, style) {
             throw "not-implemented";
         };
-        /**
-         * Converts the ags symbol to an openlayers style, then the openlayers style to a JSON representation
-         */
         StyleConverter.prototype.fromJson = function (symbol) {
             var style = {};
             this.fromSymbol(symbol, style);
@@ -1294,9 +1714,6 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                     throw "invalid-symbol-type: " + symbol.type;
             }
         };
-        /**
-         * convert drawing info into a symbology rule
-         */
         StyleConverter.prototype.fromRenderer = function (renderer, args) {
             var _this = this;
             switch (renderer.type) {
@@ -1323,10 +1740,6 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                         if (classBreakRenderer_1.visualVariables) {
                             classBreakRenderer_1.visualVariables.forEach(function (vars) {
                                 switch (vars.type) {
-                                    /**
-                                     * This renderer adjusts the size of the symbol to between [minSize..maxSize]
-                                     * based on the range of values [minDataValue, maxDataValue]
-                                     */
                                     case "sizeInfo": {
                                         var steps_1 = range(classBreakRenderer_1.authoringInfo.visualVariables[0].minSliderValue, classBreakRenderer_1.authoringInfo.visualVariables[0].maxSliderValue);
                                         var dx_1 = (vars.maxSize - vars.minSize) / steps_1.length;
@@ -1353,7 +1766,6 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                         debugger;
                         var value = feature.get(renderer.field1);
                         for (var key in styles_2) {
-                            // TODO: scan until key > value, return prior style
                             return styles_2[key];
                         }
                     };
@@ -1370,347 +1782,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
     }());
     exports.StyleConverter = StyleConverter;
 });
-define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    /**
-     * Generate a UUID
-     * @returns UUID
-     *
-     * Adapted from http://stackoverflow.com/a/2117523/526860
-     */
-    function uuid() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
-    exports.uuid = uuid;
-    function asArray(list) {
-        var result = new Array(list.length);
-        for (var i = 0; i < list.length; i++) {
-            result[i] = list[i];
-        }
-        return result;
-    }
-    exports.asArray = asArray;
-    // ie11 compatible
-    function toggle(e, className, toggle) {
-        if (toggle === void 0) { toggle = false; }
-        !toggle ? e.classList.remove(className) : e.classList.add(className);
-    }
-    exports.toggle = toggle;
-    function parse(v, type) {
-        if (typeof type === "string")
-            return v;
-        if (typeof type === "number")
-            return parseFloat(v);
-        if (typeof type === "boolean")
-            return (v === "1" || v === "true");
-        if (Array.isArray(type)) {
-            return (v.split(",").map(function (v) { return parse(v, type[0]); }));
-        }
-        throw "unknown type: " + type;
-    }
-    exports.parse = parse;
-    function getQueryParameters(options, url) {
-        if (url === void 0) { url = window.location.href; }
-        var opts = options;
-        Object.keys(opts).forEach(function (k) {
-            doif(getParameterByName(k, url), function (v) {
-                var value = parse(v, opts[k]);
-                if (value !== undefined)
-                    opts[k] = value;
-            });
-        });
-    }
-    exports.getQueryParameters = getQueryParameters;
-    function getParameterByName(name, url) {
-        if (url === void 0) { url = window.location.href; }
-        name = name.replace(/[\[\]]/g, "\\$&");
-        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"), results = regex.exec(url);
-        if (!results)
-            return null;
-        if (!results[2])
-            return '';
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
-    }
-    exports.getParameterByName = getParameterByName;
-    function doif(v, cb) {
-        if (v !== undefined && v !== null)
-            cb(v);
-    }
-    exports.doif = doif;
-    function mixin(a, b) {
-        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
-        return a;
-    }
-    exports.mixin = mixin;
-    function defaults(a) {
-        var b = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            b[_i - 1] = arguments[_i];
-        }
-        b.forEach(function (b) {
-            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
-        });
-        return a;
-    }
-    exports.defaults = defaults;
-    /**
-     * Adds exactly one instance of the CSS to the app with a mechanism
-     * for disposing by invoking the destructor returned by this method.
-     * Note the css will not be removed until the dependency count reaches
-     * 0 meaning the number of calls to cssin('id') must match the number
-     * of times the destructor is invoked.
-     * let d1 = cssin('foo', '.foo { background: white }');
-     * let d2 = cssin('foo', '.foo { background: white }');
-     * d1(); // reduce dependency count
-     * d2(); // really remove the css
-     * @param name unique id for this style tag
-     * @param css css content
-     * @returns destructor
-     */
-    function cssin(name, css) {
-        var id = "style-" + name;
-        var styleTag = document.getElementById(id);
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            styleTag.id = id;
-            styleTag.type = "text/css";
-            document.head.appendChild(styleTag);
-            styleTag.appendChild(document.createTextNode(css));
-        }
-        var dataset = styleTag.dataset;
-        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
-        return function () {
-            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
-            if (dataset["count"] === "0") {
-                styleTag.remove();
-            }
-        };
-    }
-    exports.cssin = cssin;
-    function debounce(func, wait, immediate) {
-        var _this = this;
-        if (wait === void 0) { wait = 50; }
-        if (immediate === void 0) { immediate = false; }
-        var timeout;
-        return (function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            var later = function () {
-                timeout = null;
-                if (!immediate)
-                    func.apply(_this, args);
-            };
-            var callNow = immediate && !timeout;
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-            if (callNow)
-                func.call(_this, args);
-        });
-    }
-    exports.debounce = debounce;
-    /**
-     * poor $(html) substitute due to being
-     * unable to create <td>, <tr> elements
-     */
-    function html(html) {
-        var a = document.createElement("div");
-        a.innerHTML = html;
-        return (a.firstElementChild || a.firstChild);
-    }
-    exports.html = html;
-    function pair(a1, a2) {
-        var result = new Array(a1.length * a2.length);
-        var i = 0;
-        a1.forEach(function (v1) { return a2.forEach(function (v2) { return result[i++] = [v1, v2]; }); });
-        return result;
-    }
-    exports.pair = pair;
-    function range(n) {
-        var result = new Array(n);
-        for (var i = 0; i < n; i++)
-            result[i] = i;
-        return result;
-    }
-    exports.range = range;
-    // http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-    function shuffle(array) {
-        var currentIndex = array.length;
-        var temporaryValue;
-        var randomIndex;
-        // While there remain elements to shuffle...
-        while (0 !== currentIndex) {
-            // Pick a remaining element...
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex -= 1;
-            // And swap it with the current element.
-            temporaryValue = array[currentIndex];
-            array[currentIndex] = array[randomIndex];
-            array[randomIndex] = temporaryValue;
-        }
-        return array;
-    }
-    exports.shuffle = shuffle;
-});
-define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, common_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    /**
-     * A less disorienting way of changing the maps extent (maybe!)
-     * Zoom out until new feature is visible
-     * Zoom to that feature
-     */
-    function zoomToFeature(map, feature, options) {
-        options = common_1.defaults(options || {}, {
-            duration: 1000,
-            padding: 256,
-            minResolution: 2 * map.getView().getMinResolution()
-        });
-        var view = map.getView();
-        var currentExtent = view.calculateExtent(map.getSize());
-        var targetExtent = feature.getGeometry().getExtent();
-        var doit = function (duration) {
-            view.fit(targetExtent, {
-                size: map.getSize(),
-                padding: [options.padding, options.padding, options.padding, options.padding],
-                minResolution: options.minResolution,
-                duration: duration
-            });
-        };
-        if (ol.extent.containsExtent(currentExtent, targetExtent)) {
-            // new extent is contained within current extent, pan and zoom in
-            doit(options.duration);
-        }
-        else if (ol.extent.containsExtent(currentExtent, targetExtent)) {
-            // new extent is contained within current extent, pan and zoom out
-            doit(options.duration);
-        }
-        else {
-            // zoom out until target extent is in view
-            var fullExtent = ol.extent.createEmpty();
-            ol.extent.extend(fullExtent, currentExtent);
-            ol.extent.extend(fullExtent, targetExtent);
-            var dscale = ol.extent.getWidth(fullExtent) / ol.extent.getWidth(currentExtent);
-            var duration = 0.5 * options.duration;
-            view.fit(fullExtent, {
-                size: map.getSize(),
-                padding: [options.padding, options.padding, options.padding, options.padding],
-                minResolution: options.minResolution,
-                duration: duration
-            });
-            setTimeout(function () { return doit(0.5 * options.duration); }, duration);
-        }
-    }
-    exports.zoomToFeature = zoomToFeature;
-});
-// ported from https://github.com/gmaclennan/parse-dms/blob/master/index.js
-define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    function decDegFromMatch(m) {
-        var signIndex = {
-            "-": -1,
-            "N": 1,
-            "S": -1,
-            "E": 1,
-            "W": -1
-        };
-        var latLonIndex = {
-            "-": "",
-            "N": "lat",
-            "S": "lat",
-            "E": "lon",
-            "W": "lon"
-        };
-        var degrees, minutes, seconds, sign, latLon;
-        sign = signIndex[m[2]] || signIndex[m[1]] || signIndex[m[6]] || 1;
-        degrees = Number(m[3]);
-        minutes = m[4] ? Number(m[4]) : 0;
-        seconds = m[5] ? Number(m[5]) : 0;
-        latLon = latLonIndex[m[1]] || latLonIndex[m[6]];
-        if (!inRange(degrees, 0, 180))
-            throw 'Degrees out of range';
-        if (!inRange(minutes, 0, 60))
-            throw 'Minutes out of range';
-        if (!inRange(seconds, 0, 60))
-            throw 'Seconds out of range';
-        return {
-            decDeg: sign * (degrees + minutes / 60 + seconds / 3600),
-            latLon: latLon
-        };
-    }
-    function inRange(value, a, b) {
-        return value >= a && value <= b;
-    }
-    function parse(dmsString) {
-        var _a;
-        dmsString = dmsString.trim();
-        // Inspired by https://gist.github.com/JeffJacobson/2955437
-        // See https://regex101.com/r/kS2zR1/3
-        var dmsRe = /([NSEW])?(-)?(\d+(?:\.\d+)?)[°º:d\s]?\s?(?:(\d+(?:\.\d+)?)['’‘′:]\s?(?:(\d{1,2}(?:\.\d+)?)(?:"|″|’’|'')?)?)?\s?([NSEW])?/i;
-        var dmsString2;
-        var m1 = dmsString.match(dmsRe);
-        if (!m1)
-            throw 'Could not parse string';
-        // If dmsString starts with a hemisphere letter, then the regex can also capture the 
-        // hemisphere letter for the second coordinate pair if also in the string
-        if (m1[1]) {
-            m1[6] = undefined;
-            dmsString2 = dmsString.substr(m1[0].length - 1).trim();
-        }
-        else {
-            dmsString2 = dmsString.substr(m1[0].length).trim();
-        }
-        var decDeg1 = decDegFromMatch(m1);
-        var m2 = dmsString2.match(dmsRe);
-        var decDeg2 = m2 && decDegFromMatch(m2);
-        if (typeof decDeg1.latLon === 'undefined') {
-            if (!isNaN(decDeg1.decDeg) && decDeg2 && isNaN(decDeg2.decDeg)) {
-                // If we only have one coordinate but we have no hemisphere value,
-                // just return the decDeg number
-                return decDeg1.decDeg;
-            }
-            else if (!isNaN(decDeg1.decDeg) && decDeg2 && !isNaN(decDeg2.decDeg)) {
-                // If no hemisphere letter but we have two coordinates,
-                // infer that the first is lat, the second lon
-                decDeg1.latLon = 'lat';
-                decDeg2.latLon = 'lon';
-            }
-            else {
-                throw 'Could not parse string';
-            }
-        }
-        // If we parsed the first coordinate as lat or lon, then assume the second is the other
-        if (typeof decDeg2.latLon === 'undefined') {
-            decDeg2.latLon = decDeg1.latLon === 'lat' ? 'lon' : 'lat';
-        }
-        return _a = {},
-            _a[decDeg1.latLon] = decDeg1.decDeg,
-            _a[decDeg2.latLon] = decDeg2.decDeg,
-            _a;
-    }
-    exports.parse = parse;
-});
-define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms"], function (require, exports, common, navigation, dms) {
-    "use strict";
-    var index = common.defaults(common, {
-        dms: dms,
-        navigation: navigation
-    });
-    return index;
-});
-/**
- * See https://openlayers.org/en/latest/examples/vector-esri.html
- * Ultimately this will only query for features it does not already have
- * It will make use the map SRS and the resulttype="tile" and exceededTransferLimit
- * See https://github.com/ca0v/ol3-lab/issues/4
- */
-define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/ags/ags-catalog", "ol3-symbolizer/format/ags-symbolizer", "node_modules/ol3-fun/index"], function (require, exports, $, ol, AgsCatalog, Symbolizer, index_1) {
+define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/ags/ags-catalog", "ol3-symbolizer/format/ags-symbolizer", "node_modules/ol3-fun/index"], function (require, exports, $, ol, AgsCatalog, Symbolizer, index_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var esrijsonFormat = new ol.format.EsriJSON();
@@ -1725,12 +1797,12 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
         tileSize: 512,
         where: "1=1",
     };
-    var ArcGisVectorSourceFactory = /** @class */ (function () {
+    var ArcGisVectorSourceFactory = (function () {
         function ArcGisVectorSourceFactory() {
         }
         ArcGisVectorSourceFactory.create = function (options) {
             var d = $.Deferred();
-            options = index_1.defaults(options, DEFAULT_OPTIONS);
+            options = index_2.defaults(options, DEFAULT_OPTIONS);
             var srs = options.map.getView()
                 .getProjection()
                 .getCode()
@@ -1743,8 +1815,6 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
                 });
                 var strategy = ol.loadingstrategy.tile(tileGrid);
                 var loader = function (extent, resolution, projection) {
-                    // current loading strategy isn't being clever enough?  Getting duplicates.
-                    // see ol.source.Vector.prototype.loadFeatures (it keeps history of extents)
                     var box = {
                         xmin: extent[0],
                         ymin: extent[1],
@@ -1773,12 +1843,10 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
                                     response.error.details.join('\n'));
                             }
                             else {
-                                // dataProjection will be read from document
                                 var features = esrijsonFormat.readFeatures(response, {
                                     featureProjection: projection,
                                     dataProjection: projection
                                 });
-                                // if we've defined a primary key we can ignore duplicates
                                 if (!options.uidFieldName && response.fields) {
                                     var oidField = response.fields.filter(function (f) { return f.type === "esriFieldTypeOID"; })[0];
                                     if (oidField) {
@@ -1788,7 +1856,6 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
                                 if (options.uidFieldName) {
                                     features = features.filter(function (f) { return !source.getFeatures().some(function (f) { return f.get(options.uidFieldName); }); });
                                 }
-                                // anything left to add?
                                 if (features.length > 0) {
                                     source.addFeatures(features);
                                 }
@@ -1834,200 +1901,7 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
     }());
     exports.ArcGisVectorSourceFactory = ArcGisVectorSourceFactory;
 });
-define("node_modules/ol3-fun/ol3-fun/snapshot", ["require", "exports", "openlayers"], function (require, exports, ol) {
-    "use strict";
-    function getStyle(feature) {
-        var style = feature.getStyle();
-        if (!style) {
-            var styleFn = feature.getStyleFunction();
-            if (styleFn) {
-                style = styleFn(0);
-            }
-        }
-        if (!style) {
-            style = new ol.style.Style({
-                text: new ol.style.Text({
-                    text: "?"
-                })
-            });
-        }
-        if (!Array.isArray(style))
-            style = [style];
-        return style;
-    }
-    var Snapshot = /** @class */ (function () {
-        function Snapshot() {
-        }
-        Snapshot.render = function (canvas, feature) {
-            feature = feature.clone();
-            var geom = feature.getGeometry();
-            var extent = geom.getExtent();
-            var isPoint = extent[0] === extent[2];
-            var _a = ol.extent.getCenter(extent), dx = _a[0], dy = _a[1];
-            var scale = isPoint ? 1 : Math.min(canvas.width / ol.extent.getWidth(extent), canvas.height / ol.extent.getHeight(extent));
-            geom.translate(-dx, -dy);
-            geom.scale(scale, -scale);
-            geom.translate(canvas.width / 2, canvas.height / 2);
-            var vtx = ol.render.toContext(canvas.getContext("2d"));
-            var styles = getStyle(feature);
-            if (!Array.isArray(styles))
-                styles = [styles];
-            styles.forEach(function (style) { return vtx.drawFeature(feature, style); });
-        };
-        /**
-         * convert features into data:image/png;base64;
-         */
-        Snapshot.snapshot = function (feature) {
-            var canvas = document.createElement("canvas");
-            var geom = feature.getGeometry();
-            this.render(canvas, feature);
-            return canvas.toDataURL();
-        };
-        return Snapshot;
-    }());
-    return Snapshot;
-});
-define("ol3-symbolizer/styles/icon/png", ["require", "exports"], function (require, exports) {
-    "use strict";
-    return [
-        {
-            "circle": {
-                "fill": {
-                    "gradient": {
-                        "type": "linear(32,32,96,96)",
-                        "stops": "rgba(0,255,0,0.1) 0%;rgba(0,255,0,0.8) 100%"
-                    }
-                },
-                "opacity": 1,
-                "stroke": {
-                    "color": "rgba(0,255,0,1)",
-                    "width": 1
-                },
-                "radius": 64
-            }
-        },
-        {
-            "image": {
-                "anchor": [16, 48],
-                "imgSize": [32, 48],
-                "anchorXUnits": "pixels",
-                "anchorYUnits": "pixels",
-                "src": "http://openlayers.org/en/v3.20.1/examples/data/icon.png"
-            }
-        }
-    ];
-});
-/**
- * Render a style created from converting an ags symbol to an ol symbol
- */
-define("ol3-symbolizer/labs/ags-style-converter", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/snapshot", "node_modules/ol3-fun/index", "ol3-symbolizer/format/ol3-symbolizer", "ol3-symbolizer/styles/icon/png"], function (require, exports, ol, $, Snapshot, index_2, ol3_symbolizer_1, pointStyle) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var html = "\n<div class='style-to-canvas'>\n    <h3>Renders a feature on a canvas</h3>\n    <div class=\"area\">\n        <label>256 x 256 Canvas</label>\n        <div id='canvas-collection'></div>\n    </div>\n    <div class=\"area\">\n        <label>AGS Json Symbol</label>\n        <textarea class='style'>\n        </textarea>\n        <button class=\"save\">Save</button>\n    </div>\n</div>\n";
-    var css = "\n<style>\n    #map {\n        display: none;\n    }\n\n    .style-to-canvas {\n    }\n\n    .style-to-canvas .area label {\n        display: block;\n        vertical-align: top;\n    }\n\n    .style-to-canvas .area {\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    .style-to-canvas .area .style {\n        width: 100%;\n        height: 400px;\n    }\n\n    .style-to-canvas #canvas-collection canvas {\n        font-family: sans serif;\n        font-size: 20px;\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n    \n</style>\n";
-    var svg = "\n<div style='display:none'>\n<svg xmlns=\"http://www.w3.org/2000/svg\">\n<symbol viewBox=\"5 0 20 15\" id=\"lock\">\n    <title>lock</title>\n    <path d=\"M10.9,11.6c-0.3-0.6-0.3-2.3,0-2.8c0.4-0.6,3.4,1.4,3.4,1.4c0.9,0.4,0.9-6.1,0-5.7\n\tc0,0-3.1,2.1-3.4,1.4c-0.3-0.7-0.3-2.1,0-2.8C11.2,2.5,15,2.4,15,2.4C15,1.7,12.1,1,10.9,1S8.4,1.1,6.8,1.8C5.2,2.4,3.9,3.4,2.7,4.6\n\tS0,8.2,0,8.9s1.5,2.8,3.7,3.7s3.3,1.1,4.5,1.3c1.1,0.1,2.6,0,3.9-0.3c1-0.2,2.9-0.7,2.9-1.1C15,12.3,11.2,12.2,10.9,11.6z M4.5,9.3\n\tC3.7,9.3,3,8.6,3,7.8s0.7-1.5,1.5-1.5S6,7,6,7.8S5.3,9.3,4.5,9.3z\"\n    />\n</symbol>\n<symbol viewBox=\"0 0 37 37\" id=\"marker\">\n      <title>marker</title>\n      <path d=\"M19.75 2.75 L32.47792206135786 7.022077938642145 L36.75 19.75 L32.47792206135786 32.47792206135786 L19.75 36.75 L7.022077938642145 32.47792206135786 L2.75 19.750000000000004 L7.022077938642141 7.022077938642145 L19.749999999999996 2.75 Z\" /> </symbol>\n</svg>\n</div>\n";
-    function loadStyle(name) {
-        var d = $.Deferred();
-        if ('[' === name[0]) {
-            d.resolve(JSON.parse(name));
-        }
-        else {
-            var mids = name.split(",").map(function (name) { return "../styles/" + name; });
-            require(mids, function () {
-                var styles = [];
-                for (var _i = 0; _i < arguments.length; _i++) {
-                    styles[_i] = arguments[_i];
-                }
-                var style = [];
-                styles.forEach(function (s) { return style = style.concat(s); });
-                d.resolve(style);
-            });
-        }
-        return d;
-    }
-    function loadGeom(name) {
-        var mids = name.split(",").map(function (name) { return "../tests/geom/" + name; });
-        var d = $.Deferred();
-        require(mids, function () {
-            var geoms = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                geoms[_i] = arguments[_i];
-            }
-            d.resolve(geoms);
-        });
-        return d;
-    }
-    var styles = {
-        point: pointStyle
-    };
-    var serializer = new ol3_symbolizer_1.StyleConverter();
-    var Renderer = /** @class */ (function () {
-        function Renderer(geom) {
-            this.feature = new ol.Feature(geom);
-            this.canvas = this.createCanvas();
-        }
-        Renderer.prototype.createCanvas = function (size) {
-            if (size === void 0) { size = 256; }
-            var canvas = document.createElement("canvas");
-            canvas.width = canvas.height = size;
-            return canvas;
-        };
-        Renderer.prototype.draw = function (styles) {
-            var canvas = this.canvas;
-            var feature = this.feature;
-            var style = styles.map(function (style) { return serializer.fromJson(style); });
-            feature.setStyle(style);
-            canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-            Snapshot.render(canvas, feature);
-        };
-        return Renderer;
-    }());
-    function run() {
-        $(html).appendTo("body");
-        $(svg).appendTo("body");
-        $(css).appendTo("head");
-        $(".style").val(JSON.stringify({
-            "type": "esriSFS",
-            "style": "esriSFSForwardDiagonal",
-            "color": [0, 255, 0, 255],
-            "outline": {
-                "type": "esriSLS",
-                "style": "esriSLSSolid",
-                "color": [0, 255, 0, 255],
-                "width": 0.4
-            }
-        }, null, '\t'));
-        var geom = index_2.getParameterByName("geom") || "polygon-with-holes";
-        var style = index_2.getParameterByName("style");
-        var save = function () {
-            var style = JSON.stringify(JSON.parse($(".style").val() + ""));
-            var loc = window.location;
-            var url = "" + loc.origin + loc.pathname + "?run=ol3-symbolizer/labs/ags-style-converter&geom=" + geom + "&style=" + encodeURI(style);
-            history.replaceState({}, "Changes", url);
-            return url;
-        };
-        style && loadStyle(style).then(function (styles) {
-            loadGeom(geom).then(function (geoms) {
-                var style = JSON.stringify(styles, null, ' ');
-                $(".style").val(style);
-                var renderers = geoms.map(function (g) { return new Renderer(g); });
-                renderers.forEach(function (r) { return $(r.canvas).appendTo("#canvas-collection"); });
-                setInterval(function () {
-                    try {
-                        var style_1 = JSON.parse($(".style").val() + "");
-                        renderers.forEach(function (r) { return r.draw(style_1); });
-                        save();
-                    }
-                    catch (ex) {
-                        // invalid json, try later
-                    }
-                }, 2000);
-            });
-        });
-    }
-    exports.run = run;
-});
-define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "openlayers", "node_modules/ol3-fun/index", "ol3-symbolizer/ags/ags-source"], function (require, exports, ol, index_3, ags_source_1) {
+define("examples/ags-viewer", ["require", "exports", "openlayers", "node_modules/ol3-fun/index", "ol3-symbolizer/ags/ags-source"], function (require, exports, ol, index_3, ags_source_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function parse(v, type) {
@@ -2111,33 +1985,419 @@ define("ol3-symbolizer/labs/ags-viewer", ["require", "exports", "openlayers", "n
     }
     exports.run = run;
 });
-define("ol3-symbolizer/labs/index", ["require", "exports"], function (require, exports) {
+define("examples/styles/fill/gradient", ["require", "exports"], function (require, exports) {
     "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    function run() {
-        var l = window.location;
-        var path = "" + l.origin + l.pathname + "?run=ol3-symbolizer/labs/";
-        var labs = "    \n  index\n  ags-viewer\n  ags-viewer&services=//maps.springfieldmo.gov/arcgis/rest/services&serviceType=MapServer&serviceName=Maps/Zoning&layers=6&center=-93.28,37.23\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=SanFrancisco/311Incidents&layers=0&center=-122.49,37.738\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Fire/Sheep&layers=0,1,2&center=-117.9,34.35\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=HomelandSecurity/operations&layers=0,1,2&center=-117.2,32.7\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Hydrography/Watershed173811&layers=0,1&center=-96.53,38.37\n  ags-viewer&services=//sampleserver3.arcgisonline.com/ArcGIS/rest/services&serviceName=Petroleum/KSFields&layers=0&center=-98.93,38.55\n\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION=%27GREEN%27\n  ags-viewer&services=//usgvl-shotgun02:6080/arcgis/rest/services&serviceName=Annotations/H840_ANNOTATIONS5&layers=3&center=-115.3,36.1&where=H8REGION%20IN(%27RED%27,%27GREEN%27)\n\n  style-viewer\n\n    style-viewer&geom=point&style=icon/png\n    style-viewer&geom=point&style=icon/png,text/text\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B45,45%5D,\"rotation\":0,\"stroke\":%7B\"color\":\"rgba(255,25,0,0.8)\",\"width\":3%7D,\"path\":\"M23%202%20L23%2023%20L43%2016.5%20L23%2023%20L35%2040%20L23%2023%20L11%2040%20L23%2023%20L3%2017%20L23%2023%20L23%202%20Z\"%7D%7D%5D\n\n    style-viewer&geom=point&style=%5B%7B\"circle\":%7B\"fill\":%7B\"gradient\":%7B\"type\":\"linear(32,32,96,96)\",\"stops\":\"rgba(0,255,0,0.1)%200%25;rgba(0,255,0,0.8)%20100%25\"%7D%7D,\"opacity\":1,\"stroke\":%7B\"color\":\"rgba(0,255,0,1)\",\"width\":1%7D,\"radius\":64%7D%7D,%7B\"image\":%7B\"anchor\":%5B16,48%5D,\"size\":%5B32,48%5D,\"anchorXUnits\":\"pixels\",\"anchorYUnits\":\"pixels\",\"src\":\"http://openlayers.org/en/v3.20.1/examples/data/icon.png\"%7D%7D,%7B\"text\":%7B\"fill\":%7B\"color\":\"rgba(75,92,85,0.85)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,255,255,1)\",\"width\":5%7D,\"offset-x\":0,\"offset-y\":16,\"text\":\"fantasy%20light\",\"font\":\"18px%20serif\"%7D%7D%5D    \n\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B13,21%5D,\"fill\":%7B\"color\":\"rgba(0,0,0,0.5)\"%7D,\"path\":\"M6.3,0C6.3,0,0,0.1,0,7.5c0,3.8,6.3,12.6,6.3,12.6s6.3-8.8,6.3-12.7C12.6,0.1,6.3,0,6.3,0z%20M6.3,8.8%20c-1.4,0-2.5-1.1-2.5-2.5c0-1.4,1.1-2.5,2.5-2.5c1.4,0,2.5,1.1,2.5,2.5C8.8,7.7,7.7,8.8,6.3,8.8z\"%7D%7D%5D\n\n    style-viewer&geom=point&style=%5B%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B0,0.5%5D,\"fill\":%7B\"color\":\"rgba(255,0,0,0.1)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,0,0,1)\",\"width\":0.1%7D,\"scale\":8,\"rotation\":0.7,\"img\":\"lock\"%7D%7D,%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B100,0.5%5D,\"anchorXUnits\":\"pixels\",\"fill\":%7B\"color\":\"rgba(0,255,0,0.4)\"%7D,\"stroke\":%7B\"color\":\"rgba(255,0,0,1)\",\"width\":0.1%7D,\"scale\":1.5,\"rotation\":0.7,\"img\":\"lock\"%7D%7D,%7B\"image\":%7B\"imgSize\":%5B15,15%5D,\"anchor\":%5B-10,0%5D,\"anchorXUnits\":\"pixels\",\"anchorOrigin\":\"top-right\",\"fill\":%7B\"color\":\"rgba(230,230,80,1)\"%7D,\"stroke\":%7B\"color\":\"rgba(0,0,0,1)\",\"width\":0.5%7D,\"scale\":2,\"rotation\":0.8,\"img\":\"lock\"%7D%7D%5D\n\n\n    style-viewer&geom=multipoint&style=icon/png\n\n    style-viewer&geom=polyline&style=stroke/dot\n\n    style-viewer&geom=polygon&style=fill/diagonal\n    style-viewer&geom=polygon&style=fill/horizontal,fill/vertical,stroke/dashdotdot\n    style-viewer&geom=polygon&style=stroke/solid,text/text\n    style-viewer&geom=polygon-with-holes&style=fill/cross,stroke/solid\n\n    style-viewer&geom=multipolygon&style=stroke/solid,fill/horizontal,text/text\n\n    style-viewer&geom=point&style=%5B%7B%22image%22:%7B%22imgSize%22:%5B15,15%5D,%22fill%22:%7B%22color%22:%22rgba(250,250,250,1)%22%7D,%22stroke%22:%7B%22color%22:%22rgba(0,0,0,1)%22,%22width%22:1%7D,%22path%22:%22M15,6.8182L15,8.5l-6.5-1l-0.3182,4.7727L11,14v1l-3.5-0.6818L4,15v-1l2.8182-1.7273L6.5,7.5L0,8.5V6.8182L6.5,4.5v-3c0,0,0-1.5,1-1.5s1,1.5,1,1.5v2.8182L15,6.8182z%22%7D%7D%5D\n    ";
-        var styles = document.createElement("style");
-        document.head.appendChild(styles);
-        styles.innerText += "\n    #map {\n        display: none;\n    }\n    .test {\n        margin: 20px;\n    }\n    ";
-        var labDiv = document.createElement("div");
-        document.body.appendChild(labDiv);
-        labDiv.innerHTML = labs
-            .split(/ /)
-            .map(function (v) { return v.trim(); })
-            .filter(function (v) { return !!v; })
-            //.sort()
-            .map(function (lab) { return "<div class='test'><a href='" + path + lab + "'>" + lab + "</a></div>"; })
-            .join("\n");
-        var testDiv = document.createElement("div");
-        document.body.appendChild(testDiv);
-        testDiv.innerHTML = "<a href='" + l.origin + l.pathname + "?run=ol3-symbolizer/tests/index'>tests</a>";
-    }
-    exports.run = run;
-    ;
+    return [
+        {
+            "fill": {
+                "gradient": {
+                    "type": "linear(200,0,201,0)",
+                    "stops": "rgba(255,0,0,.1) 0%;rgba(255,0,0,0.8) 100%"
+                }
+            }
+        },
+        {
+            "fill": {
+                "gradient": {
+                    "type": "linear(0,200,0,201)",
+                    "stops": "rgba(0,255,0,0.1) 0%;rgba(0,255,0,0.8) 100%"
+                }
+            }
+        }
+    ];
 });
-define("ol3-symbolizer/labs/style-viewer", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/snapshot", "node_modules/ol3-fun/index", "ol3-symbolizer/format/ol3-symbolizer", "ol3-symbolizer/styles/icon/png"], function (require, exports, ol, $, Snapshot, index_4, ol3_symbolizer_2, pointStyle) {
+define("examples/tests/geom/polygon-with-holes", ["require", "exports", "openlayers"], function (require, exports, ol) {
+    "use strict";
+    return new ol.geom.Polygon([
+        [
+            [-115.23607381724413, 36.18020468011697],
+            [-115.23585925895877, 36.179702181216726],
+            [-115.23575411703308, 36.17970096569444],
+            [-115.2357555390405, 36.179660925345416],
+            [-115.23498759816178, 36.17965671947266],
+            [-115.23498227780165, 36.17965563145225],
+            [-115.23497562817354, 36.17965345801133],
+            [-115.23497429411718, 36.179653454129465],
+            [-115.2349729648491, 36.179652368709114],
+            [-115.23497164190998, 36.17965236485955],
+            [-115.23497031260206, 36.17965128845199],
+            [-115.23496366297462, 36.17964911501038],
+            [-115.23495435806059, 36.17964152607966],
+            [-115.23495037983507, 36.17963610674103],
+            [-115.23494905056762, 36.17963502132042],
+            [-115.23494905535622, 36.17963393978194],
+            [-115.23494772608885, 36.17963285436133],
+            [-115.23494773087741, 36.17963177282287],
+            [-115.23494374153573, 36.17962635345167],
+            [-115.23494242663457, 36.17962202341565],
+            [-115.23494244274961, 36.179613362030594],
+            [-115.23494115849935, 36.17958955512785],
+            [-115.23494259074424, 36.179539762821165],
+            [-115.23495080755244, 36.17943153234975],
+            [-115.23498190979615, 36.179198854743774],
+            [-115.23498597483993, 36.179162057736576],
+            [-115.23498741333559, 36.17911335600928],
+            [-115.23498760303814, 36.1790202799572],
+            [-115.23498894037036, 36.17901703017802],
+            [-115.23499294903999, 36.17901054351405],
+            [-115.23500627711793, 36.179000821282315],
+            [-115.23501027775183, 36.17899866080441],
+            [-115.23501827423149, 36.1789954213867],
+            [-115.23502227007734, 36.178994342446956],
+            [-115.23503690505271, 36.178993267421134],
+            [-115.23613088558278, 36.17900978428773],
+            [-115.23641035743786, 36.17901554257806],
+            [-115.23642233215821, 36.17901772235737],
+            [-115.23642366143577, 36.17901880776175],
+            [-115.2364249954815, 36.17901881162746],
+            [-115.23643430369208, 36.17902314678388],
+            [-115.23644359756013, 36.1790307355685],
+            [-115.23644493318729, 36.17903290254361],
+            [-115.23644625134835, 36.179033987915574],
+            [-115.23644891148601, 36.179038321833545],
+            [-115.23644890671817, 36.179039403372215],
+            [-115.23645023599641, 36.179040488776366],
+            [-115.23645287229544, 36.179050230387844],
+            [-115.23644236273168, 36.179626054530914],
+            [-115.23668058083813, 36.17963175574282],
+            [-115.2366834748921, 36.179522437195914],
+            [-115.23661559800996, 36.17952127625068],
+            [-115.23661568079545, 36.17948230455008],
+            [-115.23656510706341, 36.179480085095875],
+            [-115.23656514052031, 36.179464925432384],
+            [-115.23654650808301, 36.17946490751295],
+            [-115.2365540175394, 36.17905252428298],
+            [-115.23655670160856, 36.17904386161155],
+            [-115.23656071015083, 36.179037374894435],
+            [-115.23656470915981, 36.17903305125468],
+            [-115.23657136994915, 36.17902764475913],
+            [-115.2365767093539, 36.179024406553935],
+            [-115.2365846946555, 36.17902116699908],
+            [-115.23659535439921, 36.17901901674222],
+            [-115.23713833886198, 36.1790294298395],
+            [-115.23715563711139, 36.17902945282161],
+            [-115.23716229150622, 36.17903054460291],
+            [-115.23716894114325, 36.17903271792267],
+            [-115.23717558602276, 36.179035972780895],
+            [-115.23718622040953, 36.17904463792368],
+            [-115.23719019876008, 36.179050057189215],
+            [-115.23719285418174, 36.179055472629685],
+            [-115.23719416919774, 36.179059802642044],
+            [-115.23719116643991, 36.17922432514126],
+            [-115.23719241007713, 36.179267626889896],
+            [-115.23721203241809, 36.179434332838255],
+            [-115.23721989085172, 36.17949279544402],
+            [-115.23722777151995, 36.17954367823275],
+            [-115.23722497973465, 36.179609698939885],
+            [-115.23722409330264, 36.180036161511154],
+            [-115.23722639987513, 36.180209351752936],
+            [-115.23722102868629, 36.18022991275794],
+            [-115.23721300999347, 36.18024830300364],
+            [-115.2372009938535, 36.18026560013875],
+            [-115.23718632380785, 36.18027965395507],
+            [-115.23717165215595, 36.180291544660236],
+            [-115.23715700433107, 36.180298018657865],
+            [-115.23713968041169, 36.18030882013731],
+            [-115.23710901412761, 36.18033259770809],
+            [-115.23709567812136, 36.180346655371196],
+            [-115.23708635703858, 36.18034772799106],
+            [-115.23707305914606, 36.18034554445107],
+            [-115.23705842558819, 36.180341193941615],
+            [-115.23702517527396, 36.18032816419867],
+            [-115.23699059405523, 36.18031946581843],
+            [-115.23695998492562, 36.180315096116985],
+            [-115.23687881268215, 36.18030849810276],
+            [-115.23662063061164, 36.18030168495093],
+            [-115.23638240890344, 36.18029382050014],
+            [-115.23637957338431, 36.18037715490031],
+            [-115.23691856336063, 36.180392974213746],
+            [-115.23696247517685, 36.18039844594108],
+            [-115.23699839685315, 36.180408229759635],
+            [-115.23701967540914, 36.18041583514312],
+            [-115.23703030836687, 36.18042233718951],
+            [-115.23703428837263, 36.18042991956851],
+            [-115.23703293205983, 36.18043749552426],
+            [-115.23702757508498, 36.18045481190387],
+            [-115.23702218797958, 36.180484025271284],
+            [-115.23701522157822, 36.180634620287506],
+            [-115.23701388430145, 36.18063787008873],
+            [-115.23701388589801, 36.1806400331979],
+            [-115.23701254226417, 36.18064220142843],
+            [-115.23701121134403, 36.18064653280025],
+            [-115.23700987247047, 36.180647619492305],
+            [-115.23700986771001, 36.18064870103079],
+            [-115.23700853999335, 36.18064977874215],
+            [-115.23700853523289, 36.180650860280636],
+            [-115.23700720747651, 36.18065194700479],
+            [-115.23700586384234, 36.18065411523524],
+            [-115.23700319725172, 36.18065627963851],
+            [-115.23699919818345, 36.180660603291415],
+            [-115.23698854137972, 36.18066708881365],
+            [-115.23698720726621, 36.18066709396689],
+            [-115.23698587954891, 36.18066817167798],
+            [-115.23698454547511, 36.18066816781841],
+            [-115.23698320660087, 36.18066925451012],
+            [-115.23698188364428, 36.18066925068268],
+            [-115.23697522590852, 36.18067141255135],
+            [-115.2369725577608, 36.18067140483197],
+            [-115.23696856185578, 36.180672483836176],
+            [-115.23696191368127, 36.18067247361428],
+            [-115.2369605748066, 36.18067356030576],
+            [-115.23613944034335, 36.18064871246639],
+            [-115.23613411993963, 36.180647615484105],
+            [-115.23612747019557, 36.180645442106865],
+            [-115.23612614089488, 36.18064435669936],
+            [-115.23612347752092, 36.180643267422624],
+            [-115.23611816027882, 36.180638934805],
+            [-115.23611418196273, 36.18063350649241],
+            [-115.23611418673549, 36.180632424954],
+            [-115.23611286220795, 36.180630258007966],
+            [-115.23611153614853, 36.18062591893997],
+            [-115.23612705321317, 36.18020582594842],
+            [-115.23607381724413, 36.18020468011697]
+        ],
+        [
+            [-115.23618294625469, 36.17956944939985],
+            [-115.23618152437697, 36.1796170696354],
+            [-115.2361813999148, 36.17967551816986],
+            [-115.23634908732791, 36.17967680645728],
+            [-115.23634919412686, 36.179624856198686],
+            [-115.2363824679463, 36.17962489855586],
+            [-115.2363825795315, 36.1795718577452],
+            [-115.23638534968705, 36.179520987743686],
+            [-115.23635074658684, 36.17951986899516],
+            [-115.2363521827075, 36.17946899512751],
+            [-115.2363522910816, 36.179419207976636],
+            [-115.236386892558, 36.179418163614926],
+            [-115.2363870009098, 36.17936837646343],
+            [-115.23638710449244, 36.17931967085019],
+            [-115.2363551585448, 36.179318541777775],
+            [-115.23635527168521, 36.17926767308688],
+            [-115.23638854535363, 36.1792677154416],
+            [-115.23638995914024, 36.17922442138702],
+            [-115.23641258255111, 36.1792244508959],
+            [-115.23641552635529, 36.17909132031167],
+            [-115.23634764988991, 36.17909015020365],
+            [-115.23634769453865, 36.179067419704054],
+            [-115.23627716107944, 36.179066250868104],
+            [-115.2362146097472, 36.17906508710888],
+            [-115.2362145698311, 36.17908673606951],
+            [-115.23614802742047, 36.17908556971632],
+            [-115.23608680530958, 36.179085500310464],
+            [-115.23608551598718, 36.17906276594198],
+            [-115.23601765066995, 36.17906159567923],
+            [-115.23595376526016, 36.179060436926335],
+            [-115.23595372049765, 36.179083167425176],
+            [-115.23588717809511, 36.179082000927025],
+            [-115.23582195384806, 36.17908191977068],
+            [-115.23582201454218, 36.17905810776571],
+            [-115.23575946318529, 36.17905695278159],
+            [-115.23569424377776, 36.17905578100435],
+            [-115.23569419894028, 36.179078511502695],
+            [-115.23563031352298, 36.179077352577124],
+            [-115.23562736517071, 36.17921372778321],
+            [-115.23575645912092, 36.179216058458195],
+            [-115.23588422384631, 36.17921729457083],
+            [-115.2360159859503, 36.17921962369661],
+            [-115.23614508469727, 36.17922087241399],
+            [-115.2362741723721, 36.17922211194713],
+            [-115.23627408780143, 36.179266491406025],
+            [-115.23618757879821, 36.17926530324189],
+            [-115.23618737296034, 36.1793648775767],
+            [-115.23618449573719, 36.17946770684685],
+            [-115.23618294625469, 36.17956944939985]
+        ],
+        [
+            [-115.23686858906352, 36.17946421772446],
+            [-115.23708818379693, 36.179467737173354],
+            [-115.23708696717102, 36.17941578308344],
+            [-115.23712289793187, 36.17941582390601],
+            [-115.23712300421819, 36.17936387364166],
+            [-115.23712310578506, 36.17931299590278],
+            [-115.23708984321254, 36.17931295378433],
+            [-115.23708994476085, 36.179262085057985],
+            [-115.23709005110757, 36.17921012577965],
+            [-115.23712465880284, 36.17921017178786],
+            [-115.23712609917445, 36.17915821636679],
+            [-115.23712620069831, 36.179107347638976],
+            [-115.23709293185466, 36.17910622395091],
+            [-115.23709302864063, 36.179056436761556],
+            [-115.23687476910101, 36.179052921188244],
+            [-115.23665251856224, 36.17904939365998],
+            [-115.2366510762937, 36.17909918596493],
+            [-115.236621804877, 36.179099146261294],
+            [-115.2366203594083, 36.17915218321373],
+            [-115.23661891870293, 36.179204138626986],
+            [-115.23664953536439, 36.17920417321409],
+            [-115.23664809467705, 36.17925612862733],
+            [-115.23664798649122, 36.1793059157809],
+            [-115.23661738090723, 36.17930588122539],
+            [-115.23661727270161, 36.179355668378406],
+            [-115.23661583834084, 36.17940870536066],
+            [-115.23664644873001, 36.17940765837814],
+            [-115.23664500327055, 36.17946069532819],
+            [-115.23686858906352, 36.17946421772446]
+        ],
+        [
+            [-115.23531117600369, 36.179579184921224],
+            [-115.23537638954298, 36.179579266325774],
+            [-115.23537633500685, 36.17960416891128],
+            [-115.23543755751767, 36.17960423868263],
+            [-115.23550144331914, 36.17960540672608],
+            [-115.23550149626053, 36.17957834103089],
+            [-115.23556538204222, 36.17957950904011],
+            [-115.23562793859004, 36.1795795825893],
+            [-115.23562787939407, 36.179605557701095],
+            [-115.23569043592308, 36.17960564023055],
+            [-115.23575431065326, 36.17960679909393],
+            [-115.23575437458497, 36.17957974244331],
+            [-115.23582357921542, 36.179579826178696],
+            [-115.23582252817624, 36.17944777458885],
+            [-115.23569209497232, 36.17944653066063],
+            [-115.23556565919206, 36.17944637074196],
+            [-115.23543922341348, 36.179446210689804],
+            [-115.23531278759663, 36.17944605951695],
+            [-115.23525822443638, 36.179445991018255],
+            [-115.23525825181221, 36.179429749785584],
+            [-115.23525979770169, 36.17932908878721],
+            [-115.23526002234115, 36.17922301618337],
+            [-115.23526157145767, 36.17911911053341],
+            [-115.23526310621648, 36.17901844949739],
+            [-115.23509542023675, 36.1790171596965],
+            [-115.23509531107005, 36.17906694684531],
+            [-115.23506869664503, 36.17906691449056],
+            [-115.23506858900447, 36.179118864748276],
+            [-115.23506846696303, 36.179174068634],
+            [-115.23509375849314, 36.17917409714073],
+            [-115.23509365407101, 36.17922281176253],
+            [-115.23509354644585, 36.17927476201899],
+            [-115.23506693195053, 36.17927472966353],
+            [-115.23506548542977, 36.17932776658991],
+            [-115.23506537295849, 36.179380807396655],
+            [-115.23509332158127, 36.179380834620375],
+            [-115.23509321715753, 36.17942954924048],
+            [-115.23509311910382, 36.179479336418154],
+            [-115.23506782268866, 36.179480389449196],
+            [-115.23506772461859, 36.17953017662637],
+            [-115.23506627330525, 36.17958429508896],
+            [-115.23509289902239, 36.17958432747747],
+            [-115.23509145729834, 36.179636282863015],
+            [-115.2352591493816, 36.17963649113807],
+            [-115.2352592215437, 36.17960509928969],
+            [-115.23531112144691, 36.17960408750662],
+            [-115.23531117600369, 36.179579184921224]
+        ],
+        [
+            [-115.23715466140786, 36.18014323272865],
+            [-115.23715476767816, 36.1800912824705],
+            [-115.23712815766072, 36.18009016903315],
+            [-115.23712826398778, 36.18003820976182],
+            [-115.23712703145384, 36.17998733718353],
+            [-115.23715498501544, 36.179986291401335],
+            [-115.23715376202102, 36.179933246732716],
+            [-115.23715254534713, 36.17988129264721],
+            [-115.2371259290423, 36.17987909763896],
+            [-115.23712603221048, 36.179830383013936],
+            [-115.2371248187149, 36.17977518427921],
+            [-115.23715276744281, 36.17977522003574],
+            [-115.23715287850983, 36.17972217922288],
+            [-115.23715298477842, 36.17967022896107],
+            [-115.2371250360878, 36.179670193204785],
+            [-115.23712379880102, 36.1796204021621],
+            [-115.23695212519661, 36.17961802187439],
+            [-115.23695190123763, 36.17972193137736],
+            [-115.23695300817042, 36.17982908938646],
+            [-115.23695546344958, 36.179933006637626],
+            [-115.2369552394907, 36.18003691613518],
+            [-115.23695635595108, 36.18014191106148],
+            [-115.2369574708579, 36.180244733863816],
+            [-115.23712782763906, 36.18024602878663],
+            [-115.2371266062204, 36.18019515624228],
+            [-115.23715322103163, 36.18019518814154],
+            [-115.23715466140786, 36.18014323272865]
+        ],
+        [
+            [-115.23677512801696, 36.18024883880216],
+            [-115.23684033735668, 36.18025000095081],
+            [-115.23684172069555, 36.18022619277727],
+            [-115.2368909608097, 36.18022841726922],
+            [-115.23690560226717, 36.180228441612684],
+            [-115.23691120233957, 36.18009530971011],
+            [-115.23677945302525, 36.18008973694613],
+            [-115.2366516853144, 36.18008632965913],
+            [-115.23651993761892, 36.18008291971901],
+            [-115.23639084059808, 36.180078435763335],
+            [-115.23638656898369, 36.18021264402907],
+            [-115.23644778716528, 36.18021380383769],
+            [-115.23644773935501, 36.180239778980805],
+            [-115.2365142827474, 36.18024094517253],
+            [-115.23657948730926, 36.18024318900176],
+            [-115.23657953666071, 36.18021937696756],
+            [-115.23664608639028, 36.18022162465665],
+            [-115.23670996163874, 36.18022278301284],
+            [-115.2367099186795, 36.180247676617995],
+            [-115.23677512801696, 36.18024883880216]
+        ],
+        [
+            [-115.23684226425577, 36.18060515225207],
+            [-115.23697402395965, 36.18060856187418],
+            [-115.23697829035417, 36.18047531796289],
+            [-115.23691707672076, 36.180473076885946],
+            [-115.23691712597076, 36.18044926485199],
+            [-115.23684925308694, 36.18044701348367],
+            [-115.23678670064628, 36.18044585001762],
+            [-115.23678665135678, 36.180469662051266],
+            [-115.23672010772597, 36.18046850502276],
+            [-115.23665489189531, 36.18046625222419],
+            [-115.23665627370782, 36.180440280944794],
+            [-115.23658840084047, 36.18043802942873],
+            [-115.23652186204708, 36.18043578173885],
+            [-115.23652180310351, 36.18046176586181],
+            [-115.23645793247239, 36.18045951685289],
+            [-115.23645364931258, 36.18059384224745],
+            [-115.2365827519096, 36.180597253613996],
+            [-115.23671716865431, 36.18060066220171],
+            [-115.23684226425577, 36.18060515225207]
+        ],
+        [
+            [-115.23633258643937, 36.18056985047485],
+            [-115.23633402914288, 36.180520013123044],
+            [-115.23633545745574, 36.180473438411894],
+            [-115.2363382229087, 36.18042364995789],
+            [-115.23631959024468, 36.180423632001876],
+            [-115.23632235412812, 36.18037168043877],
+            [-115.23632379186483, 36.18032296968805],
+            [-115.23632655574141, 36.180271018123904],
+            [-115.2363279934334, 36.18022231638518],
+            [-115.23618957515714, 36.18021889575871],
+            [-115.23618814849672, 36.18026759752763],
+            [-115.23618537341171, 36.180319549055824],
+            [-115.23618261740978, 36.18036717442975],
+            [-115.23618117638654, 36.18041912982545],
+            [-115.2361958179183, 36.18041914524308],
+            [-115.23619438644577, 36.18046893756167],
+            [-115.23619295327786, 36.180516593809216],
+            [-115.23619152160241, 36.18056643119107],
+            [-115.23618875108032, 36.18061734624244],
+            [-115.23632981596866, 36.18062077454276],
+            [-115.23633258643937, 36.18056985047485]
+        ],
+        [
+            [-115.23657932815844, 36.17968142122321],
+            [-115.23651411929491, 36.179680258934894],
+            [-115.2365114017708, 36.179704072254324],
+            [-115.23644885627627, 36.179703990185644],
+            [-115.23644591403833, 36.17983929287941],
+            [-115.23657633679484, 36.17984053595765],
+            [-115.2367107522468, 36.17984394454598],
+            [-115.23671236152083, 36.179710810103074],
+            [-115.23664582810342, 36.17970748094652],
+            [-115.23664587108127, 36.1796825873393],
+            [-115.23657932815844, 36.17968142122321]
+        ]
+    ]);
+});
+define("examples/style-viewer", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/snapshot", "node_modules/ol3-fun/index", "ol3-symbolizer/format/ol3-symbolizer", "examples/styles/icon/png", "examples/styles/fill/gradient", "examples/tests/geom/polygon-with-holes"], function (require, exports, ol, $, Snapshot, index_4, ol3_symbolizer_2, pointStyle) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var html = "\n<div class='style-to-canvas'>\n    <h3>Renders a feature on a canvas</h3>\n    <div class=\"area\">\n        <label>256 x 256 Canvas</label>\n        <div id='canvas-collection'></div>\n    </div>\n    <div class=\"area\">\n        <label>Style</label>\n        <textarea class='style'></textarea>\n        <button class=\"save\">Save</button>\n    </div>\n</div>\n";
@@ -2149,7 +2409,7 @@ define("ol3-symbolizer/labs/style-viewer", ["require", "exports", "openlayers", 
             d.resolve(JSON.parse(name));
         }
         else {
-            var mids = name.split(",").map(function (name) { return "../styles/" + name; });
+            var mids = name.split(",").map(function (name) { return "examples/styles/" + name; });
             require(mids, function () {
                 var styles = [];
                 for (var _i = 0; _i < arguments.length; _i++) {
@@ -2163,7 +2423,7 @@ define("ol3-symbolizer/labs/style-viewer", ["require", "exports", "openlayers", 
         return d;
     }
     function loadGeom(name) {
-        var mids = name.split(",").map(function (name) { return "../tests/geom/" + name; });
+        var mids = name.split(",").map(function (name) { return "examples/tests/geom/" + name; });
         var d = $.Deferred();
         require(mids, function () {
             var geoms = [];
@@ -2178,7 +2438,7 @@ define("ol3-symbolizer/labs/style-viewer", ["require", "exports", "openlayers", 
         point: pointStyle
     };
     var serializer = new ol3_symbolizer_2.StyleConverter();
-    var Renderer = /** @class */ (function () {
+    var Renderer = (function () {
         function Renderer(geom) {
             this.feature = new ol.Feature(geom);
             this.canvas = this.createCanvas();
@@ -2208,7 +2468,7 @@ define("ol3-symbolizer/labs/style-viewer", ["require", "exports", "openlayers", 
         var save = function () {
             var style = JSON.stringify(JSON.parse($(".style").val() + ""));
             var loc = window.location;
-            var url = "" + loc.origin + loc.pathname + "?run=ol3-symbolizer/labs/style-viewer&geom=" + geom + "&style=" + encodeURI(style);
+            var url = "" + loc.origin + loc.pathname + "?run=examples/style-viewer&geom=" + geom + "&style=" + encodeURI(style);
             history.replaceState({}, "Changes", url);
             return url;
         };
@@ -2225,7 +2485,6 @@ define("ol3-symbolizer/labs/style-viewer", ["require", "exports", "openlayers", 
                         save();
                     }
                     catch (ex) {
-                        // invalid json, try later
                     }
                 }, 2000);
             });
@@ -2233,7 +2492,7 @@ define("ol3-symbolizer/labs/style-viewer", ["require", "exports", "openlayers", 
     }
     exports.run = run;
 });
-define("ol3-symbolizer/styles/basic", ["require", "exports"], function (require, exports) {
+define("examples/styles/basic", ["require", "exports"], function (require, exports) {
     "use strict";
     var stroke = {
         color: 'black',
@@ -2299,7 +2558,7 @@ define("ol3-symbolizer/styles/basic", ["require", "exports"], function (require,
         x: [{ star: x }]
     };
 });
-define("ol3-symbolizer/styles/peace", ["require", "exports"], function (require, exports) {
+define("examples/styles/peace", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2332,7 +2591,7 @@ define("ol3-symbolizer/styles/peace", ["require", "exports"], function (require,
         }
     ];
 });
-define("ol3-symbolizer/styles/ags/cartographiclinesymbol", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/cartographiclinesymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     var symbol = function () { return ({
         "type": "esriSLS",
@@ -2344,7 +2603,6 @@ define("ol3-symbolizer/styles/ags/cartographiclinesymbol", ["require", "exports"
             255
         ],
         "width": 1,
-        // these settings make it a CartographicLineSymbol (butt & bevel are the same as a SimpleLineSymbol)
         "cap": "esriLCSButt",
         "join": "esriLJSBevel",
         "miterLimit": 9.75
@@ -2361,20 +2619,7 @@ define("ol3-symbolizer/styles/ags/cartographiclinesymbol", ["require", "exports"
     });
     return symbols;
 });
-/*
-the width and height of esri json is always in points but the construct uses pixels
-A point is 1/72th of an inch where as a pixels dimensions vary but window.devicePixelRatio can help
-
-One technique for getting the DPI of a device:
-
-<div id='testdiv' style='height: 1in; left: -100%; position: absolute; top: -100%; width: 1in;'></div>
-<script type='text/javascript'>
-  var devicePixelRatio = window.devicePixelRatio || 1;
-  dpi_x = document.getElementById('testdiv').offsetWidth * devicePixelRatio;
-  dpi_y = document.getElementById('testdiv').offsetHeight * devicePixelRatio;
-</script>
-*/
-define("ol3-symbolizer/styles/ags/picturefillsymbol", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/picturefillsymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "color": [
@@ -2393,7 +2638,7 @@ define("ol3-symbolizer/styles/ags/picturefillsymbol", ["require", "exports"], fu
             "yscale": 1
         }];
 });
-define("ol3-symbolizer/styles/ags/picturemarkersymbol-imagedata", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/picturemarkersymbol-imagedata", ["require", "exports"], function (require, exports) {
     "use strict";
     var style = [{
             "type": "esriPMS",
@@ -2409,7 +2654,7 @@ define("ol3-symbolizer/styles/ags/picturemarkersymbol-imagedata", ["require", "e
         }];
     return style;
 });
-define("ol3-symbolizer/styles/ags/picturemarkersymbol", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/picturemarkersymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2423,7 +2668,7 @@ define("ol3-symbolizer/styles/ags/picturemarkersymbol", ["require", "exports"], 
         }
     ];
 });
-define("ol3-symbolizer/styles/ags/simplefillsymbol", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/simplefillsymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     var symbol = function () { return ({
         "color": [
@@ -2454,11 +2699,8 @@ define("ol3-symbolizer/styles/ags/simplefillsymbol", ["require", "exports"], fun
     });
     return symbols;
 });
-define("ol3-symbolizer/styles/ags/simplemarkersymbol-circle", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/simplemarkersymbol-circle", ["require", "exports"], function (require, exports) {
     "use strict";
-    /**
-     *
-     */
     var styles = [{
             "color": [
                 255,
@@ -2486,7 +2728,7 @@ define("ol3-symbolizer/styles/ags/simplemarkersymbol-circle", ["require", "expor
         }];
     return styles;
 });
-define("ol3-symbolizer/styles/ags/simplemarkersymbol-cross", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/simplemarkersymbol-cross", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2516,7 +2758,7 @@ define("ol3-symbolizer/styles/ags/simplemarkersymbol-cross", ["require", "export
         }
     ];
 });
-define("ol3-symbolizer/styles/ags/simplemarkersymbol-diamond", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/simplemarkersymbol-diamond", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2546,13 +2788,9 @@ define("ol3-symbolizer/styles/ags/simplemarkersymbol-diamond", ["require", "expo
         }
     ];
 });
-define("ol3-symbolizer/styles/ags/simplemarkersymbol-path", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/simplemarkersymbol-path", ["require", "exports"], function (require, exports) {
     "use strict";
-    return 
-    // from https://developers.arcgis.com/javascript/3/samples/playground/main.html#/config=symbols/SimpleMarkerSymbol.json
-    // chose this to learn how to render svg as a marker
-    // next up: https://www.mapbox.com/maki-icons/
-    [
+    return [
         {
             "color": [
                 255,
@@ -2581,7 +2819,7 @@ define("ol3-symbolizer/styles/ags/simplemarkersymbol-path", ["require", "exports
         }
     ];
 });
-define("ol3-symbolizer/styles/ags/simplemarkersymbol-square", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/simplemarkersymbol-square", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2611,7 +2849,7 @@ define("ol3-symbolizer/styles/ags/simplemarkersymbol-square", ["require", "expor
         }
     ];
 });
-define("ol3-symbolizer/styles/ags/simplemarkersymbol-x", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/simplemarkersymbol-x", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "color": [
@@ -2639,7 +2877,7 @@ define("ol3-symbolizer/styles/ags/simplemarkersymbol-x", ["require", "exports"],
             }
         }];
 });
-define("ol3-symbolizer/styles/ags/textsymbol", ["require", "exports"], function (require, exports) {
+define("examples/styles/ags/textsymbol", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2667,7 +2905,7 @@ define("ol3-symbolizer/styles/ags/textsymbol", ["require", "exports"], function 
         }
     ];
 });
-define("ol3-symbolizer/styles/circle/alert", ["require", "exports"], function (require, exports) {
+define("examples/styles/circle/alert", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2698,7 +2936,7 @@ define("ol3-symbolizer/styles/circle/alert", ["require", "exports"], function (r
         }
     ];
 });
-define("ol3-symbolizer/styles/circle/gradient", ["require", "exports"], function (require, exports) {
+define("examples/styles/circle/gradient", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2717,7 +2955,7 @@ define("ol3-symbolizer/styles/circle/gradient", ["require", "exports"], function
         }
     ];
 });
-define("ol3-symbolizer/styles/fill/cross", ["require", "exports"], function (require, exports) {
+define("examples/styles/fill/cross", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "fill": {
@@ -2730,7 +2968,7 @@ define("ol3-symbolizer/styles/fill/cross", ["require", "exports"], function (req
             }
         }];
 });
-define("ol3-symbolizer/styles/fill/diagonal", ["require", "exports"], function (require, exports) {
+define("examples/styles/fill/diagonal", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2745,28 +2983,7 @@ define("ol3-symbolizer/styles/fill/diagonal", ["require", "exports"], function (
         }
     ];
 });
-define("ol3-symbolizer/styles/fill/gradient", ["require", "exports"], function (require, exports) {
-    "use strict";
-    return [
-        {
-            "fill": {
-                "gradient": {
-                    "type": "linear(200,0,201,0)",
-                    "stops": "rgba(255,0,0,.1) 0%;rgba(255,0,0,0.8) 100%"
-                }
-            }
-        },
-        {
-            "fill": {
-                "gradient": {
-                    "type": "linear(0,200,0,201)",
-                    "stops": "rgba(0,255,0,0.1) 0%;rgba(0,255,0,0.8) 100%"
-                }
-            }
-        }
-    ];
-});
-define("ol3-symbolizer/styles/fill/horizontal", ["require", "exports"], function (require, exports) {
+define("examples/styles/fill/horizontal", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "fill": {
@@ -2779,7 +2996,7 @@ define("ol3-symbolizer/styles/fill/horizontal", ["require", "exports"], function
             }
         }];
 });
-define("ol3-symbolizer/styles/fill/vertical", ["require", "exports"], function (require, exports) {
+define("examples/styles/fill/vertical", ["require", "exports"], function (require, exports) {
     "use strict";
     return [{
             "fill": {
@@ -2792,7 +3009,7 @@ define("ol3-symbolizer/styles/fill/vertical", ["require", "exports"], function (
             }
         }];
 });
-define("ol3-symbolizer/styles/icon/svg", ["require", "exports"], function (require, exports) {
+define("examples/styles/icon/svg", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2810,7 +3027,7 @@ define("ol3-symbolizer/styles/icon/svg", ["require", "exports"], function (requi
         }
     ];
 });
-define("ol3-symbolizer/styles/star/4star", ["require", "exports"], function (require, exports) {
+define("examples/styles/star/4star", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2830,7 +3047,7 @@ define("ol3-symbolizer/styles/star/4star", ["require", "exports"], function (req
         }
     ];
 });
-define("ol3-symbolizer/styles/star/6star", ["require", "exports"], function (require, exports) {
+define("examples/styles/star/6star", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2849,7 +3066,7 @@ define("ol3-symbolizer/styles/star/6star", ["require", "exports"], function (req
         }
     ];
 });
-define("ol3-symbolizer/styles/star/cold", ["require", "exports"], function (require, exports) {
+define("examples/styles/star/cold", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2869,7 +3086,7 @@ define("ol3-symbolizer/styles/star/cold", ["require", "exports"], function (requ
         }
     ];
 });
-define("ol3-symbolizer/styles/star/flower", ["require", "exports"], function (require, exports) {
+define("examples/styles/star/flower", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2902,9 +3119,8 @@ define("ol3-symbolizer/styles/star/flower", ["require", "exports"], function (re
         }
     ];
 });
-define("ol3-symbolizer/styles/stroke/linedash", ["require", "exports"], function (require, exports) {
+define("examples/styles/stroke/linedash", ["require", "exports"], function (require, exports) {
     "use strict";
-    //from dojox gfx.canvas:
     var dasharray = {
         solid: "none",
         shortdash: [4, 1],
@@ -2920,7 +3136,7 @@ define("ol3-symbolizer/styles/stroke/linedash", ["require", "exports"], function
     };
     return dasharray;
 });
-define("ol3-symbolizer/styles/stroke/dash", ["require", "exports", "ol3-symbolizer/styles/stroke/linedash"], function (require, exports, Dashes) {
+define("examples/styles/stroke/dash", ["require", "exports", "examples/styles/stroke/linedash"], function (require, exports, Dashes) {
     "use strict";
     return [
         {
@@ -2932,7 +3148,7 @@ define("ol3-symbolizer/styles/stroke/dash", ["require", "exports", "ol3-symboliz
         }
     ];
 });
-define("ol3-symbolizer/styles/stroke/dashdotdot", ["require", "exports", "ol3-symbolizer/styles/stroke/linedash"], function (require, exports, Dashes) {
+define("examples/styles/stroke/dashdotdot", ["require", "exports", "examples/styles/stroke/linedash"], function (require, exports, Dashes) {
     "use strict";
     return [
         {
@@ -2944,7 +3160,7 @@ define("ol3-symbolizer/styles/stroke/dashdotdot", ["require", "exports", "ol3-sy
         }
     ];
 });
-define("ol3-symbolizer/styles/stroke/dot", ["require", "exports", "ol3-symbolizer/styles/stroke/linedash"], function (require, exports, Dashes) {
+define("examples/styles/stroke/dot", ["require", "exports", "examples/styles/stroke/linedash"], function (require, exports, Dashes) {
     "use strict";
     return [
         {
@@ -2956,7 +3172,7 @@ define("ol3-symbolizer/styles/stroke/dot", ["require", "exports", "ol3-symbolize
         }
     ];
 });
-define("ol3-symbolizer/styles/stroke/solid", ["require", "exports"], function (require, exports) {
+define("examples/styles/stroke/solid", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2967,7 +3183,7 @@ define("ol3-symbolizer/styles/stroke/solid", ["require", "exports"], function (r
         }
     ];
 });
-define("ol3-symbolizer/styles/text/text", ["require", "exports"], function (require, exports) {
+define("examples/styles/text/text", ["require", "exports"], function (require, exports) {
     "use strict";
     return [
         {
@@ -2987,12 +3203,9 @@ define("ol3-symbolizer/styles/text/text", ["require", "exports"], function (requ
         }
     ];
 });
-define("ol3-symbolizer/tests/backward-diagonal", ["require", "exports", "ol3-symbolizer/format/ags-symbolizer", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, ags_symbolizer_1, ol3_symbolizer_3) {
+define("examples/tests/backward-diagonal", ["require", "exports", "ol3-symbolizer/format/ags-symbolizer", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, ags_symbolizer_1, ol3_symbolizer_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    /**
-     * Converts an AGS symbol encoded as a backward diagonal to an openlayer style
-     */
     var agsZones = {
         "currentVersion": 10.31,
         "id": 6,
@@ -3811,36 +4024,6 @@ define("ol3-symbolizer/tests/backward-diagonal", ["require", "exports", "ol3-sym
             "supportsQueryWithDistance": true
         }
     };
-    /**
-    "symbol": {
-        "type": "esriSFS",
-        "style": "esriSFSForwardDiagonal",
-        "color": [0,255,0,255],
-        "outline": {
-            "type": "esriSLS",
-            "style": "esriSLSSolid",
-            "color": [0,255,0,255],
-            "width": 0.4
-        }
-    },
-    
-    =>
-    
-    {
-        "fill": {
-            "pattern": {
-                "color": "rgba(0,129,254,1)",
-                "orientation": "backward",
-                "spacing": 3,
-                "repitition": "repeat"
-            }
-        },
-        "stroke": {
-            "color": "rgba(0,129,254,1)",
-            "width": 0.5333333333333333
-        }
-    }
-     */
     function convertBackwardDiagonal() {
         var converter = new ags_symbolizer_1.StyleConverter();
         var inverse = new ol3_symbolizer_3.StyleConverter();
@@ -3867,12 +4050,12 @@ define("ol3-symbolizer/tests/backward-diagonal", ["require", "exports", "ol3-sym
     }
     exports.run = run;
 });
-define("ol3-symbolizer/tests/index", ["require", "exports"], function (require, exports) {
+define("examples/tests/index", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         var l = window.location;
-        var path = "" + l.origin + l.pathname + "?run=ol3-symbolizer/tests/";
+        var path = "" + l.origin + l.pathname + "?run=examples/tests/";
         var labs = "\n    index\n    backward-diagonal\n    ";
         document.writeln("\n    <p>\n    Watch the console output for failed assertions (blank is good).\n    </p>\n    ");
         document.writeln(labs
@@ -3886,7 +4069,7 @@ define("ol3-symbolizer/tests/index", ["require", "exports"], function (require, 
     exports.run = run;
     ;
 });
-define("ol3-symbolizer/tests/geom/multipoint", ["require", "exports", "openlayers"], function (require, exports, ol) {
+define("examples/tests/geom/multipoint", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
     return new ol.geom.MultiPoint([
         [-115, 36],
@@ -3894,7 +4077,7 @@ define("ol3-symbolizer/tests/geom/multipoint", ["require", "exports", "openlayer
         [-115.2553, 36.1831]
     ]);
 });
-define("ol3-symbolizer/tests/geom/multipolygon", ["require", "exports", "openlayers"], function (require, exports, ol) {
+define("examples/tests/geom/multipolygon", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
     return new ol.geom.MultiPolygon([
         [[
@@ -4139,402 +4322,11 @@ define("ol3-symbolizer/tests/geom/multipolygon", ["require", "exports", "openlay
         ]
     ]);
 });
-define("ol3-symbolizer/tests/geom/point", ["require", "exports", "openlayers"], function (require, exports, ol) {
+define("examples/tests/geom/point", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
     return new ol.geom.Point([-115.2553, 36.1832]);
 });
-define("ol3-symbolizer/tests/geom/polygon-with-holes", ["require", "exports", "openlayers"], function (require, exports, ol) {
-    "use strict";
-    return new ol.geom.Polygon([
-        [
-            [-115.23607381724413, 36.18020468011697],
-            [-115.23585925895877, 36.179702181216726],
-            [-115.23575411703308, 36.17970096569444],
-            [-115.2357555390405, 36.179660925345416],
-            [-115.23498759816178, 36.17965671947266],
-            [-115.23498227780165, 36.17965563145225],
-            [-115.23497562817354, 36.17965345801133],
-            [-115.23497429411718, 36.179653454129465],
-            [-115.2349729648491, 36.179652368709114],
-            [-115.23497164190998, 36.17965236485955],
-            [-115.23497031260206, 36.17965128845199],
-            [-115.23496366297462, 36.17964911501038],
-            [-115.23495435806059, 36.17964152607966],
-            [-115.23495037983507, 36.17963610674103],
-            [-115.23494905056762, 36.17963502132042],
-            [-115.23494905535622, 36.17963393978194],
-            [-115.23494772608885, 36.17963285436133],
-            [-115.23494773087741, 36.17963177282287],
-            [-115.23494374153573, 36.17962635345167],
-            [-115.23494242663457, 36.17962202341565],
-            [-115.23494244274961, 36.179613362030594],
-            [-115.23494115849935, 36.17958955512785],
-            [-115.23494259074424, 36.179539762821165],
-            [-115.23495080755244, 36.17943153234975],
-            [-115.23498190979615, 36.179198854743774],
-            [-115.23498597483993, 36.179162057736576],
-            [-115.23498741333559, 36.17911335600928],
-            [-115.23498760303814, 36.1790202799572],
-            [-115.23498894037036, 36.17901703017802],
-            [-115.23499294903999, 36.17901054351405],
-            [-115.23500627711793, 36.179000821282315],
-            [-115.23501027775183, 36.17899866080441],
-            [-115.23501827423149, 36.1789954213867],
-            [-115.23502227007734, 36.178994342446956],
-            [-115.23503690505271, 36.178993267421134],
-            [-115.23613088558278, 36.17900978428773],
-            [-115.23641035743786, 36.17901554257806],
-            [-115.23642233215821, 36.17901772235737],
-            [-115.23642366143577, 36.17901880776175],
-            [-115.2364249954815, 36.17901881162746],
-            [-115.23643430369208, 36.17902314678388],
-            [-115.23644359756013, 36.1790307355685],
-            [-115.23644493318729, 36.17903290254361],
-            [-115.23644625134835, 36.179033987915574],
-            [-115.23644891148601, 36.179038321833545],
-            [-115.23644890671817, 36.179039403372215],
-            [-115.23645023599641, 36.179040488776366],
-            [-115.23645287229544, 36.179050230387844],
-            [-115.23644236273168, 36.179626054530914],
-            [-115.23668058083813, 36.17963175574282],
-            [-115.2366834748921, 36.179522437195914],
-            [-115.23661559800996, 36.17952127625068],
-            [-115.23661568079545, 36.17948230455008],
-            [-115.23656510706341, 36.179480085095875],
-            [-115.23656514052031, 36.179464925432384],
-            [-115.23654650808301, 36.17946490751295],
-            [-115.2365540175394, 36.17905252428298],
-            [-115.23655670160856, 36.17904386161155],
-            [-115.23656071015083, 36.179037374894435],
-            [-115.23656470915981, 36.17903305125468],
-            [-115.23657136994915, 36.17902764475913],
-            [-115.2365767093539, 36.179024406553935],
-            [-115.2365846946555, 36.17902116699908],
-            [-115.23659535439921, 36.17901901674222],
-            [-115.23713833886198, 36.1790294298395],
-            [-115.23715563711139, 36.17902945282161],
-            [-115.23716229150622, 36.17903054460291],
-            [-115.23716894114325, 36.17903271792267],
-            [-115.23717558602276, 36.179035972780895],
-            [-115.23718622040953, 36.17904463792368],
-            [-115.23719019876008, 36.179050057189215],
-            [-115.23719285418174, 36.179055472629685],
-            [-115.23719416919774, 36.179059802642044],
-            [-115.23719116643991, 36.17922432514126],
-            [-115.23719241007713, 36.179267626889896],
-            [-115.23721203241809, 36.179434332838255],
-            [-115.23721989085172, 36.17949279544402],
-            [-115.23722777151995, 36.17954367823275],
-            [-115.23722497973465, 36.179609698939885],
-            [-115.23722409330264, 36.180036161511154],
-            [-115.23722639987513, 36.180209351752936],
-            [-115.23722102868629, 36.18022991275794],
-            [-115.23721300999347, 36.18024830300364],
-            [-115.2372009938535, 36.18026560013875],
-            [-115.23718632380785, 36.18027965395507],
-            [-115.23717165215595, 36.180291544660236],
-            [-115.23715700433107, 36.180298018657865],
-            [-115.23713968041169, 36.18030882013731],
-            [-115.23710901412761, 36.18033259770809],
-            [-115.23709567812136, 36.180346655371196],
-            [-115.23708635703858, 36.18034772799106],
-            [-115.23707305914606, 36.18034554445107],
-            [-115.23705842558819, 36.180341193941615],
-            [-115.23702517527396, 36.18032816419867],
-            [-115.23699059405523, 36.18031946581843],
-            [-115.23695998492562, 36.180315096116985],
-            [-115.23687881268215, 36.18030849810276],
-            [-115.23662063061164, 36.18030168495093],
-            [-115.23638240890344, 36.18029382050014],
-            [-115.23637957338431, 36.18037715490031],
-            [-115.23691856336063, 36.180392974213746],
-            [-115.23696247517685, 36.18039844594108],
-            [-115.23699839685315, 36.180408229759635],
-            [-115.23701967540914, 36.18041583514312],
-            [-115.23703030836687, 36.18042233718951],
-            [-115.23703428837263, 36.18042991956851],
-            [-115.23703293205983, 36.18043749552426],
-            [-115.23702757508498, 36.18045481190387],
-            [-115.23702218797958, 36.180484025271284],
-            [-115.23701522157822, 36.180634620287506],
-            [-115.23701388430145, 36.18063787008873],
-            [-115.23701388589801, 36.1806400331979],
-            [-115.23701254226417, 36.18064220142843],
-            [-115.23701121134403, 36.18064653280025],
-            [-115.23700987247047, 36.180647619492305],
-            [-115.23700986771001, 36.18064870103079],
-            [-115.23700853999335, 36.18064977874215],
-            [-115.23700853523289, 36.180650860280636],
-            [-115.23700720747651, 36.18065194700479],
-            [-115.23700586384234, 36.18065411523524],
-            [-115.23700319725172, 36.18065627963851],
-            [-115.23699919818345, 36.180660603291415],
-            [-115.23698854137972, 36.18066708881365],
-            [-115.23698720726621, 36.18066709396689],
-            [-115.23698587954891, 36.18066817167798],
-            [-115.23698454547511, 36.18066816781841],
-            [-115.23698320660087, 36.18066925451012],
-            [-115.23698188364428, 36.18066925068268],
-            [-115.23697522590852, 36.18067141255135],
-            [-115.2369725577608, 36.18067140483197],
-            [-115.23696856185578, 36.180672483836176],
-            [-115.23696191368127, 36.18067247361428],
-            [-115.2369605748066, 36.18067356030576],
-            [-115.23613944034335, 36.18064871246639],
-            [-115.23613411993963, 36.180647615484105],
-            [-115.23612747019557, 36.180645442106865],
-            [-115.23612614089488, 36.18064435669936],
-            [-115.23612347752092, 36.180643267422624],
-            [-115.23611816027882, 36.180638934805],
-            [-115.23611418196273, 36.18063350649241],
-            [-115.23611418673549, 36.180632424954],
-            [-115.23611286220795, 36.180630258007966],
-            [-115.23611153614853, 36.18062591893997],
-            [-115.23612705321317, 36.18020582594842],
-            [-115.23607381724413, 36.18020468011697]
-        ],
-        [
-            [-115.23618294625469, 36.17956944939985],
-            [-115.23618152437697, 36.1796170696354],
-            [-115.2361813999148, 36.17967551816986],
-            [-115.23634908732791, 36.17967680645728],
-            [-115.23634919412686, 36.179624856198686],
-            [-115.2363824679463, 36.17962489855586],
-            [-115.2363825795315, 36.1795718577452],
-            [-115.23638534968705, 36.179520987743686],
-            [-115.23635074658684, 36.17951986899516],
-            [-115.2363521827075, 36.17946899512751],
-            [-115.2363522910816, 36.179419207976636],
-            [-115.236386892558, 36.179418163614926],
-            [-115.2363870009098, 36.17936837646343],
-            [-115.23638710449244, 36.17931967085019],
-            [-115.2363551585448, 36.179318541777775],
-            [-115.23635527168521, 36.17926767308688],
-            [-115.23638854535363, 36.1792677154416],
-            [-115.23638995914024, 36.17922442138702],
-            [-115.23641258255111, 36.1792244508959],
-            [-115.23641552635529, 36.17909132031167],
-            [-115.23634764988991, 36.17909015020365],
-            [-115.23634769453865, 36.179067419704054],
-            [-115.23627716107944, 36.179066250868104],
-            [-115.2362146097472, 36.17906508710888],
-            [-115.2362145698311, 36.17908673606951],
-            [-115.23614802742047, 36.17908556971632],
-            [-115.23608680530958, 36.179085500310464],
-            [-115.23608551598718, 36.17906276594198],
-            [-115.23601765066995, 36.17906159567923],
-            [-115.23595376526016, 36.179060436926335],
-            [-115.23595372049765, 36.179083167425176],
-            [-115.23588717809511, 36.179082000927025],
-            [-115.23582195384806, 36.17908191977068],
-            [-115.23582201454218, 36.17905810776571],
-            [-115.23575946318529, 36.17905695278159],
-            [-115.23569424377776, 36.17905578100435],
-            [-115.23569419894028, 36.179078511502695],
-            [-115.23563031352298, 36.179077352577124],
-            [-115.23562736517071, 36.17921372778321],
-            [-115.23575645912092, 36.179216058458195],
-            [-115.23588422384631, 36.17921729457083],
-            [-115.2360159859503, 36.17921962369661],
-            [-115.23614508469727, 36.17922087241399],
-            [-115.2362741723721, 36.17922211194713],
-            [-115.23627408780143, 36.179266491406025],
-            [-115.23618757879821, 36.17926530324189],
-            [-115.23618737296034, 36.1793648775767],
-            [-115.23618449573719, 36.17946770684685],
-            [-115.23618294625469, 36.17956944939985]
-        ],
-        [
-            [-115.23686858906352, 36.17946421772446],
-            [-115.23708818379693, 36.179467737173354],
-            [-115.23708696717102, 36.17941578308344],
-            [-115.23712289793187, 36.17941582390601],
-            [-115.23712300421819, 36.17936387364166],
-            [-115.23712310578506, 36.17931299590278],
-            [-115.23708984321254, 36.17931295378433],
-            [-115.23708994476085, 36.179262085057985],
-            [-115.23709005110757, 36.17921012577965],
-            [-115.23712465880284, 36.17921017178786],
-            [-115.23712609917445, 36.17915821636679],
-            [-115.23712620069831, 36.179107347638976],
-            [-115.23709293185466, 36.17910622395091],
-            [-115.23709302864063, 36.179056436761556],
-            [-115.23687476910101, 36.179052921188244],
-            [-115.23665251856224, 36.17904939365998],
-            [-115.2366510762937, 36.17909918596493],
-            [-115.236621804877, 36.179099146261294],
-            [-115.2366203594083, 36.17915218321373],
-            [-115.23661891870293, 36.179204138626986],
-            [-115.23664953536439, 36.17920417321409],
-            [-115.23664809467705, 36.17925612862733],
-            [-115.23664798649122, 36.1793059157809],
-            [-115.23661738090723, 36.17930588122539],
-            [-115.23661727270161, 36.179355668378406],
-            [-115.23661583834084, 36.17940870536066],
-            [-115.23664644873001, 36.17940765837814],
-            [-115.23664500327055, 36.17946069532819],
-            [-115.23686858906352, 36.17946421772446]
-        ],
-        [
-            [-115.23531117600369, 36.179579184921224],
-            [-115.23537638954298, 36.179579266325774],
-            [-115.23537633500685, 36.17960416891128],
-            [-115.23543755751767, 36.17960423868263],
-            [-115.23550144331914, 36.17960540672608],
-            [-115.23550149626053, 36.17957834103089],
-            [-115.23556538204222, 36.17957950904011],
-            [-115.23562793859004, 36.1795795825893],
-            [-115.23562787939407, 36.179605557701095],
-            [-115.23569043592308, 36.17960564023055],
-            [-115.23575431065326, 36.17960679909393],
-            [-115.23575437458497, 36.17957974244331],
-            [-115.23582357921542, 36.179579826178696],
-            [-115.23582252817624, 36.17944777458885],
-            [-115.23569209497232, 36.17944653066063],
-            [-115.23556565919206, 36.17944637074196],
-            [-115.23543922341348, 36.179446210689804],
-            [-115.23531278759663, 36.17944605951695],
-            [-115.23525822443638, 36.179445991018255],
-            [-115.23525825181221, 36.179429749785584],
-            [-115.23525979770169, 36.17932908878721],
-            [-115.23526002234115, 36.17922301618337],
-            [-115.23526157145767, 36.17911911053341],
-            [-115.23526310621648, 36.17901844949739],
-            [-115.23509542023675, 36.1790171596965],
-            [-115.23509531107005, 36.17906694684531],
-            [-115.23506869664503, 36.17906691449056],
-            [-115.23506858900447, 36.179118864748276],
-            [-115.23506846696303, 36.179174068634],
-            [-115.23509375849314, 36.17917409714073],
-            [-115.23509365407101, 36.17922281176253],
-            [-115.23509354644585, 36.17927476201899],
-            [-115.23506693195053, 36.17927472966353],
-            [-115.23506548542977, 36.17932776658991],
-            [-115.23506537295849, 36.179380807396655],
-            [-115.23509332158127, 36.179380834620375],
-            [-115.23509321715753, 36.17942954924048],
-            [-115.23509311910382, 36.179479336418154],
-            [-115.23506782268866, 36.179480389449196],
-            [-115.23506772461859, 36.17953017662637],
-            [-115.23506627330525, 36.17958429508896],
-            [-115.23509289902239, 36.17958432747747],
-            [-115.23509145729834, 36.179636282863015],
-            [-115.2352591493816, 36.17963649113807],
-            [-115.2352592215437, 36.17960509928969],
-            [-115.23531112144691, 36.17960408750662],
-            [-115.23531117600369, 36.179579184921224]
-        ],
-        [
-            [-115.23715466140786, 36.18014323272865],
-            [-115.23715476767816, 36.1800912824705],
-            [-115.23712815766072, 36.18009016903315],
-            [-115.23712826398778, 36.18003820976182],
-            [-115.23712703145384, 36.17998733718353],
-            [-115.23715498501544, 36.179986291401335],
-            [-115.23715376202102, 36.179933246732716],
-            [-115.23715254534713, 36.17988129264721],
-            [-115.2371259290423, 36.17987909763896],
-            [-115.23712603221048, 36.179830383013936],
-            [-115.2371248187149, 36.17977518427921],
-            [-115.23715276744281, 36.17977522003574],
-            [-115.23715287850983, 36.17972217922288],
-            [-115.23715298477842, 36.17967022896107],
-            [-115.2371250360878, 36.179670193204785],
-            [-115.23712379880102, 36.1796204021621],
-            [-115.23695212519661, 36.17961802187439],
-            [-115.23695190123763, 36.17972193137736],
-            [-115.23695300817042, 36.17982908938646],
-            [-115.23695546344958, 36.179933006637626],
-            [-115.2369552394907, 36.18003691613518],
-            [-115.23695635595108, 36.18014191106148],
-            [-115.2369574708579, 36.180244733863816],
-            [-115.23712782763906, 36.18024602878663],
-            [-115.2371266062204, 36.18019515624228],
-            [-115.23715322103163, 36.18019518814154],
-            [-115.23715466140786, 36.18014323272865]
-        ],
-        [
-            [-115.23677512801696, 36.18024883880216],
-            [-115.23684033735668, 36.18025000095081],
-            [-115.23684172069555, 36.18022619277727],
-            [-115.2368909608097, 36.18022841726922],
-            [-115.23690560226717, 36.180228441612684],
-            [-115.23691120233957, 36.18009530971011],
-            [-115.23677945302525, 36.18008973694613],
-            [-115.2366516853144, 36.18008632965913],
-            [-115.23651993761892, 36.18008291971901],
-            [-115.23639084059808, 36.180078435763335],
-            [-115.23638656898369, 36.18021264402907],
-            [-115.23644778716528, 36.18021380383769],
-            [-115.23644773935501, 36.180239778980805],
-            [-115.2365142827474, 36.18024094517253],
-            [-115.23657948730926, 36.18024318900176],
-            [-115.23657953666071, 36.18021937696756],
-            [-115.23664608639028, 36.18022162465665],
-            [-115.23670996163874, 36.18022278301284],
-            [-115.2367099186795, 36.180247676617995],
-            [-115.23677512801696, 36.18024883880216]
-        ],
-        [
-            [-115.23684226425577, 36.18060515225207],
-            [-115.23697402395965, 36.18060856187418],
-            [-115.23697829035417, 36.18047531796289],
-            [-115.23691707672076, 36.180473076885946],
-            [-115.23691712597076, 36.18044926485199],
-            [-115.23684925308694, 36.18044701348367],
-            [-115.23678670064628, 36.18044585001762],
-            [-115.23678665135678, 36.180469662051266],
-            [-115.23672010772597, 36.18046850502276],
-            [-115.23665489189531, 36.18046625222419],
-            [-115.23665627370782, 36.180440280944794],
-            [-115.23658840084047, 36.18043802942873],
-            [-115.23652186204708, 36.18043578173885],
-            [-115.23652180310351, 36.18046176586181],
-            [-115.23645793247239, 36.18045951685289],
-            [-115.23645364931258, 36.18059384224745],
-            [-115.2365827519096, 36.180597253613996],
-            [-115.23671716865431, 36.18060066220171],
-            [-115.23684226425577, 36.18060515225207]
-        ],
-        [
-            [-115.23633258643937, 36.18056985047485],
-            [-115.23633402914288, 36.180520013123044],
-            [-115.23633545745574, 36.180473438411894],
-            [-115.2363382229087, 36.18042364995789],
-            [-115.23631959024468, 36.180423632001876],
-            [-115.23632235412812, 36.18037168043877],
-            [-115.23632379186483, 36.18032296968805],
-            [-115.23632655574141, 36.180271018123904],
-            [-115.2363279934334, 36.18022231638518],
-            [-115.23618957515714, 36.18021889575871],
-            [-115.23618814849672, 36.18026759752763],
-            [-115.23618537341171, 36.180319549055824],
-            [-115.23618261740978, 36.18036717442975],
-            [-115.23618117638654, 36.18041912982545],
-            [-115.2361958179183, 36.18041914524308],
-            [-115.23619438644577, 36.18046893756167],
-            [-115.23619295327786, 36.180516593809216],
-            [-115.23619152160241, 36.18056643119107],
-            [-115.23618875108032, 36.18061734624244],
-            [-115.23632981596866, 36.18062077454276],
-            [-115.23633258643937, 36.18056985047485]
-        ],
-        [
-            [-115.23657932815844, 36.17968142122321],
-            [-115.23651411929491, 36.179680258934894],
-            [-115.2365114017708, 36.179704072254324],
-            [-115.23644885627627, 36.179703990185644],
-            [-115.23644591403833, 36.17983929287941],
-            [-115.23657633679484, 36.17984053595765],
-            [-115.2367107522468, 36.17984394454598],
-            [-115.23671236152083, 36.179710810103074],
-            [-115.23664582810342, 36.17970748094652],
-            [-115.23664587108127, 36.1796825873393],
-            [-115.23657932815844, 36.17968142122321]
-        ]
-    ]);
-});
-define("ol3-symbolizer/tests/geom/polygon", ["require", "exports", "openlayers"], function (require, exports, ol) {
+define("examples/tests/geom/polygon", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
     return new ol.geom.Polygon([
         [
@@ -4554,7 +4346,7 @@ define("ol3-symbolizer/tests/geom/polygon", ["require", "exports", "openlayers"]
         ]
     ]);
 });
-define("ol3-symbolizer/tests/geom/polyline", ["require", "exports", "openlayers"], function (require, exports, ol) {
+define("examples/tests/geom/polyline", ["require", "exports", "openlayers"], function (require, exports, ol) {
     "use strict";
     return new ol.geom.MultiLineString([
         [

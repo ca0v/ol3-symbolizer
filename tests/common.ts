@@ -8,7 +8,7 @@ declare var window: any;
 // I'll have the option of doing module-based builds akin to webpack...other options is to modify TSC to build commonjs
 // and then transpile again via webpack.  That's probably the best option for 2018.import { should } from "should";
  */
-import Style from "ol/style/Style";
+//import Style from "ol/style/Style";
 
 
 import { assign } from "../ol3-symbolizer/common/assign";
@@ -54,13 +54,6 @@ describe("mixin tests", () => {
         should(a === mixin(a, { a: 2 }), "");
     });
 
-});
-
-!window["require"] && describe("test accessing openlayers using webpack", function () {
-    it("log ol.style.Style", function () {
-        should(!!Style, "");
-        console.log(Style.toString());
-    });
 });
 
 describe("test accessing openlayers using amd", function () {

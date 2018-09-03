@@ -1,7 +1,7 @@
 import ol = require("openlayers");
-import { StyleConverter } from "../format/ags-symbolizer";
-import { StyleConverter as InverseConverter } from "../format/ol3-symbolizer";
-import { FeatureLayerInfo } from "../ags/@types/cataloginfo";
+import { StyleConverter } from "../../ol3-symbolizer/format/ags-symbolizer";
+import { StyleConverter as InverseConverter } from "../../ol3-symbolizer/format/ol3-symbolizer";
+import { FeatureLayerInfo } from "../../ol3-symbolizer/ags/@types/cataloginfo";
 
 /**
  * Converts an AGS symbol encoded as a backward diagonal to an openlayer style

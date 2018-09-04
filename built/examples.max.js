@@ -48,21 +48,25 @@ define("node_modules/ol3-fun/ol3-fun/snapshot", ["require", "exports", "openlaye
             feature = feature.clone();
             var geom = feature.getGeometry();
             var extent = geom.getExtent();
-            var isPoint = extent[0] === extent[2];
-            var _a = ol.extent.getCenter(extent), dx = _a[0], dy = _a[1];
-            var scale = isPoint ? 1 : Math.min(canvas.width / ol.extent.getWidth(extent), canvas.height / ol.extent.getHeight(extent));
-            geom.translate(-dx, -dy);
+            var _a = ol.extent.getCenter(extent), cx = _a[0], cy = _a[1];
+            var _b = [ol.extent.getWidth(extent), ol.extent.getHeight(extent)], w = _b[0], h = _b[1];
+            var isPoint = w === 0 || h === 0;
+            var ff = 1 / (window.devicePixelRatio || 1);
+            var scale = isPoint ? 1 : Math.min(ff * canvas.width / w, ff * canvas.height / h);
+            geom.translate(-cx, -cy);
             geom.scale(scale, -scale);
-            geom.translate(canvas.width / 2, canvas.height / 2);
+            geom.translate(Math.ceil(ff * canvas.width / 2), Math.ceil(ff * canvas.height / 2));
+            console.log(scale, cx, cy, w, h, geom.getCoordinates());
             var vtx = ol.render.toContext(canvas.getContext("2d"));
             var styles = getStyle(feature);
             if (!Array.isArray(styles))
                 styles = [styles];
             styles.forEach(function (style) { return vtx.drawFeature(feature, style); });
         };
-        Snapshot.snapshot = function (feature) {
+        Snapshot.snapshot = function (feature, size) {
+            if (size === void 0) { size = 128; }
             var canvas = document.createElement("canvas");
-            var geom = feature.getGeometry();
+            canvas.width = canvas.height = size;
             this.render(canvas, feature);
             return canvas.toDataURL();
         };
@@ -180,7 +184,6 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     }
     exports.cssin = cssin;
     function debounce(func, wait, immediate) {
-        var _this = this;
         if (wait === void 0) { wait = 50; }
         if (immediate === void 0) { immediate = false; }
         var timeout;
@@ -192,13 +195,13 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             var later = function () {
                 timeout = null;
                 if (!immediate)
-                    func.apply(_this, args);
+                    func.apply({}, args);
             };
             var callNow = immediate && !timeout;
             clearTimeout(timeout);
             timeout = window.setTimeout(later, wait);
             if (callNow)
-                func.call(_this, args);
+                func.apply({}, args);
         });
     }
     exports.debounce = debounce;
@@ -237,10 +240,11 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     }
     exports.shuffle = shuffle;
 });
-define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, common_1) {
+define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function zoomToFeature(map, feature, options) {
+        var promise = $.Deferred();
         options = common_1.defaults(options || {}, {
             duration: 1000,
             padding: 256,
@@ -254,7 +258,8 @@ define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openla
                 size: map.getSize(),
                 padding: [options.padding, options.padding, options.padding, options.padding],
                 minResolution: options.minResolution,
-                duration: duration
+                duration: duration,
+                callback: function () { return promise.resolve(); },
             });
         };
         if (ol.extent.containsExtent(currentExtent, targetExtent)) {
@@ -277,6 +282,7 @@ define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openla
             });
             setTimeout(function () { return doit(0.5 * options.duration); }, duration);
         }
+        return promise;
     }
     exports.zoomToFeature = zoomToFeature;
 });

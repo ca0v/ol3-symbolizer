@@ -48,25 +48,21 @@ define("node_modules/ol3-fun/ol3-fun/snapshot", ["require", "exports", "openlaye
             feature = feature.clone();
             var geom = feature.getGeometry();
             var extent = geom.getExtent();
-            var _a = ol.extent.getCenter(extent), cx = _a[0], cy = _a[1];
-            var _b = [ol.extent.getWidth(extent), ol.extent.getHeight(extent)], w = _b[0], h = _b[1];
-            var isPoint = w === 0 || h === 0;
-            var ff = 1 / (window.devicePixelRatio || 1);
-            var scale = isPoint ? 1 : Math.min(ff * canvas.width / w, ff * canvas.height / h);
-            geom.translate(-cx, -cy);
+            var isPoint = extent[0] === extent[2];
+            var _a = ol.extent.getCenter(extent), dx = _a[0], dy = _a[1];
+            var scale = isPoint ? 1 : Math.min(canvas.width / ol.extent.getWidth(extent), canvas.height / ol.extent.getHeight(extent));
+            geom.translate(-dx, -dy);
             geom.scale(scale, -scale);
-            geom.translate(Math.ceil(ff * canvas.width / 2), Math.ceil(ff * canvas.height / 2));
-            console.log(scale, cx, cy, w, h, geom.getCoordinates());
+            geom.translate(canvas.width / 2, canvas.height / 2);
             var vtx = ol.render.toContext(canvas.getContext("2d"));
             var styles = getStyle(feature);
             if (!Array.isArray(styles))
                 styles = [styles];
             styles.forEach(function (style) { return vtx.drawFeature(feature, style); });
         };
-        Snapshot.snapshot = function (feature, size) {
-            if (size === void 0) { size = 128; }
+        Snapshot.snapshot = function (feature) {
             var canvas = document.createElement("canvas");
-            canvas.width = canvas.height = size;
+            var geom = feature.getGeometry();
             this.render(canvas, feature);
             return canvas.toDataURL();
         };
@@ -184,6 +180,7 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     }
     exports.cssin = cssin;
     function debounce(func, wait, immediate) {
+        var _this = this;
         if (wait === void 0) { wait = 50; }
         if (immediate === void 0) { immediate = false; }
         var timeout;
@@ -195,13 +192,13 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             var later = function () {
                 timeout = null;
                 if (!immediate)
-                    func.apply({}, args);
+                    func.apply(_this, args);
             };
             var callNow = immediate && !timeout;
             clearTimeout(timeout);
             timeout = window.setTimeout(later, wait);
             if (callNow)
-                func.apply({}, args);
+                func.call(_this, args);
         });
     }
     exports.debounce = debounce;
@@ -240,11 +237,10 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     }
     exports.shuffle = shuffle;
 });
-define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
+define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, common_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function zoomToFeature(map, feature, options) {
-        var promise = $.Deferred();
         options = common_1.defaults(options || {}, {
             duration: 1000,
             padding: 256,
@@ -258,8 +254,7 @@ define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openla
                 size: map.getSize(),
                 padding: [options.padding, options.padding, options.padding, options.padding],
                 minResolution: options.minResolution,
-                duration: duration,
-                callback: function () { return promise.resolve(); },
+                duration: duration
             });
         };
         if (ol.extent.containsExtent(currentExtent, targetExtent)) {
@@ -282,7 +277,6 @@ define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openla
             });
             setTimeout(function () { return doit(0.5 * options.duration); }, duration);
         }
-        return promise;
     }
     exports.zoomToFeature = zoomToFeature;
 });
@@ -1793,15 +1787,13 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
     Object.defineProperty(exports, "__esModule", { value: true });
     var esrijsonFormat = new ol.format.EsriJSON();
     function asParam(options) {
-        return Object
-            .keys(options)
+        return Object.keys(options)
             .map(function (k) { return k + "=" + options[k]; })
             .join("&");
     }
-    ;
     var DEFAULT_OPTIONS = {
         tileSize: 512,
-        where: "1=1",
+        where: "1=1"
     };
     var ArcGisVectorSourceFactory = (function () {
         function ArcGisVectorSourceFactory() {
@@ -1809,7 +1801,8 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
         ArcGisVectorSourceFactory.create = function (options) {
             var d = $.Deferred();
             options = index_2.defaults(options, DEFAULT_OPTIONS);
-            var srs = options.map.getView()
+            var srs = options.map
+                .getView()
                 .getProjection()
                 .getCode()
                 .split(":")
@@ -1837,16 +1830,18 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
                         where: encodeURIComponent(options.where),
                         inSR: srs,
                         outSR: srs,
-                        outFields: "*",
+                        outFields: "*"
                     };
                     var query = options.services + "/" + options.serviceName + "/" + options.serviceType + "/" + layerId + "/query?" + asParam(params);
                     $.ajax({
                         url: query,
-                        dataType: 'jsonp',
+                        dataType: "jsonp",
+                        error: function () {
+                            debugger;
+                        },
                         success: function (response) {
                             if (response.error) {
-                                console.warn(response.error.message + '\n' +
-                                    response.error.details.join('\n'));
+                                console.warn(response.error.message + "\n" + response.error.details.join("\n"));
                             }
                             else {
                                 var features = esrijsonFormat.readFeatures(response, {
@@ -1859,11 +1854,19 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
                                         options.uidFieldName = oidField.name;
                                     }
                                 }
-                                if (options.uidFieldName) {
-                                    features = features.filter(function (f) { return !source.getFeatures().some(function (f) { return f.get(options.uidFieldName); }); });
-                                }
-                                if (features.length > 0) {
-                                    source.addFeatures(features);
+                                if (features.length) {
+                                    if (options.uidFieldName) {
+                                        var featureIds_1 = source
+                                            .getFeatures()
+                                            .map(function (f) { return f.get(options.uidFieldName); })
+                                            .filter(function (v) { return !!v; })
+                                            .sort();
+                                        var uniqueFeatures = features.filter(function (f) { return -1 === featureIds_1.indexOf(f.get(options.uidFieldName)); });
+                                        source.addFeatures(uniqueFeatures);
+                                    }
+                                    else {
+                                        source.addFeatures(features);
+                                    }
                                 }
                             }
                         }

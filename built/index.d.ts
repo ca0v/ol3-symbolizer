@@ -76,8 +76,38 @@ declare module "ol3-symbolizer/format/ol3-symbolizer" {
         private deserializeRadialGradient;
     }
 }
+declare module "ol3-symbolizer/format/ags-symbolizer" {
+    import { ArcGisFeatureServerLayer } from "./@types/ArcGisFeatureServerLayer";
+    export class StyleConverter {
+        private asWidth;
+        private asColor;
+        private fromSFSSolid;
+        private fromSFSForwardDiagonal;
+        private fromSFSBackwardDiagonal;
+        private fromSFS;
+        private fromSMSCircle;
+        private fromSMSCross;
+        private fromSMSDiamond;
+        private fromSMSPath;
+        private fromSMSSquare;
+        private fromSMSX;
+        private fromSMS;
+        private fromPMS;
+        private fromSLSSolid;
+        private fromSLS;
+        private fromPFS;
+        private fromTS;
+        fromJson(symbol: ArcGisFeatureServerLayer.Symbol): import("@types/openlayers/index").style.Style;
+        private fromSymbol;
+        fromRenderer(renderer: ArcGisFeatureServerLayer.Renderer, args: {
+            url: string;
+        }): import("@types/openlayers/index").style.Style | ((feature: import("@types/openlayers/index").Feature) => import("@types/openlayers/index").style.Style);
+    }
+}
 declare module "index" {
     import Symbolizer = require("ol3-symbolizer/format/ol3-symbolizer");
+    import { StyleConverter as AgsStyleConverter } from "ol3-symbolizer/format/ags-symbolizer";
+    import { StyleConverter } from "ol3-symbolizer/format/ol3-symbolizer";
     import { Format } from "./ol3-symbolizer/format/@types/formats";
-    export { Symbolizer, Format };
+    export { Symbolizer, AgsStyleConverter, StyleConverter, Format };
 }

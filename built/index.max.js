@@ -808,9 +808,342 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
     }());
     exports.StyleConverter = StyleConverter;
 });
-define("index", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
+define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var symbolizer = new Symbolizer.StyleConverter();
+    var styleMap = {
+        "esriSMSCircle": "circle",
+        "esriSMSDiamond": "diamond",
+        "esriSMSX": "x",
+        "esriSMSCross": "cross",
+        "esriSLSSolid": "solid",
+        "esriSFSSolid": "solid",
+        "esriSLSDot": "dot",
+        "esriSLSDash": "dash",
+        "esriSLSDashDot": "dashdot",
+        "esriSLSDashDotDot": "dashdotdot",
+        "esriSFSBackwardDiagonal": "backward-diagonal",
+        "esriSFSForwardDiagonal": "forward-diagonal",
+    };
+    var typeMap = {
+        "esriSMS": "sms",
+        "esriSLS": "sls",
+        "esriSFS": "sfs",
+        "esriPMS": "pms",
+        "esriPFS": "pfs",
+        "esriTS": "txt",
+    };
+    function range(a, b) {
+        var result = new Array(b - a + 1);
+        while (a <= b)
+            result.push(a++);
+        return result;
+    }
+    function clone(o) {
+        return JSON.parse(JSON.stringify(o));
+    }
+    var StyleConverter = (function () {
+        function StyleConverter() {
+        }
+        StyleConverter.prototype.asWidth = function (v) {
+            return v * 4 / 3;
+        };
+        StyleConverter.prototype.asColor = function (color) {
+            if (color.length === 4)
+                return "rgba(" + color[0] + "," + color[1] + "," + color[2] + "," + color[3] / 255 + ")";
+            if (color.length === 3)
+                return "rgb(" + color[0] + "," + color[1] + "," + color[2] + "})";
+            return "#" + color.map(function (v) { return ("0" + v.toString(16)).substr(0, 2); }).join("");
+        };
+        StyleConverter.prototype.fromSFSSolid = function (symbol, style) {
+            style.fill = {
+                color: this.asColor(symbol.color)
+            };
+            this.fromSLS(symbol.outline, style);
+        };
+        StyleConverter.prototype.fromSFSForwardDiagonal = function (symbol, style) {
+            style.fill = {
+                pattern: {
+                    color: this.asColor(symbol.color),
+                    orientation: "forward",
+                    spacing: 3,
+                    repitition: "repeat",
+                }
+            };
+            this.fromSLS(symbol.outline, style);
+        };
+        StyleConverter.prototype.fromSFSBackwardDiagonal = function (symbol, style) {
+            style.fill = {
+                pattern: {
+                    color: this.asColor(symbol.color),
+                    orientation: "backward",
+                    spacing: 3,
+                    repitition: "repeat",
+                }
+            };
+            this.fromSLS(symbol.outline, style);
+        };
+        StyleConverter.prototype.fromSFS = function (symbol, style) {
+            switch (symbol.style) {
+                case "esriSFSSolid":
+                    this.fromSFSSolid(symbol, style);
+                    break;
+                case "esriSFSForwardDiagonal":
+                    this.fromSFSForwardDiagonal(symbol, style);
+                    break;
+                case "esriSFSBackwardDiagonal":
+                    this.fromSFSBackwardDiagonal(symbol, style);
+                    break;
+                default:
+                    throw "invalid-style: " + symbol.style;
+            }
+        };
+        StyleConverter.prototype.fromSMSCircle = function (symbol, style) {
+            style.circle = {
+                opacity: 1,
+                radius: this.asWidth(symbol.size / 2),
+                stroke: {
+                    color: this.asColor(symbol.outline.color),
+                },
+                snapToPixel: true
+            };
+            this.fromSFSSolid(symbol, style.circle);
+            this.fromSLS(symbol.outline, style.circle);
+        };
+        StyleConverter.prototype.fromSMSCross = function (symbol, style) {
+            style.star = {
+                points: 4,
+                angle: 0,
+                radius: this.asWidth(symbol.size / Math.sqrt(2)),
+                radius2: 0
+            };
+            this.fromSFSSolid(symbol, style.star);
+            this.fromSLS(symbol.outline, style.star);
+        };
+        StyleConverter.prototype.fromSMSDiamond = function (symbol, style) {
+            style.star = {
+                points: 4,
+                angle: 0,
+                radius: this.asWidth(symbol.size / Math.sqrt(2)),
+                radius2: this.asWidth(symbol.size / Math.sqrt(2))
+            };
+            this.fromSFSSolid(symbol, style.star);
+            this.fromSLS(symbol.outline, style.star);
+        };
+        StyleConverter.prototype.fromSMSPath = function (symbol, style) {
+            var size = 2 * this.asWidth(symbol.size);
+            style.svg = {
+                imgSize: [size, size],
+                path: symbol.path,
+                rotation: symbol.angle
+            };
+            this.fromSLSSolid(symbol, style.svg);
+            this.fromSLS(symbol.outline, style.svg);
+        };
+        StyleConverter.prototype.fromSMSSquare = function (symbol, style) {
+            style.star = {
+                points: 4,
+                angle: Math.PI / 4,
+                radius: this.asWidth(symbol.size / Math.sqrt(2)),
+                radius2: this.asWidth(symbol.size / Math.sqrt(2))
+            };
+            this.fromSFSSolid(symbol, style.star);
+            this.fromSLS(symbol.outline, style.star);
+        };
+        StyleConverter.prototype.fromSMSX = function (symbol, style) {
+            style.star = {
+                points: 4,
+                angle: Math.PI / 4,
+                radius: this.asWidth(symbol.size / Math.sqrt(2)),
+                radius2: 0
+            };
+            this.fromSFSSolid(symbol, style.star);
+            this.fromSLS(symbol.outline, style.star);
+        };
+        StyleConverter.prototype.fromSMS = function (symbol, style) {
+            switch (symbol.style) {
+                case "esriSMSCircle":
+                    this.fromSMSCircle(symbol, style);
+                    break;
+                case "esriSMSCross":
+                    this.fromSMSCross(symbol, style);
+                    break;
+                case "esriSMSDiamond":
+                    this.fromSMSDiamond(symbol, style);
+                    break;
+                case "esriSMSPath":
+                    this.fromSMSPath(symbol, style);
+                    break;
+                case "esriSMSSquare":
+                    this.fromSMSSquare(symbol, style);
+                    break;
+                case "esriSMSX":
+                    this.fromSMSX(symbol, style);
+                    break;
+                default:
+                    throw "invalid-style: " + symbol.style;
+            }
+        };
+        StyleConverter.prototype.fromPMS = function (symbol, style) {
+            style.image = {};
+            style.image.src = symbol.url;
+            if (symbol.imageData) {
+                style.image.src = "data:image/png;base64," + symbol.imageData;
+            }
+            style.image["anchor-x"] = this.asWidth(symbol.xoffset);
+            style.image["anchor-y"] = this.asWidth(symbol.yoffset);
+            style.image.imgSize = [this.asWidth(symbol.width), this.asWidth(symbol.height)];
+        };
+        StyleConverter.prototype.fromSLSSolid = function (symbol, style) {
+            style.stroke = {
+                color: this.asColor(symbol.color),
+                width: this.asWidth(symbol.width),
+                lineDash: [],
+                lineJoin: "",
+                miterLimit: 4
+            };
+        };
+        StyleConverter.prototype.fromSLS = function (symbol, style) {
+            switch (symbol.style) {
+                case "esriSLSSolid":
+                    this.fromSLSSolid(symbol, style);
+                    break;
+                case "esriSLSDot":
+                    this.fromSLSSolid(symbol, style);
+                    break;
+                case "esriSLSDash":
+                    this.fromSLSSolid(symbol, style);
+                    break;
+                case "esriSLSDashDot":
+                    this.fromSLSSolid(symbol, style);
+                    break;
+                case "esriSLSDashDotDot":
+                    this.fromSLSSolid(symbol, style);
+                    break;
+                default:
+                    this.fromSLSSolid(symbol, style);
+                    console.warn("invalid-style: " + symbol.style);
+                    break;
+            }
+        };
+        StyleConverter.prototype.fromPFS = function (symbol, style) {
+            style.fill = {
+                image: {
+                    src: symbol.url,
+                    imageData: symbol.imageData && "data:image/png;base64," + symbol.imageData,
+                    "anchor-x": this.asWidth(symbol.xoffset),
+                    "anchor-y": this.asWidth(symbol.yoffset),
+                    imgSize: [this.asWidth(symbol.width), this.asWidth(symbol.height)]
+                }
+            };
+            this.fromSLS(symbol.outline, style);
+        };
+        StyleConverter.prototype.fromTS = function (symbol, style) {
+            throw "not-implemented";
+        };
+        StyleConverter.prototype.fromJson = function (symbol) {
+            var style = {};
+            this.fromSymbol(symbol, style);
+            return symbolizer.fromJson(style);
+        };
+        StyleConverter.prototype.fromSymbol = function (symbol, style) {
+            switch (symbol.type) {
+                case "esriSFS":
+                    this.fromSFS(symbol, style);
+                    break;
+                case "esriSLS":
+                    this.fromSLS(symbol, style);
+                    break;
+                case "esriPMS":
+                    this.fromPMS(symbol, style);
+                    break;
+                case "esriPFS":
+                    this.fromPFS(symbol, style);
+                    break;
+                case "esriSMS":
+                    this.fromSMS(symbol, style);
+                    break;
+                case "esriTS":
+                    this.fromTS(symbol, style);
+                    break;
+                default:
+                    throw "invalid-symbol-type: " + symbol.type;
+            }
+        };
+        StyleConverter.prototype.fromRenderer = function (renderer, args) {
+            var _this = this;
+            switch (renderer.type) {
+                case "simple":
+                    {
+                        return this.fromJson(renderer.symbol);
+                    }
+                case "uniqueValue":
+                    {
+                        var styles_1 = {};
+                        var defaultStyle_1 = (renderer.defaultSymbol) && this.fromJson(renderer.defaultSymbol);
+                        if (renderer.uniqueValueInfos) {
+                            renderer.uniqueValueInfos.forEach(function (info) {
+                                styles_1[info.value] = _this.fromJson(info.symbol);
+                            });
+                        }
+                        return function (feature) { return styles_1[feature.get(renderer.field1)] || defaultStyle_1; };
+                    }
+                case "classBreaks": {
+                    var styles_2 = {};
+                    var classBreakRenderer_1 = renderer;
+                    if (classBreakRenderer_1.classBreakInfos) {
+                        console.log("processing classBreakInfos");
+                        if (classBreakRenderer_1.visualVariables) {
+                            classBreakRenderer_1.visualVariables.forEach(function (vars) {
+                                switch (vars.type) {
+                                    case "sizeInfo": {
+                                        var steps_1 = range(classBreakRenderer_1.authoringInfo.visualVariables[0].minSliderValue, classBreakRenderer_1.authoringInfo.visualVariables[0].maxSliderValue);
+                                        var dx_1 = (vars.maxSize - vars.minSize) / steps_1.length;
+                                        var dataValue_1 = (vars.maxDataValue - vars.minDataValue) / steps_1.length;
+                                        classBreakRenderer_1.classBreakInfos.forEach(function (classBreakInfo) {
+                                            var icons = steps_1.map(function (step) {
+                                                var json = JSON.parse(JSON.stringify(classBreakInfo.symbol));
+                                                json.size = vars.minSize + dx_1 * (dataValue_1 - vars.minDataValue);
+                                                var style = _this.fromJson(json);
+                                                styles_2[dataValue_1] = style;
+                                            });
+                                        });
+                                        debugger;
+                                        break;
+                                    }
+                                    default:
+                                        debugger;
+                                        break;
+                                }
+                            });
+                        }
+                    }
+                    return function (feature) {
+                        debugger;
+                        var value = feature.get(renderer.field1);
+                        for (var key in styles_2) {
+                            return styles_2[key];
+                        }
+                    };
+                }
+                default:
+                    {
+                        debugger;
+                        console.error("unsupported renderer type: ", renderer.type);
+                        break;
+                    }
+            }
+        };
+        return StyleConverter;
+    }());
+    exports.StyleConverter = StyleConverter;
+});
+define("index", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer", "ol3-symbolizer/format/ags-symbolizer", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer, ags_symbolizer_1, ol3_symbolizer_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Symbolizer = Symbolizer;
+    exports.AgsStyleConverter = ags_symbolizer_1.StyleConverter;
+    exports.StyleConverter = ol3_symbolizer_1.StyleConverter;
 });
 //# sourceMappingURL=index.max.js.map

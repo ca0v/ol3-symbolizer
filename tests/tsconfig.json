@@ -1,17 +1,9 @@
 {
-    "compilerOptions": {
-        "allowJs": false,
-        "removeComments": true,
-        "declaration": false,
-        "module": "amd",
-        "target": "es3",
-        "noImplicitAny": true,
-        "sourceMap": true,
-        "outFile": "./spec/index.js",
-        "moduleResolution": "node",
-        "baseUrl": "../node_modules"
-    },
-    "include": [
-        "index.ts"
-    ]
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"declaration": false,
+		"outFile": "./spec/index.js"
+	},
+	"include": ["index.ts"],
+	"exclude": []
 }

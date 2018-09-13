@@ -1,5 +1,4 @@
 define("examples/index", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         var l = window.location;
@@ -21,7 +20,6 @@ define("examples/index", ["require", "exports"], function (require, exports) {
     ;
 });
 define("node_modules/ol3-fun/ol3-fun/snapshot", ["require", "exports", "openlayers"], function (require, exports, ol) {
-    "use strict";
     function getStyle(feature) {
         var style = feature.getStyle();
         if (!style) {
@@ -48,21 +46,25 @@ define("node_modules/ol3-fun/ol3-fun/snapshot", ["require", "exports", "openlaye
             feature = feature.clone();
             var geom = feature.getGeometry();
             var extent = geom.getExtent();
-            var isPoint = extent[0] === extent[2];
-            var _a = ol.extent.getCenter(extent), dx = _a[0], dy = _a[1];
-            var scale = isPoint ? 1 : Math.min(canvas.width / ol.extent.getWidth(extent), canvas.height / ol.extent.getHeight(extent));
-            geom.translate(-dx, -dy);
+            var _a = ol.extent.getCenter(extent), cx = _a[0], cy = _a[1];
+            var _b = [ol.extent.getWidth(extent), ol.extent.getHeight(extent)], w = _b[0], h = _b[1];
+            var isPoint = w === 0 || h === 0;
+            var ff = 1 / (window.devicePixelRatio || 1);
+            var scale = isPoint ? 1 : Math.min((ff * canvas.width) / w, (ff * canvas.height) / h);
+            geom.translate(-cx, -cy);
             geom.scale(scale, -scale);
-            geom.translate(canvas.width / 2, canvas.height / 2);
+            geom.translate(Math.ceil((ff * canvas.width) / 2), Math.ceil((ff * canvas.height) / 2));
+            console.log(scale, cx, cy, w, h, geom.getCoordinates());
             var vtx = ol.render.toContext(canvas.getContext("2d"));
             var styles = getStyle(feature);
             if (!Array.isArray(styles))
                 styles = [styles];
             styles.forEach(function (style) { return vtx.drawFeature(feature, style); });
         };
-        Snapshot.snapshot = function (feature) {
+        Snapshot.snapshot = function (feature, size) {
+            if (size === void 0) { size = 128; }
             var canvas = document.createElement("canvas");
-            var geom = feature.getGeometry();
+            canvas.width = canvas.height = size;
             this.render(canvas, feature);
             return canvas.toDataURL();
         };
@@ -71,11 +73,10 @@ define("node_modules/ol3-fun/ol3-fun/snapshot", ["require", "exports", "openlaye
     return Snapshot;
 });
 define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function uuid() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+            var r = (Math.random() * 16) | 0, v = c == "x" ? r : (r & 0x3) | 0x8;
             return v.toString(16);
         });
     }
@@ -94,7 +95,6 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             e.classList.remove(className);
             return false;
         }
-        ;
         if (!exists && force !== false) {
             e.classList.add(className);
             return true;
@@ -110,7 +110,7 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         if (typeof type === "boolean")
             return (v === "1" || v === "true");
         if (Array.isArray(type)) {
-            return (v.split(",").map(function (v) { return parse(v, type[0]); }));
+            return v.split(",").map(function (v) { return parse(v, type[0]); });
         }
         throw "unknown type: " + type;
     }
@@ -134,7 +134,7 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         if (!results)
             return null;
         if (!results[2])
-            return '';
+            return "";
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
     exports.getParameterByName = getParameterByName;
@@ -143,8 +143,14 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             cb(v);
     }
     exports.doif = doif;
-    function mixin(a, b) {
-        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
+    function mixin(a) {
+        var b = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            b[_i - 1] = arguments[_i];
+        }
+        b.forEach(function (b) {
+            Object.keys(b).forEach(function (k) { return (a[k] = b[k]); });
+        });
         return a;
     }
     exports.mixin = mixin;
@@ -154,7 +160,9 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             b[_i - 1] = arguments[_i];
         }
         b.forEach(function (b) {
-            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
+            Object.keys(b)
+                .filter(function (k) { return a[k] === undefined; })
+                .forEach(function (k) { return (a[k] = b[k]); });
         });
         return a;
     }
@@ -180,7 +188,6 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     }
     exports.cssin = cssin;
     function debounce(func, wait, immediate) {
-        var _this = this;
         if (wait === void 0) { wait = 50; }
         if (immediate === void 0) { immediate = false; }
         var timeout;
@@ -192,13 +199,13 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
             var later = function () {
                 timeout = null;
                 if (!immediate)
-                    func.apply(_this, args);
+                    func.apply({}, args);
             };
             var callNow = immediate && !timeout;
             clearTimeout(timeout);
             timeout = window.setTimeout(later, wait);
             if (callNow)
-                func.call(_this, args);
+                func.apply({}, args);
         });
     }
     exports.debounce = debounce;
@@ -211,7 +218,7 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     function pair(a1, a2) {
         var result = new Array(a1.length * a2.length);
         var i = 0;
-        a1.forEach(function (v1) { return a2.forEach(function (v2) { return result[i++] = [v1, v2]; }); });
+        a1.forEach(function (v1) { return a2.forEach(function (v2) { return (result[i++] = [v1, v2]); }); });
         return result;
     }
     exports.pair = pair;
@@ -237,10 +244,10 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
     }
     exports.shuffle = shuffle;
 });
-define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, common_1) {
-    "use strict";
+define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
     Object.defineProperty(exports, "__esModule", { value: true });
     function zoomToFeature(map, feature, options) {
+        var promise = $.Deferred();
         options = common_1.defaults(options || {}, {
             duration: 1000,
             padding: 256,
@@ -254,7 +261,8 @@ define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openla
                 size: map.getSize(),
                 padding: [options.padding, options.padding, options.padding, options.padding],
                 minResolution: options.minResolution,
-                duration: duration
+                duration: duration,
+                callback: function () { return promise.resolve(); }
             });
         };
         if (ol.extent.containsExtent(currentExtent, targetExtent)) {
@@ -277,26 +285,26 @@ define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openla
             });
             setTimeout(function () { return doit(0.5 * options.duration); }, duration);
         }
+        return promise;
     }
     exports.zoomToFeature = zoomToFeature;
 });
 define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function decDegFromMatch(m) {
         var signIndex = {
             "-": -1,
-            "N": 1,
-            "S": -1,
-            "E": 1,
-            "W": -1
+            N: 1,
+            S: -1,
+            E: 1,
+            W: -1
         };
         var latLonIndex = {
             "-": "",
-            "N": "lat",
-            "S": "lat",
-            "E": "lon",
-            "W": "lon"
+            N: "lat",
+            S: "lat",
+            E: "lon",
+            W: "lon"
         };
         var degrees, minutes, seconds, sign, latLon;
         sign = signIndex[m[2]] || signIndex[m[1]] || signIndex[m[6]] || 1;
@@ -305,11 +313,11 @@ define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], functio
         seconds = m[5] ? Number(m[5]) : 0;
         latLon = latLonIndex[m[1]] || latLonIndex[m[6]];
         if (!inRange(degrees, 0, 180))
-            throw 'Degrees out of range';
+            throw "Degrees out of range";
         if (!inRange(minutes, 0, 60))
-            throw 'Minutes out of range';
+            throw "Minutes out of range";
         if (!inRange(seconds, 0, 60))
-            throw 'Seconds out of range';
+            throw "Seconds out of range";
         return {
             decDeg: sign * (degrees + minutes / 60 + seconds / 3600),
             latLon: latLon
@@ -318,14 +326,29 @@ define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], functio
     function inRange(value, a, b) {
         return value >= a && value <= b;
     }
-    function parse(dmsString) {
+    function toDegreesMinutesAndSeconds(coordinate) {
+        var absolute = Math.abs(coordinate);
+        var degrees = Math.floor(absolute);
+        var minutesNotTruncated = (absolute - degrees) * 60;
+        var minutes = Math.floor(minutesNotTruncated);
+        var seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+        return degrees + " " + minutes + " " + seconds;
+    }
+    function fromLonLatToDms(lon, lat) {
+        var latitude = toDegreesMinutesAndSeconds(lat);
+        var latitudeCardinal = lat >= 0 ? "N" : "S";
+        var longitude = toDegreesMinutesAndSeconds(lon);
+        var longitudeCardinal = lon >= 0 ? "E" : "W";
+        return latitude + " " + latitudeCardinal + " " + longitude + " " + longitudeCardinal;
+    }
+    function fromDmsToLonLat(dmsString) {
         var _a;
         dmsString = dmsString.trim();
         var dmsRe = /([NSEW])?(-)?(\d+(?:\.\d+)?)[°º:d\s]?\s?(?:(\d+(?:\.\d+)?)['’‘′:]\s?(?:(\d{1,2}(?:\.\d+)?)(?:"|″|’’|'')?)?)?\s?([NSEW])?/i;
         var dmsString2;
         var m1 = dmsString.match(dmsRe);
         if (!m1)
-            throw 'Could not parse string';
+            throw "Could not parse string";
         if (m1[1]) {
             m1[6] = undefined;
             dmsString2 = dmsString.substr(m1[0].length - 1).trim();
@@ -336,38 +359,95 @@ define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], functio
         var decDeg1 = decDegFromMatch(m1);
         var m2 = dmsString2.match(dmsRe);
         var decDeg2 = m2 && decDegFromMatch(m2);
-        if (typeof decDeg1.latLon === 'undefined') {
+        if (typeof decDeg1.latLon === "undefined") {
             if (!isNaN(decDeg1.decDeg) && decDeg2 && isNaN(decDeg2.decDeg)) {
                 return decDeg1.decDeg;
             }
             else if (!isNaN(decDeg1.decDeg) && decDeg2 && !isNaN(decDeg2.decDeg)) {
-                decDeg1.latLon = 'lat';
-                decDeg2.latLon = 'lon';
+                decDeg1.latLon = "lat";
+                decDeg2.latLon = "lon";
             }
             else {
-                throw 'Could not parse string';
+                throw "Could not parse string";
             }
         }
-        if (typeof decDeg2.latLon === 'undefined') {
-            decDeg2.latLon = decDeg1.latLon === 'lat' ? 'lon' : 'lat';
+        if (typeof decDeg2.latLon === "undefined") {
+            decDeg2.latLon = decDeg1.latLon === "lat" ? "lon" : "lat";
         }
         return _a = {},
             _a[decDeg1.latLon] = decDeg1.decDeg,
             _a[decDeg2.latLon] = decDeg2.decDeg,
             _a;
     }
+    function parse(value) {
+        if (typeof value === "string")
+            return fromDmsToLonLat(value);
+        return fromLonLatToDms(value.lon, value.lat);
+    }
     exports.parse = parse;
 });
-define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms"], function (require, exports, common, navigation, dms) {
-    "use strict";
-    var index = common.defaults(common, {
-        dms: dms,
-        navigation: navigation
-    });
+define("node_modules/ol3-fun/ol3-fun/slowloop", ["require", "exports"], function (require, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function slowloop(functions, interval, cycles) {
+        if (interval === void 0) { interval = 1000; }
+        if (cycles === void 0) { cycles = 1; }
+        var d = $.Deferred();
+        var index = 0;
+        var cycle = 0;
+        if (!functions || 0 >= cycles) {
+            d.resolve();
+            return d;
+        }
+        var h = setInterval(function () {
+            if (index === functions.length) {
+                index = 0;
+                if (++cycle === cycles) {
+                    d.resolve();
+                    clearInterval(h);
+                    return;
+                }
+            }
+            try {
+                d.notify({ index: index, cycle: cycle });
+                functions[index++]();
+            }
+            catch (ex) {
+                clearInterval(h);
+                d.reject(ex);
+            }
+        }, interval);
+        return d;
+    }
+    exports.slowloop = slowloop;
+});
+define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop"], function (require, exports, common_2, navigation_1, parse_dms_1, slowloop_1) {
+    var index = {
+        asArray: common_2.asArray,
+        cssin: common_2.cssin,
+        debounce: common_2.debounce,
+        defaults: common_2.defaults,
+        doif: common_2.doif,
+        getParameterByName: common_2.getParameterByName,
+        getQueryParameters: common_2.getQueryParameters,
+        html: common_2.html,
+        mixin: common_2.mixin,
+        pair: common_2.pair,
+        parse: common_2.parse,
+        range: common_2.range,
+        shuffle: common_2.shuffle,
+        toggle: common_2.toggle,
+        uuid: common_2.uuid,
+        slowloop: slowloop_1.slowloop,
+        dms: {
+            parse: parse_dms_1.parse,
+        },
+        navigation: {
+            zoomToFeature: navigation_1.zoomToFeature,
+        },
+    };
     return index;
 });
 define("ol3-symbolizer/common/assign", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function assign(obj, prop, value) {
         if (value === null)
@@ -393,26 +473,7 @@ define("ol3-symbolizer/common/assign", ["require", "exports"], function (require
     }
     exports.assign = assign;
 });
-define("ol3-symbolizer/common/mixin", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    function mixin(a, b) {
-        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
-        return a;
-    }
-    exports.mixin = mixin;
-});
-define("ol3-symbolizer/common/doif", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    function doif(v, cb) {
-        if (v !== undefined && v !== null)
-            cb(v);
-    }
-    exports.doif = doif;
-});
 define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Shapeshifter = (function () {
         function Shapeshifter() {
@@ -475,7 +536,6 @@ define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], functio
     exports.Shapeshifter = Shapeshifter;
 });
 define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Shapeshifter = (function () {
         function Shapeshifter() {
@@ -540,7 +600,6 @@ define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], functi
     exports.Shapeshifter = Shapeshifter;
 });
 define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Shapeshifter = (function () {
         function Shapeshifter() {
@@ -605,7 +664,6 @@ define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], funct
     exports.Shapeshifter = Shapeshifter;
 });
 define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Shapeshifter = (function () {
         function Shapeshifter() {
@@ -670,7 +728,6 @@ define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], func
     exports.Shapeshifter = Shapeshifter;
 });
 define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Shapeshifter = (function () {
         function Shapeshifter() {
@@ -732,8 +789,7 @@ define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (r
     }());
     exports.Shapeshifter = Shapeshifter;
 });
-define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers", "ol3-symbolizer/common/assign", "ol3-symbolizer/common/mixin", "ol3-symbolizer/common/doif", "ol3-symbolizer/format/plugins/as-cross", "ol3-symbolizer/format/plugins/as-square", "ol3-symbolizer/format/plugins/as-diamond", "ol3-symbolizer/format/plugins/as-triangle", "ol3-symbolizer/format/plugins/as-x"], function (require, exports, ol, assign_1, mixin_1, doif_1, as_cross_1, as_square_1, as_diamond_1, as_triangle_1, as_x_1) {
-    "use strict";
+define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers", "ol3-symbolizer/common/assign", "node_modules/ol3-fun/index", "ol3-symbolizer/format/plugins/as-cross", "ol3-symbolizer/format/plugins/as-square", "ol3-symbolizer/format/plugins/as-diamond", "ol3-symbolizer/format/plugins/as-triangle", "ol3-symbolizer/format/plugins/as-x"], function (require, exports, ol, assign_1, index_1, as_cross_1, as_square_1, as_diamond_1, as_triangle_1, as_x_1) {
     Object.defineProperty(exports, "__esModule", { value: true });
     var StyleConverter = (function () {
         function StyleConverter() {
@@ -769,7 +825,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             if (typeof style === "number")
                 throw style;
             if (style.getColor)
-                mixin_1.mixin(s, this.serializeColor(style.getColor()));
+                index_1.mixin(s, this.serializeColor(style.getColor()));
             if (style.getImage)
                 assign_1.assign(s, "image", this.serializeImage(style.getImage()));
             if (style.getFill)
@@ -948,8 +1004,8 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 fill: json.fill && this.deserializeFill(json.fill),
                 stroke: json.stroke && this.deserializeStroke(json.stroke)
             });
-            doif_1.doif(json.rotation, function (v) { return image.setRotation(v); });
-            doif_1.doif(json.opacity, function (v) { return image.setOpacity(v); });
+            index_1.doif(json.rotation, function (v) { return image.setRotation(v); });
+            index_1.doif(json.opacity, function (v) { return image.setOpacity(v); });
             return image;
         };
         StyleConverter.prototype.deserializeIcon = function (json) {
@@ -1040,7 +1096,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 size: [canvas.width, canvas.height],
                 src: undefined
             });
-            return mixin_1.mixin(icon, {
+            return index_1.mixin(icon, {
                 path: json.path,
                 stroke: json.stroke,
                 fill: json.fill,
@@ -1056,12 +1112,12 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
         };
         StyleConverter.prototype.deserializeStroke = function (json) {
             var stroke = new ol.style.Stroke();
-            doif_1.doif(json.color, function (v) { return stroke.setColor(v); });
-            doif_1.doif(json.lineCap, function (v) { return stroke.setLineCap(v); });
-            doif_1.doif(json.lineDash, function (v) { return stroke.setLineDash(v); });
-            doif_1.doif(json.lineJoin, function (v) { return stroke.setLineJoin(v); });
-            doif_1.doif(json.miterLimit, function (v) { return stroke.setMiterLimit(v); });
-            doif_1.doif(json.width, function (v) { return stroke.setWidth(v); });
+            index_1.doif(json.color, function (v) { return stroke.setColor(v); });
+            index_1.doif(json.lineCap, function (v) { return stroke.setLineCap(v); });
+            index_1.doif(json.lineDash, function (v) { return stroke.setLineDash(v); });
+            index_1.doif(json.lineJoin, function (v) { return stroke.setLineJoin(v); });
+            index_1.doif(json.miterLimit, function (v) { return stroke.setMiterLimit(v); });
+            index_1.doif(json.width, function (v) { return stroke.setWidth(v); });
             return stroke;
         };
         StyleConverter.prototype.deserializeColor = function (fill) {
@@ -1079,7 +1135,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                     gradient_1 = this.deserializeRadialGradient(fill.gradient);
                 }
                 if (fill.gradient.stops) {
-                    mixin_1.mixin(gradient_1, {
+                    index_1.mixin(gradient_1, {
                         stops: fill.gradient.stops
                     });
                     var stops = fill.gradient.stops.split(";");
@@ -1132,7 +1188,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                         }
                         break;
                 }
-                return mixin_1.mixin(context_1.createPattern(canvas, repitition), fill.pattern);
+                return index_1.mixin(context_1.createPattern(canvas, repitition), fill.pattern);
             }
             if (fill.image) {
                 var canvas = document.createElement('canvas');
@@ -1154,7 +1210,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             canvas.height = Math.max(y0, y1);
             var context = canvas.getContext('2d');
             var gradient = context.createLinearGradient(x0, y0, x1, y1);
-            mixin_1.mixin(gradient, {
+            index_1.mixin(gradient, {
                 type: "linear(" + [x0, y0, x1, y1].join(",") + ")"
             });
             return gradient;
@@ -1167,7 +1223,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             canvas.height = 2 * Math.max(y0, y1);
             var context = canvas.getContext('2d');
             var gradient = context.createRadialGradient(x0, y0, r0, x1, y1, r1);
-            mixin_1.mixin(gradient, {
+            index_1.mixin(gradient, {
                 type: "radial(" + [x0, y0, r0, x1, y1, r1].join(",") + ")"
             });
             return gradient;
@@ -1177,7 +1233,6 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
     exports.StyleConverter = StyleConverter;
 });
 define("examples/styles/icon/png", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "circle": {
@@ -1206,8 +1261,7 @@ define("examples/styles/icon/png", ["require", "exports"], function (require, ex
         }
     ];
 });
-define("examples/ags-style-converter", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/snapshot", "node_modules/ol3-fun/index", "ol3-symbolizer/format/ol3-symbolizer", "examples/styles/icon/png"], function (require, exports, ol, $, Snapshot, index_1, ol3_symbolizer_1, pointStyle) {
-    "use strict";
+define("examples/ags-style-converter", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/snapshot", "node_modules/ol3-fun/index", "ol3-symbolizer/format/ol3-symbolizer", "examples/styles/icon/png"], function (require, exports, ol, $, Snapshot, index_2, ol3_symbolizer_1, pointStyle) {
     Object.defineProperty(exports, "__esModule", { value: true });
     var html = "\n<div class='style-to-canvas'>\n    <h3>Renders a feature on a canvas</h3>\n    <div class=\"area\">\n        <label>256 x 256 Canvas</label>\n        <div id='canvas-collection'></div>\n    </div>\n    <div class=\"area\">\n        <label>AGS Json Symbol</label>\n        <textarea class='style'>\n        </textarea>\n        <button class=\"save\">Save</button>\n    </div>\n</div>\n";
     var css = "\n<style>\n    #map {\n        display: none;\n    }\n\n    .style-to-canvas {\n    }\n\n    .style-to-canvas .area label {\n        display: block;\n        vertical-align: top;\n    }\n\n    .style-to-canvas .area {\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    .style-to-canvas .area .style {\n        width: 100%;\n        height: 400px;\n    }\n\n    .style-to-canvas #canvas-collection canvas {\n        font-family: sans serif;\n        font-size: 20px;\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n    \n</style>\n";
@@ -1283,8 +1337,8 @@ define("examples/ags-style-converter", ["require", "exports", "openlayers", "jqu
                 "width": 0.4
             }
         }, null, '\t'));
-        var geom = index_1.getParameterByName("geom") || "polygon-with-holes";
-        var style = index_1.getParameterByName("style");
+        var geom = index_2.getParameterByName("geom") || "polygon-with-holes";
+        var style = index_2.getParameterByName("style");
         var save = function () {
             var style = JSON.stringify(JSON.parse($(".style").val() + ""));
             var loc = window.location;
@@ -1313,7 +1367,6 @@ define("examples/ags-style-converter", ["require", "exports", "openlayers", "jqu
     exports.run = run;
 });
 define("ol3-symbolizer/common/ajax", ["require", "exports", "jquery"], function (require, exports, $) {
-    "use strict";
     var Ajax = (function () {
         function Ajax(url) {
             this.url = url;
@@ -1391,30 +1444,14 @@ define("ol3-symbolizer/common/ajax", ["require", "exports", "jquery"], function 
     }());
     return Ajax;
 });
-define("ol3-symbolizer/common/defaults", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    function defaults(a) {
-        var b = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            b[_i - 1] = arguments[_i];
-        }
-        b.filter(function (b) { return !!b; }).forEach(function (b) {
-            Object.keys(b).filter(function (k) { return a[k] === undefined; }).forEach(function (k) { return a[k] = b[k]; });
-        });
-        return a;
-    }
-    exports.defaults = defaults;
-});
-define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/common/ajax", "ol3-symbolizer/common/defaults"], function (require, exports, Ajax, defaults_1) {
-    "use strict";
+define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/common/ajax", "node_modules/ol3-fun/index"], function (require, exports, Ajax, index_3) {
     Object.defineProperty(exports, "__esModule", { value: true });
     var Catalog = (function () {
         function Catalog(url) {
             this.ajax = new Ajax(url);
         }
         Catalog.prototype.about = function (data) {
-            var req = defaults_1.defaults({
+            var req = index_3.defaults({
                 f: "pjson"
             }, data);
             return this.ajax.jsonp(req);
@@ -1431,14 +1468,14 @@ define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/
             var req = {
                 f: "pjson"
             };
-            return defaults_1.defaults(ajax.jsonp(req), { url: ajax.url });
+            return index_3.defaults(ajax.jsonp(req), { url: ajax.url });
         };
         Catalog.prototype.aboutMapServer = function (name) {
             var ajax = new Ajax(this.ajax.url + "/" + name + "/MapServer");
             var req = {
                 f: "pjson"
             };
-            return defaults_1.defaults(ajax.jsonp(req), { url: ajax.url });
+            return index_3.defaults(ajax.jsonp(req), { url: ajax.url });
         };
         Catalog.prototype.aboutLayer = function (layer) {
             var ajax = new Ajax(this.ajax.url + "/" + layer);
@@ -1452,30 +1489,29 @@ define("ol3-symbolizer/ags/ags-catalog", ["require", "exports", "ol3-symbolizer/
     exports.Catalog = Catalog;
 });
 define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var symbolizer = new Symbolizer.StyleConverter();
     var styleMap = {
-        "esriSMSCircle": "circle",
-        "esriSMSDiamond": "diamond",
-        "esriSMSX": "x",
-        "esriSMSCross": "cross",
-        "esriSLSSolid": "solid",
-        "esriSFSSolid": "solid",
-        "esriSLSDot": "dot",
-        "esriSLSDash": "dash",
-        "esriSLSDashDot": "dashdot",
-        "esriSLSDashDotDot": "dashdotdot",
-        "esriSFSBackwardDiagonal": "backward-diagonal",
-        "esriSFSForwardDiagonal": "forward-diagonal",
+        esriSMSCircle: "circle",
+        esriSMSDiamond: "diamond",
+        esriSMSX: "x",
+        esriSMSCross: "cross",
+        esriSLSSolid: "solid",
+        esriSFSSolid: "solid",
+        esriSLSDot: "dot",
+        esriSLSDash: "dash",
+        esriSLSDashDot: "dashdot",
+        esriSLSDashDotDot: "dashdotdot",
+        esriSFSBackwardDiagonal: "backward-diagonal",
+        esriSFSForwardDiagonal: "forward-diagonal"
     };
     var typeMap = {
-        "esriSMS": "sms",
-        "esriSLS": "sls",
-        "esriSFS": "sfs",
-        "esriPMS": "pms",
-        "esriPFS": "pfs",
-        "esriTS": "txt",
+        esriSMS: "sms",
+        esriSLS: "sls",
+        esriSFS: "sfs",
+        esriPMS: "pms",
+        esriPFS: "pfs",
+        esriTS: "txt"
     };
     function range(a, b) {
         var result = new Array(b - a + 1);
@@ -1490,7 +1526,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
         function StyleConverter() {
         }
         StyleConverter.prototype.asWidth = function (v) {
-            return v * 4 / 3;
+            return (v * 4) / 3;
         };
         StyleConverter.prototype.asColor = function (color) {
             if (color.length === 4)
@@ -1511,7 +1547,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                     color: this.asColor(symbol.color),
                     orientation: "forward",
                     spacing: 3,
-                    repitition: "repeat",
+                    repitition: "repeat"
                 }
             };
             this.fromSLS(symbol.outline, style);
@@ -1522,7 +1558,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                     color: this.asColor(symbol.color),
                     orientation: "backward",
                     spacing: 3,
-                    repitition: "repeat",
+                    repitition: "repeat"
                 }
             };
             this.fromSLS(symbol.outline, style);
@@ -1547,7 +1583,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                 opacity: 1,
                 radius: this.asWidth(symbol.size / 2),
                 stroke: {
-                    color: this.asColor(symbol.outline.color),
+                    color: this.asColor(symbol.outline.color)
                 },
                 snapToPixel: true
             };
@@ -1717,21 +1753,19 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
         StyleConverter.prototype.fromRenderer = function (renderer, args) {
             var _this = this;
             switch (renderer.type) {
-                case "simple":
-                    {
-                        return this.fromJson(renderer.symbol);
+                case "simple": {
+                    return this.fromJson(renderer.symbol);
+                }
+                case "uniqueValue": {
+                    var styles_1 = {};
+                    var defaultStyle_1 = renderer.defaultSymbol && this.fromJson(renderer.defaultSymbol);
+                    if (renderer.uniqueValueInfos) {
+                        renderer.uniqueValueInfos.forEach(function (info) {
+                            styles_1[info.value] = _this.fromJson(info.symbol);
+                        });
                     }
-                case "uniqueValue":
-                    {
-                        var styles_1 = {};
-                        var defaultStyle_1 = (renderer.defaultSymbol) && this.fromJson(renderer.defaultSymbol);
-                        if (renderer.uniqueValueInfos) {
-                            renderer.uniqueValueInfos.forEach(function (info) {
-                                styles_1[info.value] = _this.fromJson(info.symbol);
-                            });
-                        }
-                        return function (feature) { return styles_1[feature.get(renderer.field1)] || defaultStyle_1; };
-                    }
+                    return function (feature) { return styles_1[feature.get(renderer.field1)] || defaultStyle_1; };
+                }
                 case "classBreaks": {
                     var styles_2 = {};
                     var classBreakRenderer_1 = renderer;
@@ -1746,7 +1780,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                                         var dataValue_1 = (vars.maxDataValue - vars.minDataValue) / steps_1.length;
                                         classBreakRenderer_1.classBreakInfos.forEach(function (classBreakInfo) {
                                             var icons = steps_1.map(function (step) {
-                                                var json = JSON.parse(JSON.stringify(classBreakInfo.symbol));
+                                                var json = (JSON.parse(JSON.stringify(classBreakInfo.symbol)));
                                                 json.size = vars.minSize + dx_1 * (dataValue_1 - vars.minDataValue);
                                                 var style = _this.fromJson(json);
                                                 styles_2[dataValue_1] = style;
@@ -1768,22 +1802,18 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                         for (var key in styles_2) {
                             return styles_2[key];
                         }
+                        return null;
                     };
                 }
                 default:
-                    {
-                        debugger;
-                        console.error("unsupported renderer type: ", renderer.type);
-                        break;
-                    }
+                    throw "unsupported renderer type: " + renderer.type;
             }
         };
         return StyleConverter;
     }());
     exports.StyleConverter = StyleConverter;
 });
-define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/ags/ags-catalog", "ol3-symbolizer/format/ags-symbolizer", "node_modules/ol3-fun/index"], function (require, exports, $, ol, AgsCatalog, Symbolizer, index_2) {
-    "use strict";
+define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openlayers", "ol3-symbolizer/ags/ags-catalog", "ol3-symbolizer/format/ags-symbolizer", "node_modules/ol3-fun/index"], function (require, exports, $, ol, AgsCatalog, Symbolizer, index_4) {
     Object.defineProperty(exports, "__esModule", { value: true });
     var esrijsonFormat = new ol.format.EsriJSON();
     function asParam(options) {
@@ -1800,7 +1830,7 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
         }
         ArcGisVectorSourceFactory.create = function (options) {
             var d = $.Deferred();
-            options = index_2.defaults(options, DEFAULT_OPTIONS);
+            options = index_4.defaults(options, DEFAULT_OPTIONS);
             var srs = options.map
                 .getView()
                 .getProjection()
@@ -1910,8 +1940,7 @@ define("ol3-symbolizer/ags/ags-source", ["require", "exports", "jquery", "openla
     }());
     exports.ArcGisVectorSourceFactory = ArcGisVectorSourceFactory;
 });
-define("examples/ags-viewer", ["require", "exports", "openlayers", "node_modules/ol3-fun/index", "ol3-symbolizer/ags/ags-source"], function (require, exports, ol, index_3, ags_source_1) {
-    "use strict";
+define("examples/ags-viewer", ["require", "exports", "openlayers", "node_modules/ol3-fun/index", "ol3-symbolizer/ags/ags-source"], function (require, exports, ol, index_5, ags_source_1) {
     Object.defineProperty(exports, "__esModule", { value: true });
     function parse(v, type) {
         if (typeof type === "string")
@@ -1935,8 +1964,8 @@ define("examples/ags-viewer", ["require", "exports", "openlayers", "node_modules
     };
     function run() {
         var target = document.getElementsByClassName("map")[0];
-        target.appendChild(index_3.html(html));
-        document.head.appendChild(index_3.html(css));
+        target.appendChild(index_5.html(html));
+        document.head.appendChild(index_5.html(css));
         var options = {
             srs: 'EPSG:4326',
             center: center.vegas,
@@ -1951,7 +1980,7 @@ define("examples/ags-viewer", ["require", "exports", "openlayers", "node_modules
         {
             var opts_1 = options;
             Object.keys(opts_1).forEach(function (k) {
-                index_3.doif(index_3.getParameterByName(k), function (v) {
+                index_5.doif(index_5.getParameterByName(k), function (v) {
                     var value = parse(v, opts_1[k]);
                     if (value !== undefined)
                         opts_1[k] = value;
@@ -1995,7 +2024,6 @@ define("examples/ags-viewer", ["require", "exports", "openlayers", "node_modules
     exports.run = run;
 });
 define("examples/styles/fill/gradient", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "fill": {
@@ -2016,7 +2044,6 @@ define("examples/styles/fill/gradient", ["require", "exports"], function (requir
     ];
 });
 define("examples/tests/geom/polygon-with-holes", ["require", "exports", "openlayers"], function (require, exports, ol) {
-    "use strict";
     return new ol.geom.Polygon([
         [
             [-115.23607381724413, 36.18020468011697],
@@ -2406,8 +2433,7 @@ define("examples/tests/geom/polygon-with-holes", ["require", "exports", "openlay
         ]
     ]);
 });
-define("examples/style-viewer", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/snapshot", "node_modules/ol3-fun/index", "ol3-symbolizer/format/ol3-symbolizer", "examples/styles/icon/png", "examples/styles/fill/gradient", "examples/tests/geom/polygon-with-holes"], function (require, exports, ol, $, Snapshot, index_4, ol3_symbolizer_2, pointStyle) {
-    "use strict";
+define("examples/style-viewer", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/snapshot", "node_modules/ol3-fun/index", "ol3-symbolizer/format/ol3-symbolizer", "examples/styles/icon/png", "examples/styles/fill/gradient", "examples/tests/geom/polygon-with-holes"], function (require, exports, ol, $, Snapshot, index_6, ol3_symbolizer_2, pointStyle) {
     Object.defineProperty(exports, "__esModule", { value: true });
     var html = "\n<div class='style-to-canvas'>\n    <h3>Renders a feature on a canvas</h3>\n    <div class=\"area\">\n        <label>256 x 256 Canvas</label>\n        <div id='canvas-collection'></div>\n    </div>\n    <div class=\"area\">\n        <label>Style</label>\n        <textarea class='style'></textarea>\n        <button class=\"save\">Save</button>\n    </div>\n</div>\n";
     var css = "\n<style>\n    #map {\n        display: none;\n    }\n\n    .style-to-canvas {\n    }\n\n    .style-to-canvas .area label {\n        display: block;\n        vertical-align: top;\n    }\n\n    .style-to-canvas .area {\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n\n    .style-to-canvas .area .style {\n        width: 100%;\n        height: 400px;\n    }\n\n    .style-to-canvas #canvas-collection canvas {\n        font-family: sans serif;\n        font-size: 20px;\n        border: 1px solid black;\n        padding: 20px;\n        margin: 20px;\n    }\n    \n</style>\n";
@@ -2472,8 +2498,8 @@ define("examples/style-viewer", ["require", "exports", "openlayers", "jquery", "
         $(html).appendTo("body");
         $(svg).appendTo("body");
         $(css).appendTo("head");
-        var geom = index_4.getParameterByName("geom") || "polygon-with-holes";
-        var style = index_4.getParameterByName("style") || "fill/gradient";
+        var geom = index_6.getParameterByName("geom") || "polygon-with-holes";
+        var style = index_6.getParameterByName("style") || "fill/gradient";
         var save = function () {
             var style = JSON.stringify(JSON.parse($(".style").val() + ""));
             var loc = window.location;
@@ -2502,7 +2528,6 @@ define("examples/style-viewer", ["require", "exports", "openlayers", "jquery", "
     exports.run = run;
 });
 define("examples/styles/basic", ["require", "exports"], function (require, exports) {
-    "use strict";
     var stroke = {
         color: 'black',
         width: 2
@@ -2568,7 +2593,6 @@ define("examples/styles/basic", ["require", "exports"], function (require, expor
     };
 });
 define("examples/styles/peace", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "star": {
@@ -2601,7 +2625,6 @@ define("examples/styles/peace", ["require", "exports"], function (require, expor
     ];
 });
 define("examples/styles/ags/cartographiclinesymbol", ["require", "exports"], function (require, exports) {
-    "use strict";
     var symbol = function () { return ({
         "type": "esriSLS",
         "style": "esriSLSLongDashDot",
@@ -2629,7 +2652,6 @@ define("examples/styles/ags/cartographiclinesymbol", ["require", "exports"], fun
     return symbols;
 });
 define("examples/styles/ags/picturefillsymbol", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [{
             "color": [
                 0,
@@ -2648,7 +2670,6 @@ define("examples/styles/ags/picturefillsymbol", ["require", "exports"], function
         }];
 });
 define("examples/styles/ags/picturemarkersymbol-imagedata", ["require", "exports"], function (require, exports) {
-    "use strict";
     var style = [{
             "type": "esriPMS",
             "url": "4A138C60",
@@ -2664,7 +2685,6 @@ define("examples/styles/ags/picturemarkersymbol-imagedata", ["require", "exports
     return style;
 });
 define("examples/styles/ags/picturemarkersymbol", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "angle": 0,
@@ -2678,7 +2698,6 @@ define("examples/styles/ags/picturemarkersymbol", ["require", "exports"], functi
     ];
 });
 define("examples/styles/ags/simplefillsymbol", ["require", "exports"], function (require, exports) {
-    "use strict";
     var symbol = function () { return ({
         "color": [
             0,
@@ -2709,7 +2728,6 @@ define("examples/styles/ags/simplefillsymbol", ["require", "exports"], function 
     return symbols;
 });
 define("examples/styles/ags/simplemarkersymbol-circle", ["require", "exports"], function (require, exports) {
-    "use strict";
     var styles = [{
             "color": [
                 255,
@@ -2738,7 +2756,6 @@ define("examples/styles/ags/simplemarkersymbol-circle", ["require", "exports"], 
     return styles;
 });
 define("examples/styles/ags/simplemarkersymbol-cross", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "color": [
@@ -2768,7 +2785,6 @@ define("examples/styles/ags/simplemarkersymbol-cross", ["require", "exports"], f
     ];
 });
 define("examples/styles/ags/simplemarkersymbol-diamond", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "color": [
@@ -2798,7 +2814,6 @@ define("examples/styles/ags/simplemarkersymbol-diamond", ["require", "exports"],
     ];
 });
 define("examples/styles/ags/simplemarkersymbol-path", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "color": [
@@ -2829,7 +2844,6 @@ define("examples/styles/ags/simplemarkersymbol-path", ["require", "exports"], fu
     ];
 });
 define("examples/styles/ags/simplemarkersymbol-square", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "color": [
@@ -2859,7 +2873,6 @@ define("examples/styles/ags/simplemarkersymbol-square", ["require", "exports"], 
     ];
 });
 define("examples/styles/ags/simplemarkersymbol-x", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [{
             "color": [
                 255,
@@ -2887,7 +2900,6 @@ define("examples/styles/ags/simplemarkersymbol-x", ["require", "exports"], funct
         }];
 });
 define("examples/styles/ags/textsymbol", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "color": [
@@ -2915,7 +2927,6 @@ define("examples/styles/ags/textsymbol", ["require", "exports"], function (requi
     ];
 });
 define("examples/styles/circle/alert", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "circle": {
@@ -2946,7 +2957,6 @@ define("examples/styles/circle/alert", ["require", "exports"], function (require
     ];
 });
 define("examples/styles/circle/gradient", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "circle": {
@@ -2965,7 +2975,6 @@ define("examples/styles/circle/gradient", ["require", "exports"], function (requ
     ];
 });
 define("examples/styles/fill/cross", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [{
             "fill": {
                 "pattern": {
@@ -2978,7 +2987,6 @@ define("examples/styles/fill/cross", ["require", "exports"], function (require, 
         }];
 });
 define("examples/styles/fill/diagonal", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "fill": {
@@ -2993,7 +3001,6 @@ define("examples/styles/fill/diagonal", ["require", "exports"], function (requir
     ];
 });
 define("examples/styles/fill/horizontal", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [{
             "fill": {
                 "pattern": {
@@ -3006,7 +3013,6 @@ define("examples/styles/fill/horizontal", ["require", "exports"], function (requ
         }];
 });
 define("examples/styles/fill/vertical", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [{
             "fill": {
                 "pattern": {
@@ -3019,7 +3025,6 @@ define("examples/styles/fill/vertical", ["require", "exports"], function (requir
         }];
 });
 define("examples/styles/icon/svg", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "image": {
@@ -3037,7 +3042,6 @@ define("examples/styles/icon/svg", ["require", "exports"], function (require, ex
     ];
 });
 define("examples/styles/star/4star", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "star": {
@@ -3057,7 +3061,6 @@ define("examples/styles/star/4star", ["require", "exports"], function (require, 
     ];
 });
 define("examples/styles/star/6star", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "star": {
@@ -3076,7 +3079,6 @@ define("examples/styles/star/6star", ["require", "exports"], function (require, 
     ];
 });
 define("examples/styles/star/cold", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "star": {
@@ -3096,7 +3098,6 @@ define("examples/styles/star/cold", ["require", "exports"], function (require, e
     ];
 });
 define("examples/styles/star/flower", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "star": {
@@ -3129,7 +3130,6 @@ define("examples/styles/star/flower", ["require", "exports"], function (require,
     ];
 });
 define("examples/styles/stroke/linedash", ["require", "exports"], function (require, exports) {
-    "use strict";
     var dasharray = {
         solid: "none",
         shortdash: [4, 1],
@@ -3146,7 +3146,6 @@ define("examples/styles/stroke/linedash", ["require", "exports"], function (requ
     return dasharray;
 });
 define("examples/styles/stroke/dash", ["require", "exports", "examples/styles/stroke/linedash"], function (require, exports, Dashes) {
-    "use strict";
     return [
         {
             "stroke": {
@@ -3158,7 +3157,6 @@ define("examples/styles/stroke/dash", ["require", "exports", "examples/styles/st
     ];
 });
 define("examples/styles/stroke/dashdotdot", ["require", "exports", "examples/styles/stroke/linedash"], function (require, exports, Dashes) {
-    "use strict";
     return [
         {
             "stroke": {
@@ -3170,7 +3168,6 @@ define("examples/styles/stroke/dashdotdot", ["require", "exports", "examples/sty
     ];
 });
 define("examples/styles/stroke/dot", ["require", "exports", "examples/styles/stroke/linedash"], function (require, exports, Dashes) {
-    "use strict";
     return [
         {
             "stroke": {
@@ -3182,7 +3179,6 @@ define("examples/styles/stroke/dot", ["require", "exports", "examples/styles/str
     ];
 });
 define("examples/styles/stroke/solid", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "stroke": {
@@ -3193,7 +3189,6 @@ define("examples/styles/stroke/solid", ["require", "exports"], function (require
     ];
 });
 define("examples/styles/text/text", ["require", "exports"], function (require, exports) {
-    "use strict";
     return [
         {
             "text": {
@@ -3213,7 +3208,6 @@ define("examples/styles/text/text", ["require", "exports"], function (require, e
     ];
 });
 define("examples/tests/backward-diagonal", ["require", "exports", "ol3-symbolizer/format/ags-symbolizer", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, ags_symbolizer_1, ol3_symbolizer_3) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var agsZones = {
         "currentVersion": 10.31,
@@ -4060,7 +4054,6 @@ define("examples/tests/backward-diagonal", ["require", "exports", "ol3-symbolize
     exports.run = run;
 });
 define("examples/tests/index", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         var l = window.location;
@@ -4079,7 +4072,6 @@ define("examples/tests/index", ["require", "exports"], function (require, export
     ;
 });
 define("examples/tests/geom/multipoint", ["require", "exports", "openlayers"], function (require, exports, ol) {
-    "use strict";
     return new ol.geom.MultiPoint([
         [-115, 36],
         [-115.26, 36.3],
@@ -4087,7 +4079,6 @@ define("examples/tests/geom/multipoint", ["require", "exports", "openlayers"], f
     ]);
 });
 define("examples/tests/geom/multipolygon", ["require", "exports", "openlayers"], function (require, exports, ol) {
-    "use strict";
     return new ol.geom.MultiPolygon([
         [[
                 [-115.23618294625469, 36.17956944939985],
@@ -4332,11 +4323,9 @@ define("examples/tests/geom/multipolygon", ["require", "exports", "openlayers"],
     ]);
 });
 define("examples/tests/geom/point", ["require", "exports", "openlayers"], function (require, exports, ol) {
-    "use strict";
     return new ol.geom.Point([-115.2553, 36.1832]);
 });
 define("examples/tests/geom/polygon", ["require", "exports", "openlayers"], function (require, exports, ol) {
-    "use strict";
     return new ol.geom.Polygon([
         [
             [-115.25532322799027, 36.18318333413792],
@@ -4356,7 +4345,6 @@ define("examples/tests/geom/polygon", ["require", "exports", "openlayers"], func
     ]);
 });
 define("examples/tests/geom/polyline", ["require", "exports", "openlayers"], function (require, exports, ol) {
-    "use strict";
     return new ol.geom.MultiLineString([
         [
             [-115.25532322799027, 36.18318333413792],

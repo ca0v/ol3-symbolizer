@@ -1,5 +1,4 @@
 define("ol3-symbolizer/common/assign", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function assign(obj, prop, value) {
         if (value === null)
@@ -25,26 +24,382 @@ define("ol3-symbolizer/common/assign", ["require", "exports"], function (require
     }
     exports.assign = assign;
 });
-define("ol3-symbolizer/common/mixin", ["require", "exports"], function (require, exports) {
-    "use strict";
+define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
-    function mixin(a, b) {
-        Object.keys(b).forEach(function (k) { return a[k] = b[k]; });
-        return a;
+    function uuid() {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+            var r = (Math.random() * 16) | 0, v = c == "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+        });
     }
-    exports.mixin = mixin;
-});
-define("ol3-symbolizer/common/doif", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.uuid = uuid;
+    function asArray(list) {
+        var result = new Array(list.length);
+        for (var i = 0; i < list.length; i++) {
+            result[i] = list[i];
+        }
+        return result;
+    }
+    exports.asArray = asArray;
+    function toggle(e, className, force) {
+        var exists = e.classList.contains(className);
+        if (exists && force !== true) {
+            e.classList.remove(className);
+            return false;
+        }
+        if (!exists && force !== false) {
+            e.classList.add(className);
+            return true;
+        }
+        return exists;
+    }
+    exports.toggle = toggle;
+    function parse(v, type) {
+        if (typeof type === "string")
+            return v;
+        if (typeof type === "number")
+            return parseFloat(v);
+        if (typeof type === "boolean")
+            return (v === "1" || v === "true");
+        if (Array.isArray(type)) {
+            return v.split(",").map(function (v) { return parse(v, type[0]); });
+        }
+        throw "unknown type: " + type;
+    }
+    exports.parse = parse;
+    function getQueryParameters(options, url) {
+        if (url === void 0) { url = window.location.href; }
+        var opts = options;
+        Object.keys(opts).forEach(function (k) {
+            doif(getParameterByName(k, url), function (v) {
+                var value = parse(v, opts[k]);
+                if (value !== undefined)
+                    opts[k] = value;
+            });
+        });
+    }
+    exports.getQueryParameters = getQueryParameters;
+    function getParameterByName(name, url) {
+        if (url === void 0) { url = window.location.href; }
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"), results = regex.exec(url);
+        if (!results)
+            return null;
+        if (!results[2])
+            return "";
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+    exports.getParameterByName = getParameterByName;
     function doif(v, cb) {
         if (v !== undefined && v !== null)
             cb(v);
     }
     exports.doif = doif;
+    function mixin(a) {
+        var b = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            b[_i - 1] = arguments[_i];
+        }
+        b.forEach(function (b) {
+            Object.keys(b).forEach(function (k) { return (a[k] = b[k]); });
+        });
+        return a;
+    }
+    exports.mixin = mixin;
+    function defaults(a) {
+        var b = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            b[_i - 1] = arguments[_i];
+        }
+        b.forEach(function (b) {
+            Object.keys(b)
+                .filter(function (k) { return a[k] === undefined; })
+                .forEach(function (k) { return (a[k] = b[k]); });
+        });
+        return a;
+    }
+    exports.defaults = defaults;
+    function cssin(name, css) {
+        var id = "style-" + name;
+        var styleTag = document.getElementById(id);
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = id;
+            styleTag.type = "text/css";
+            document.head.appendChild(styleTag);
+            styleTag.appendChild(document.createTextNode(css));
+        }
+        var dataset = styleTag.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                styleTag.remove();
+            }
+        };
+    }
+    exports.cssin = cssin;
+    function debounce(func, wait, immediate) {
+        if (wait === void 0) { wait = 50; }
+        if (immediate === void 0) { immediate = false; }
+        var timeout;
+        return (function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            var later = function () {
+                timeout = null;
+                if (!immediate)
+                    func.apply({}, args);
+            };
+            var callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = window.setTimeout(later, wait);
+            if (callNow)
+                func.apply({}, args);
+        });
+    }
+    exports.debounce = debounce;
+    function html(html) {
+        var a = document.createElement("div");
+        a.innerHTML = html;
+        return (a.firstElementChild || a.firstChild);
+    }
+    exports.html = html;
+    function pair(a1, a2) {
+        var result = new Array(a1.length * a2.length);
+        var i = 0;
+        a1.forEach(function (v1) { return a2.forEach(function (v2) { return (result[i++] = [v1, v2]); }); });
+        return result;
+    }
+    exports.pair = pair;
+    function range(n) {
+        var result = new Array(n);
+        for (var i = 0; i < n; i++)
+            result[i] = i;
+        return result;
+    }
+    exports.range = range;
+    function shuffle(array) {
+        var currentIndex = array.length;
+        var temporaryValue;
+        var randomIndex;
+        while (0 !== currentIndex) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+        return array;
+    }
+    exports.shuffle = shuffle;
+});
+define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function zoomToFeature(map, feature, options) {
+        var promise = $.Deferred();
+        options = common_1.defaults(options || {}, {
+            duration: 1000,
+            padding: 256,
+            minResolution: 2 * map.getView().getMinResolution()
+        });
+        var view = map.getView();
+        var currentExtent = view.calculateExtent(map.getSize());
+        var targetExtent = feature.getGeometry().getExtent();
+        var doit = function (duration) {
+            view.fit(targetExtent, {
+                size: map.getSize(),
+                padding: [options.padding, options.padding, options.padding, options.padding],
+                minResolution: options.minResolution,
+                duration: duration,
+                callback: function () { return promise.resolve(); }
+            });
+        };
+        if (ol.extent.containsExtent(currentExtent, targetExtent)) {
+            doit(options.duration);
+        }
+        else if (ol.extent.containsExtent(currentExtent, targetExtent)) {
+            doit(options.duration);
+        }
+        else {
+            var fullExtent = ol.extent.createEmpty();
+            ol.extent.extend(fullExtent, currentExtent);
+            ol.extent.extend(fullExtent, targetExtent);
+            var dscale = ol.extent.getWidth(fullExtent) / ol.extent.getWidth(currentExtent);
+            var duration = 0.5 * options.duration;
+            view.fit(fullExtent, {
+                size: map.getSize(),
+                padding: [options.padding, options.padding, options.padding, options.padding],
+                minResolution: options.minResolution,
+                duration: duration
+            });
+            setTimeout(function () { return doit(0.5 * options.duration); }, duration);
+        }
+        return promise;
+    }
+    exports.zoomToFeature = zoomToFeature;
+});
+define("node_modules/ol3-fun/ol3-fun/parse-dms", ["require", "exports"], function (require, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function decDegFromMatch(m) {
+        var signIndex = {
+            "-": -1,
+            N: 1,
+            S: -1,
+            E: 1,
+            W: -1
+        };
+        var latLonIndex = {
+            "-": "",
+            N: "lat",
+            S: "lat",
+            E: "lon",
+            W: "lon"
+        };
+        var degrees, minutes, seconds, sign, latLon;
+        sign = signIndex[m[2]] || signIndex[m[1]] || signIndex[m[6]] || 1;
+        degrees = Number(m[3]);
+        minutes = m[4] ? Number(m[4]) : 0;
+        seconds = m[5] ? Number(m[5]) : 0;
+        latLon = latLonIndex[m[1]] || latLonIndex[m[6]];
+        if (!inRange(degrees, 0, 180))
+            throw "Degrees out of range";
+        if (!inRange(minutes, 0, 60))
+            throw "Minutes out of range";
+        if (!inRange(seconds, 0, 60))
+            throw "Seconds out of range";
+        return {
+            decDeg: sign * (degrees + minutes / 60 + seconds / 3600),
+            latLon: latLon
+        };
+    }
+    function inRange(value, a, b) {
+        return value >= a && value <= b;
+    }
+    function toDegreesMinutesAndSeconds(coordinate) {
+        var absolute = Math.abs(coordinate);
+        var degrees = Math.floor(absolute);
+        var minutesNotTruncated = (absolute - degrees) * 60;
+        var minutes = Math.floor(minutesNotTruncated);
+        var seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+        return degrees + " " + minutes + " " + seconds;
+    }
+    function fromLonLatToDms(lon, lat) {
+        var latitude = toDegreesMinutesAndSeconds(lat);
+        var latitudeCardinal = lat >= 0 ? "N" : "S";
+        var longitude = toDegreesMinutesAndSeconds(lon);
+        var longitudeCardinal = lon >= 0 ? "E" : "W";
+        return latitude + " " + latitudeCardinal + " " + longitude + " " + longitudeCardinal;
+    }
+    function fromDmsToLonLat(dmsString) {
+        var _a;
+        dmsString = dmsString.trim();
+        var dmsRe = /([NSEW])?(-)?(\d+(?:\.\d+)?)[°º:d\s]?\s?(?:(\d+(?:\.\d+)?)['’‘′:]\s?(?:(\d{1,2}(?:\.\d+)?)(?:"|″|’’|'')?)?)?\s?([NSEW])?/i;
+        var dmsString2;
+        var m1 = dmsString.match(dmsRe);
+        if (!m1)
+            throw "Could not parse string";
+        if (m1[1]) {
+            m1[6] = undefined;
+            dmsString2 = dmsString.substr(m1[0].length - 1).trim();
+        }
+        else {
+            dmsString2 = dmsString.substr(m1[0].length).trim();
+        }
+        var decDeg1 = decDegFromMatch(m1);
+        var m2 = dmsString2.match(dmsRe);
+        var decDeg2 = m2 && decDegFromMatch(m2);
+        if (typeof decDeg1.latLon === "undefined") {
+            if (!isNaN(decDeg1.decDeg) && decDeg2 && isNaN(decDeg2.decDeg)) {
+                return decDeg1.decDeg;
+            }
+            else if (!isNaN(decDeg1.decDeg) && decDeg2 && !isNaN(decDeg2.decDeg)) {
+                decDeg1.latLon = "lat";
+                decDeg2.latLon = "lon";
+            }
+            else {
+                throw "Could not parse string";
+            }
+        }
+        if (typeof decDeg2.latLon === "undefined") {
+            decDeg2.latLon = decDeg1.latLon === "lat" ? "lon" : "lat";
+        }
+        return _a = {},
+            _a[decDeg1.latLon] = decDeg1.decDeg,
+            _a[decDeg2.latLon] = decDeg2.decDeg,
+            _a;
+    }
+    function parse(value) {
+        if (typeof value === "string")
+            return fromDmsToLonLat(value);
+        return fromLonLatToDms(value.lon, value.lat);
+    }
+    exports.parse = parse;
+});
+define("node_modules/ol3-fun/ol3-fun/slowloop", ["require", "exports"], function (require, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function slowloop(functions, interval, cycles) {
+        if (interval === void 0) { interval = 1000; }
+        if (cycles === void 0) { cycles = 1; }
+        var d = $.Deferred();
+        var index = 0;
+        var cycle = 0;
+        if (!functions || 0 >= cycles) {
+            d.resolve();
+            return d;
+        }
+        var h = setInterval(function () {
+            if (index === functions.length) {
+                index = 0;
+                if (++cycle === cycles) {
+                    d.resolve();
+                    clearInterval(h);
+                    return;
+                }
+            }
+            try {
+                d.notify({ index: index, cycle: cycle });
+                functions[index++]();
+            }
+            catch (ex) {
+                clearInterval(h);
+                d.reject(ex);
+            }
+        }, interval);
+        return d;
+    }
+    exports.slowloop = slowloop;
+});
+define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop"], function (require, exports, common_2, navigation_1, parse_dms_1, slowloop_1) {
+    var index = {
+        asArray: common_2.asArray,
+        cssin: common_2.cssin,
+        debounce: common_2.debounce,
+        defaults: common_2.defaults,
+        doif: common_2.doif,
+        getParameterByName: common_2.getParameterByName,
+        getQueryParameters: common_2.getQueryParameters,
+        html: common_2.html,
+        mixin: common_2.mixin,
+        pair: common_2.pair,
+        parse: common_2.parse,
+        range: common_2.range,
+        shuffle: common_2.shuffle,
+        toggle: common_2.toggle,
+        uuid: common_2.uuid,
+        slowloop: slowloop_1.slowloop,
+        dms: {
+            parse: parse_dms_1.parse,
+        },
+        navigation: {
+            zoomToFeature: navigation_1.zoomToFeature,
+        },
+    };
+    return index;
 });
 define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Shapeshifter = (function () {
         function Shapeshifter() {
@@ -107,7 +462,6 @@ define("ol3-symbolizer/format/plugins/as-cross", ["require", "exports"], functio
     exports.Shapeshifter = Shapeshifter;
 });
 define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Shapeshifter = (function () {
         function Shapeshifter() {
@@ -172,7 +526,6 @@ define("ol3-symbolizer/format/plugins/as-square", ["require", "exports"], functi
     exports.Shapeshifter = Shapeshifter;
 });
 define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Shapeshifter = (function () {
         function Shapeshifter() {
@@ -237,7 +590,6 @@ define("ol3-symbolizer/format/plugins/as-diamond", ["require", "exports"], funct
     exports.Shapeshifter = Shapeshifter;
 });
 define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Shapeshifter = (function () {
         function Shapeshifter() {
@@ -302,7 +654,6 @@ define("ol3-symbolizer/format/plugins/as-triangle", ["require", "exports"], func
     exports.Shapeshifter = Shapeshifter;
 });
 define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (require, exports) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Shapeshifter = (function () {
         function Shapeshifter() {
@@ -364,8 +715,7 @@ define("ol3-symbolizer/format/plugins/as-x", ["require", "exports"], function (r
     }());
     exports.Shapeshifter = Shapeshifter;
 });
-define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers", "ol3-symbolizer/common/assign", "ol3-symbolizer/common/mixin", "ol3-symbolizer/common/doif", "ol3-symbolizer/format/plugins/as-cross", "ol3-symbolizer/format/plugins/as-square", "ol3-symbolizer/format/plugins/as-diamond", "ol3-symbolizer/format/plugins/as-triangle", "ol3-symbolizer/format/plugins/as-x"], function (require, exports, ol, assign_1, mixin_1, doif_1, as_cross_1, as_square_1, as_diamond_1, as_triangle_1, as_x_1) {
-    "use strict";
+define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayers", "ol3-symbolizer/common/assign", "node_modules/ol3-fun/index", "ol3-symbolizer/format/plugins/as-cross", "ol3-symbolizer/format/plugins/as-square", "ol3-symbolizer/format/plugins/as-diamond", "ol3-symbolizer/format/plugins/as-triangle", "ol3-symbolizer/format/plugins/as-x"], function (require, exports, ol, assign_1, index_1, as_cross_1, as_square_1, as_diamond_1, as_triangle_1, as_x_1) {
     Object.defineProperty(exports, "__esModule", { value: true });
     var StyleConverter = (function () {
         function StyleConverter() {
@@ -401,7 +751,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             if (typeof style === "number")
                 throw style;
             if (style.getColor)
-                mixin_1.mixin(s, this.serializeColor(style.getColor()));
+                index_1.mixin(s, this.serializeColor(style.getColor()));
             if (style.getImage)
                 assign_1.assign(s, "image", this.serializeImage(style.getImage()));
             if (style.getFill)
@@ -580,8 +930,8 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 fill: json.fill && this.deserializeFill(json.fill),
                 stroke: json.stroke && this.deserializeStroke(json.stroke)
             });
-            doif_1.doif(json.rotation, function (v) { return image.setRotation(v); });
-            doif_1.doif(json.opacity, function (v) { return image.setOpacity(v); });
+            index_1.doif(json.rotation, function (v) { return image.setRotation(v); });
+            index_1.doif(json.opacity, function (v) { return image.setOpacity(v); });
             return image;
         };
         StyleConverter.prototype.deserializeIcon = function (json) {
@@ -672,7 +1022,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                 size: [canvas.width, canvas.height],
                 src: undefined
             });
-            return mixin_1.mixin(icon, {
+            return index_1.mixin(icon, {
                 path: json.path,
                 stroke: json.stroke,
                 fill: json.fill,
@@ -688,12 +1038,12 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
         };
         StyleConverter.prototype.deserializeStroke = function (json) {
             var stroke = new ol.style.Stroke();
-            doif_1.doif(json.color, function (v) { return stroke.setColor(v); });
-            doif_1.doif(json.lineCap, function (v) { return stroke.setLineCap(v); });
-            doif_1.doif(json.lineDash, function (v) { return stroke.setLineDash(v); });
-            doif_1.doif(json.lineJoin, function (v) { return stroke.setLineJoin(v); });
-            doif_1.doif(json.miterLimit, function (v) { return stroke.setMiterLimit(v); });
-            doif_1.doif(json.width, function (v) { return stroke.setWidth(v); });
+            index_1.doif(json.color, function (v) { return stroke.setColor(v); });
+            index_1.doif(json.lineCap, function (v) { return stroke.setLineCap(v); });
+            index_1.doif(json.lineDash, function (v) { return stroke.setLineDash(v); });
+            index_1.doif(json.lineJoin, function (v) { return stroke.setLineJoin(v); });
+            index_1.doif(json.miterLimit, function (v) { return stroke.setMiterLimit(v); });
+            index_1.doif(json.width, function (v) { return stroke.setWidth(v); });
             return stroke;
         };
         StyleConverter.prototype.deserializeColor = function (fill) {
@@ -711,7 +1061,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                     gradient_1 = this.deserializeRadialGradient(fill.gradient);
                 }
                 if (fill.gradient.stops) {
-                    mixin_1.mixin(gradient_1, {
+                    index_1.mixin(gradient_1, {
                         stops: fill.gradient.stops
                     });
                     var stops = fill.gradient.stops.split(";");
@@ -764,7 +1114,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
                         }
                         break;
                 }
-                return mixin_1.mixin(context_1.createPattern(canvas, repitition), fill.pattern);
+                return index_1.mixin(context_1.createPattern(canvas, repitition), fill.pattern);
             }
             if (fill.image) {
                 var canvas = document.createElement('canvas');
@@ -786,7 +1136,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             canvas.height = Math.max(y0, y1);
             var context = canvas.getContext('2d');
             var gradient = context.createLinearGradient(x0, y0, x1, y1);
-            mixin_1.mixin(gradient, {
+            index_1.mixin(gradient, {
                 type: "linear(" + [x0, y0, x1, y1].join(",") + ")"
             });
             return gradient;
@@ -799,7 +1149,7 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
             canvas.height = 2 * Math.max(y0, y1);
             var context = canvas.getContext('2d');
             var gradient = context.createRadialGradient(x0, y0, r0, x1, y1, r1);
-            mixin_1.mixin(gradient, {
+            index_1.mixin(gradient, {
                 type: "radial(" + [x0, y0, r0, x1, y1, r1].join(",") + ")"
             });
             return gradient;
@@ -809,30 +1159,29 @@ define("ol3-symbolizer/format/ol3-symbolizer", ["require", "exports", "openlayer
     exports.StyleConverter = StyleConverter;
 });
 define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var symbolizer = new Symbolizer.StyleConverter();
     var styleMap = {
-        "esriSMSCircle": "circle",
-        "esriSMSDiamond": "diamond",
-        "esriSMSX": "x",
-        "esriSMSCross": "cross",
-        "esriSLSSolid": "solid",
-        "esriSFSSolid": "solid",
-        "esriSLSDot": "dot",
-        "esriSLSDash": "dash",
-        "esriSLSDashDot": "dashdot",
-        "esriSLSDashDotDot": "dashdotdot",
-        "esriSFSBackwardDiagonal": "backward-diagonal",
-        "esriSFSForwardDiagonal": "forward-diagonal",
+        esriSMSCircle: "circle",
+        esriSMSDiamond: "diamond",
+        esriSMSX: "x",
+        esriSMSCross: "cross",
+        esriSLSSolid: "solid",
+        esriSFSSolid: "solid",
+        esriSLSDot: "dot",
+        esriSLSDash: "dash",
+        esriSLSDashDot: "dashdot",
+        esriSLSDashDotDot: "dashdotdot",
+        esriSFSBackwardDiagonal: "backward-diagonal",
+        esriSFSForwardDiagonal: "forward-diagonal"
     };
     var typeMap = {
-        "esriSMS": "sms",
-        "esriSLS": "sls",
-        "esriSFS": "sfs",
-        "esriPMS": "pms",
-        "esriPFS": "pfs",
-        "esriTS": "txt",
+        esriSMS: "sms",
+        esriSLS: "sls",
+        esriSFS: "sfs",
+        esriPMS: "pms",
+        esriPFS: "pfs",
+        esriTS: "txt"
     };
     function range(a, b) {
         var result = new Array(b - a + 1);
@@ -847,7 +1196,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
         function StyleConverter() {
         }
         StyleConverter.prototype.asWidth = function (v) {
-            return v * 4 / 3;
+            return (v * 4) / 3;
         };
         StyleConverter.prototype.asColor = function (color) {
             if (color.length === 4)
@@ -868,7 +1217,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                     color: this.asColor(symbol.color),
                     orientation: "forward",
                     spacing: 3,
-                    repitition: "repeat",
+                    repitition: "repeat"
                 }
             };
             this.fromSLS(symbol.outline, style);
@@ -879,7 +1228,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                     color: this.asColor(symbol.color),
                     orientation: "backward",
                     spacing: 3,
-                    repitition: "repeat",
+                    repitition: "repeat"
                 }
             };
             this.fromSLS(symbol.outline, style);
@@ -904,7 +1253,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                 opacity: 1,
                 radius: this.asWidth(symbol.size / 2),
                 stroke: {
-                    color: this.asColor(symbol.outline.color),
+                    color: this.asColor(symbol.outline.color)
                 },
                 snapToPixel: true
             };
@@ -1074,21 +1423,19 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
         StyleConverter.prototype.fromRenderer = function (renderer, args) {
             var _this = this;
             switch (renderer.type) {
-                case "simple":
-                    {
-                        return this.fromJson(renderer.symbol);
+                case "simple": {
+                    return this.fromJson(renderer.symbol);
+                }
+                case "uniqueValue": {
+                    var styles_1 = {};
+                    var defaultStyle_1 = renderer.defaultSymbol && this.fromJson(renderer.defaultSymbol);
+                    if (renderer.uniqueValueInfos) {
+                        renderer.uniqueValueInfos.forEach(function (info) {
+                            styles_1[info.value] = _this.fromJson(info.symbol);
+                        });
                     }
-                case "uniqueValue":
-                    {
-                        var styles_1 = {};
-                        var defaultStyle_1 = (renderer.defaultSymbol) && this.fromJson(renderer.defaultSymbol);
-                        if (renderer.uniqueValueInfos) {
-                            renderer.uniqueValueInfos.forEach(function (info) {
-                                styles_1[info.value] = _this.fromJson(info.symbol);
-                            });
-                        }
-                        return function (feature) { return styles_1[feature.get(renderer.field1)] || defaultStyle_1; };
-                    }
+                    return function (feature) { return styles_1[feature.get(renderer.field1)] || defaultStyle_1; };
+                }
                 case "classBreaks": {
                     var styles_2 = {};
                     var classBreakRenderer_1 = renderer;
@@ -1103,7 +1450,7 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                                         var dataValue_1 = (vars.maxDataValue - vars.minDataValue) / steps_1.length;
                                         classBreakRenderer_1.classBreakInfos.forEach(function (classBreakInfo) {
                                             var icons = steps_1.map(function (step) {
-                                                var json = JSON.parse(JSON.stringify(classBreakInfo.symbol));
+                                                var json = (JSON.parse(JSON.stringify(classBreakInfo.symbol)));
                                                 json.size = vars.minSize + dx_1 * (dataValue_1 - vars.minDataValue);
                                                 var style = _this.fromJson(json);
                                                 styles_2[dataValue_1] = style;
@@ -1125,14 +1472,11 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
                         for (var key in styles_2) {
                             return styles_2[key];
                         }
+                        return null;
                     };
                 }
                 default:
-                    {
-                        debugger;
-                        console.error("unsupported renderer type: ", renderer.type);
-                        break;
-                    }
+                    throw "unsupported renderer type: " + renderer.type;
             }
         };
         return StyleConverter;
@@ -1140,7 +1484,6 @@ define("ol3-symbolizer/format/ags-symbolizer", ["require", "exports", "ol3-symbo
     exports.StyleConverter = StyleConverter;
 });
 define("index", ["require", "exports", "ol3-symbolizer/format/ol3-symbolizer", "ol3-symbolizer/format/ags-symbolizer", "ol3-symbolizer/format/ol3-symbolizer"], function (require, exports, Symbolizer, ags_symbolizer_1, ol3_symbolizer_1) {
-    "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Symbolizer = Symbolizer;
     exports.AgsStyleConverter = ags_symbolizer_1.StyleConverter;

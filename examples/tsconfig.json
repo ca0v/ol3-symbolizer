@@ -1,6 +1,7 @@
 {
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
+		"strictNullChecks": false,
 		"declaration": false,
 		"outFile": "./spec/index.js"
 	},

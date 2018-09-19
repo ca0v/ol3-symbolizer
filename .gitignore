@@ -1,8 +1,7 @@
 .vscode
-built/**
 node_modules
 *.log
 *.js
 *.map
-!built/**
-!static/require.js
+built/**
+static/**

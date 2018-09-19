@@ -77,7 +77,7 @@ export class ArcGisVectorSourceFactory {
 					geometry: encodeURIComponent(JSON.stringify(box)),
 					geometryType: "esriGeometryEnvelope",
 					resultType: "tile",
-					where: encodeURIComponent(options.where),
+					where: options.where ? encodeURIComponent(options.where) : "",
 					inSR: srs,
 					outSR: srs,
 					outFields: "*"
@@ -118,14 +118,15 @@ export class ArcGisVectorSourceFactory {
 							}
 							if (features.length) {
 								if (options.uidFieldName) {
+									let uidFieldName = options.uidFieldName;
 									// TODO: very likely source.getFeatureById is faster...
 									let featureIds = source
 										.getFeatures()
-										.map(f => f.get(options.uidFieldName))
+										.map(f => f.get(uidFieldName))
 										.filter(v => !!v)
 										.sort();
 									let uniqueFeatures = features.filter(
-										f => -1 === featureIds.indexOf(f.get(options.uidFieldName))
+										f => -1 === featureIds.indexOf(f.get(uidFieldName))
 									);
 									source.addFeatures(uniqueFeatures);
 								} else {
@@ -154,11 +155,11 @@ export class ArcGisVectorSourceFactory {
 				});
 
 				let styleMap = converter.fromRenderer(<any>layerInfo.drawingInfo.renderer, { url: "for icons?" });
-				layer.setStyle((feature: ol.Feature, resolution: number) => {
+				layer.setStyle((feature: ol.Feature | ol.render.Feature, resolution: number) => {
 					if (styleMap instanceof ol.style.Style) {
 						return styleMap;
 					} else {
-						return styleMap(feature);
+						return (<any>styleMap)(feature);
 					}
 				});
 

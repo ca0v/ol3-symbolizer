@@ -10,7 +10,7 @@ declare var window: any;
  */
 //import Style from "ol/style/Style";
 
-import { assign } from "../ol3-symbolizer/common/assign";
+import { assign } from "../../ol3-symbolizer/common/assign";
 import { mixin, defaults } from "ol3-fun/index"; // replace with ol-fun/mixin
 import { describe, it, should } from "ol3-fun/tests/base";
 

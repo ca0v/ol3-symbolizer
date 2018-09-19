@@ -1,4 +1,4 @@
-import Ajax = require("../common/ajax");
+import { Ajax } from "../common/ajax";
 import { defaults } from "ol3-fun/index";
 import { CatalogInfo, FeatureServerInfo, MapServerInfo, FeatureLayerInfo } from "./@types/cataloginfo";
 

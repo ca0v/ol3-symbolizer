@@ -1,6 +1,10 @@
 {
-	"extends": "../tsconfig.json",
+	"extends": "../tsconfig",
 	"compilerOptions": {
+		"strict": false,
+		"strictFunctionTypes": true,
+		"strictNullChecks": false,
+		"strictPropertyInitialization": false,
 		"declaration": false,
 		"outFile": "./spec/index.js"
 	},

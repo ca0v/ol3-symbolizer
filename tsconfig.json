@@ -4,16 +4,12 @@
 		"declaration": true,
 		"module": "amd",
 		"target": "es5",
-		"noImplicitAny": true,
-		"noImplicitThis": true,
-		"noImplicitUseStrict": true,
-		"noImplicitReturns": true,
+		"strict": true,
 		"sourceMap": true,
 		"outFile": "./built/index.max.js",
 		"moduleResolution": "classic",
 		"baseUrl": "./node_modules",
-		"lib": ["esnext", "dom", "scripthost"]
+		"lib": ["esnext", "dom"]
 	},
-	"include": ["index.ts"],
-	"exclude": ["ol3-symbolizer/labs"]
+	"include": ["index.ts", "ol3-symbolizer/**/*.ts"]
 }

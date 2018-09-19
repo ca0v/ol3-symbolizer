@@ -1,3 +1,4 @@
-import "./common";
-import "./ol3-symbolizer";
-import "./ags-symbolizer";
+import "./spec/packages";
+import "./spec/common";
+import "./spec/ol3-symbolizer";
+import "./spec/ags-symbolizer";

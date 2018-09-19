@@ -9,10 +9,10 @@
 		"doc": "typedoc --out ./built/docs --tsconfig ./tsconfig.json --readme none",
 		"build-for-amd": "tsc -p tsconfig.json",
 		"build-for-loaders": "tsc -p loaders/tsconfig.json",
-		"build-for-tests": "tsc -p tests/tsconfig.json --outFile ./built/spec/index.js",
+		"build-for-tests": "tsc -p tests/tsconfig.json --outFile ./built/tests.max.js",
 		"build-for-examples": "tsc -p examples/tsconfig.json --outFile ./built/examples.max.js",
-		"live-for-tests": "live-server --port=5000 --wait=200 --watch=./built/spec/index.js --open=./loaders/tests.html --browser=CHROME",
-		"live-for-examples": "live-server --port=5000 --wait=200 --watch=./built/examples.max.js --open=./loaders/examples.html --browser=CHROME",
+		"live-for-tests": "live-server --port=5001 --wait=200 --watch=./built/*.max.js --open=\"./loaders/tests.html?theme=dark&debug=1&test=*\" --browser=CHROME",
+		"live-for-examples": "live-server --port=5001 --wait=200 --watch=./built/*.max.js --open=\"./loaders/tests.html?theme=dark\" --browser=CHROME",
 		"dev-for-tests": "npm run build-for-tests & start npm run live-for-tests & npm run build-for-tests -- -w",
 		"dev-for-examples": "npm run build-for-examples & start npm run live-for-examples & npm run build-for-examples -- -w",
 		"uglify-for-amd": "pushd built && uglifyjs index.max.js --source-map \"content='index.max.js.map',url='index.js.map'\" --output=index.js --compress --mangle && popd",
@@ -21,6 +21,9 @@
 		"install": "npm run build-for-amd",
 		"test": "npm run live-for-tests"
 	},
+	"pre-commit": [
+		"before-push"
+	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/ca0v/ol3-symbolizer.git"
@@ -31,7 +34,9 @@
 		"url": "https://github.com/ca0v/ol3-symbolizer/issues"
 	},
 	"homepage": "https://github.com/ca0v/ol3-symbolizer#readme",
-	"dependencies": {},
+	"dependencies": {
+		"jquery": "^3.3.1"
+	},
 	"devDependencies": {
 		"@types/jquery": "^3.3.6",
 		"@types/mocha": "^5.2.5",

@@ -119,26 +119,6 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         return a;
     }
     exports.defaults = defaults;
-    function cssin(name, css) {
-        var id = "style-" + name;
-        var styleTag = document.getElementById(id);
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            styleTag.id = id;
-            styleTag.type = "text/css";
-            document.head.appendChild(styleTag);
-            styleTag.appendChild(document.createTextNode(css));
-        }
-        var dataset = styleTag.dataset;
-        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
-        return function () {
-            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
-            if (dataset["count"] === "0") {
-                styleTag.remove();
-            }
-        };
-    }
-    exports.cssin = cssin;
     function debounce(func, wait, immediate) {
         if (wait === void 0) { wait = 50; }
         if (immediate === void 0) { immediate = false; }
@@ -195,6 +175,57 @@ define("node_modules/ol3-fun/ol3-fun/common", ["require", "exports"], function (
         return array;
     }
     exports.shuffle = shuffle;
+});
+define("node_modules/ol3-fun/ol3-fun/css", ["require", "exports"], function (require, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function cssin(name, css) {
+        var id = "style-" + name;
+        var styleTag = document.getElementById(id);
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = id;
+            styleTag.type = "text/css";
+            document.head.appendChild(styleTag);
+            styleTag.appendChild(document.createTextNode(css));
+        }
+        var dataset = styleTag.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                styleTag.remove();
+            }
+        };
+    }
+    exports.cssin = cssin;
+    function loadCss(options) {
+        if (!options.url && !options.css)
+            throw "must provide either a url or css option";
+        if (options.url && options.css)
+            throw "cannot provide both a url and a css";
+        if (options.name && options.css)
+            return cssin(options.name, options.css);
+        var id = "style-" + options.name;
+        var head = document.getElementsByTagName("head")[0];
+        var link = document.getElementById(id);
+        if (!link) {
+            link = document.createElement("link");
+            link.id = id;
+            link.type = "text/css";
+            link.rel = "stylesheet";
+            link.href = options.url;
+            head.appendChild(link);
+        }
+        var dataset = link.dataset;
+        dataset["count"] = parseInt(dataset["count"] || "0") + 1 + "";
+        return function () {
+            dataset["count"] = parseInt(dataset["count"] || "0") - 1 + "";
+            if (dataset["count"] === "0") {
+                link.remove();
+            }
+        };
+    }
+    exports.loadCss = loadCss;
 });
 define("node_modules/ol3-fun/ol3-fun/navigation", ["require", "exports", "openlayers", "jquery", "node_modules/ol3-fun/ol3-fun/common"], function (require, exports, ol, $, common_1) {
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -372,13 +403,288 @@ define("node_modules/ol3-fun/ol3-fun/slowloop", ["require", "exports"], function
     }
     exports.slowloop = slowloop;
 });
-define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop"], function (require, exports, common_2, navigation_1, parse_dms_1, slowloop_1) {
+define("node_modules/ol3-fun/ol3-fun/is-primitive", ["require", "exports"], function (require, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function isPrimitive(a) {
+        switch (typeof a) {
+            case "boolean":
+                return true;
+            case "number":
+                return true;
+            case "object":
+                return null === a;
+            case "string":
+                return true;
+            case "symbol":
+                return true;
+            case "undefined":
+                return true;
+            default:
+                throw "unknown type: " + typeof a;
+        }
+    }
+    exports.isPrimitive = isPrimitive;
+});
+define("node_modules/ol3-fun/ol3-fun/is-cyclic", ["require", "exports", "node_modules/ol3-fun/ol3-fun/is-primitive"], function (require, exports, is_primitive_1) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function isCyclic(a) {
+        if (is_primitive_1.isPrimitive(a))
+            return false;
+        var test = function (o, history) {
+            if (is_primitive_1.isPrimitive(o))
+                return false;
+            if (0 <= history.indexOf(o)) {
+                return true;
+            }
+            return Object.keys(o).some(function (k) { return test(o[k], [o].concat(history)); });
+        };
+        return Object.keys(a).some(function (k) { return test(a[k], [a]); });
+    }
+    exports.isCyclic = isCyclic;
+});
+define("node_modules/ol3-fun/ol3-fun/deep-extend", ["require", "exports", "node_modules/ol3-fun/ol3-fun/is-cyclic", "node_modules/ol3-fun/ol3-fun/is-primitive"], function (require, exports, is_cyclic_1, is_primitive_2) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function extend(a, b, trace, history) {
+        if (history === void 0) { history = []; }
+        if (!b) {
+            b = a;
+            a = {};
+        }
+        var merger = new Merger(trace, history);
+        return merger.deepExtend(a, b, []);
+    }
+    exports.extend = extend;
+    function isUndefined(a) {
+        return typeof a === "undefined";
+    }
+    function isArray(val) {
+        return Array.isArray(val);
+    }
+    function isHash(val) {
+        return !is_primitive_2.isPrimitive(val) && !canClone(val) && !isArray(val);
+    }
+    function canClone(val) {
+        if (val instanceof Date)
+            return true;
+        if (val instanceof RegExp)
+            return true;
+        return false;
+    }
+    function clone(val) {
+        if (val instanceof Date)
+            return new Date(val.getTime());
+        if (val instanceof RegExp)
+            return new RegExp(val.source);
+        throw "unclonable type encounted: " + typeof val;
+    }
+    var Merger = (function () {
+        function Merger(traceItems, history) {
+            this.traceItems = traceItems;
+            this.history = history;
+        }
+        Merger.prototype.trace = function (item) {
+            if (this.traceItems) {
+                this.traceItems.push(item);
+            }
+            return item.path;
+        };
+        Merger.prototype.deepExtend = function (target, source, path) {
+            var _this = this;
+            if (target === source)
+                return target;
+            if (!target || (!isHash(target) && !isArray(target))) {
+                throw "first argument must be an object";
+            }
+            if (!source || (!isHash(source) && !isArray(source))) {
+                throw "second argument must be an object";
+            }
+            if (typeof source === "function") {
+                return target;
+            }
+            this.push(source);
+            if (isArray(source)) {
+                if (!isArray(target)) {
+                    throw "attempting to merge an array into a non-array";
+                }
+                this.mergeArray("id", target, source, path);
+                return target;
+            }
+            else if (isArray(target)) {
+                throw "attempting to merge a non-array into an array";
+            }
+            Object.keys(source).forEach(function (k) { return _this.mergeChild(k, target, source[k], [k].concat(path)); });
+            return target;
+        };
+        Merger.prototype.cloneArray = function (val, path) {
+            var _this = this;
+            this.push(val);
+            return val.map(function (v) {
+                if (is_primitive_2.isPrimitive(v))
+                    return v;
+                if (isHash(v))
+                    return _this.deepExtend({}, v, path);
+                if (isArray(v))
+                    return _this.cloneArray(v, path);
+                if (canClone(v))
+                    return clone(v);
+                throw "unknown type encountered: " + typeof v;
+            });
+        };
+        Merger.prototype.push = function (a) {
+            if (is_primitive_2.isPrimitive(a))
+                return;
+            if (-1 < this.history.indexOf(a)) {
+                if (is_cyclic_1.isCyclic(a)) {
+                    throw "circular reference detected";
+                }
+            }
+            else
+                this.history.push(a);
+        };
+        Merger.prototype.mergeChild = function (key, target, sourceValue, path) {
+            var targetValue = target[key];
+            if (sourceValue === targetValue)
+                return;
+            if (is_primitive_2.isPrimitive(sourceValue)) {
+                path = this.trace({
+                    path: path,
+                    key: key,
+                    target: target,
+                    was: targetValue,
+                    value: sourceValue
+                });
+                target[key] = sourceValue;
+                return;
+            }
+            if (canClone(sourceValue)) {
+                sourceValue = clone(sourceValue);
+                path = this.trace({
+                    path: path,
+                    key: key,
+                    target: target,
+                    was: targetValue,
+                    value: sourceValue
+                });
+                target[key] = sourceValue;
+                return;
+            }
+            if (isArray(sourceValue)) {
+                if (isArray(targetValue)) {
+                    this.deepExtend(targetValue, sourceValue, path);
+                    return;
+                }
+                sourceValue = this.cloneArray(sourceValue, path);
+                path = this.trace({
+                    path: path,
+                    key: key,
+                    target: target,
+                    was: targetValue,
+                    value: sourceValue
+                });
+                target[key] = sourceValue;
+                return;
+            }
+            if (!isHash(sourceValue)) {
+                throw "unexpected source type: " + typeof sourceValue;
+            }
+            if (!isHash(targetValue)) {
+                var merger = new Merger(null, this.history);
+                sourceValue = merger.deepExtend({}, sourceValue, path);
+                path = this.trace({
+                    path: path,
+                    key: key,
+                    target: target,
+                    was: targetValue,
+                    value: sourceValue
+                });
+                target[key] = sourceValue;
+                return;
+            }
+            this.deepExtend(targetValue, sourceValue, path);
+            return;
+        };
+        Merger.prototype.mergeArray = function (key, target, source, path) {
+            var _this = this;
+            if (!isArray(target))
+                throw "target must be an array";
+            if (!isArray(source))
+                throw "input must be an array";
+            if (!source.length)
+                return target;
+            var hash = {};
+            target.forEach(function (item, i) {
+                if (!item[key])
+                    return;
+                hash[item[key]] = i;
+            });
+            source.forEach(function (sourceItem, i) {
+                var sourceKey = sourceItem[key];
+                var targetIndex = hash[sourceKey];
+                if (isUndefined(sourceKey)) {
+                    if (isHash(target[i]) && !!target[i][key]) {
+                        throw "cannot replace an identified array item with a non-identified array item";
+                    }
+                    _this.mergeChild(i, target, sourceItem, path);
+                    return;
+                }
+                if (isUndefined(targetIndex)) {
+                    _this.mergeChild(target.length, target, sourceItem, path);
+                    return;
+                }
+                _this.mergeChild(targetIndex, target, sourceItem, path);
+                return;
+            });
+            return target;
+        };
+        return Merger;
+    }());
+});
+define("node_modules/ol3-fun/ol3-fun/extensions", ["require", "exports"], function (require, exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Extensions = (function () {
+        function Extensions() {
+            this.hash = new WeakMap(null);
+        }
+        Extensions.prototype.isExtended = function (o) {
+            return this.hash.has(o);
+        };
+        Extensions.prototype.extend = function (o, ext) {
+            var hashData = this.hash.get(o);
+            if (!hashData) {
+                hashData = {};
+                this.hash.set(o, hashData);
+            }
+            ext && Object.keys(ext).forEach(function (k) { return (hashData[k] = ext[k]); });
+            return hashData;
+        };
+        Extensions.prototype.bind = function (o1, o2) {
+            if (this.isExtended(o1)) {
+                if (this.isExtended(o2)) {
+                    if (this.hash.get(o1) === this.hash.get(o2))
+                        return;
+                    throw "both objects already bound";
+                }
+                else {
+                    this.hash.set(o2, this.extend(o1));
+                }
+            }
+            else {
+                this.hash.set(o1, this.extend(o2));
+            }
+        };
+        return Extensions;
+    }());
+    exports.Extensions = Extensions;
+});
+define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fun/ol3-fun/common", "node_modules/ol3-fun/ol3-fun/css", "node_modules/ol3-fun/ol3-fun/navigation", "node_modules/ol3-fun/ol3-fun/parse-dms", "node_modules/ol3-fun/ol3-fun/slowloop", "node_modules/ol3-fun/ol3-fun/deep-extend", "node_modules/ol3-fun/ol3-fun/extensions"], function (require, exports, common_2, css_1, navigation_1, parse_dms_1, slowloop_1, deep_extend_1, extensions_1) {
     var index = {
         asArray: common_2.asArray,
-        cssin: common_2.cssin,
+        cssin: css_1.cssin,
+        loadCss: css_1.loadCss,
         debounce: common_2.debounce,
         defaults: common_2.defaults,
         doif: common_2.doif,
+        deepExtend: deep_extend_1.extend,
         getParameterByName: common_2.getParameterByName,
         getQueryParameters: common_2.getQueryParameters,
         html: common_2.html,
@@ -392,10 +698,13 @@ define("node_modules/ol3-fun/index", ["require", "exports", "node_modules/ol3-fu
         slowloop: slowloop_1.slowloop,
         dms: {
             parse: parse_dms_1.parse,
+            fromDms: function (dms) { return parse_dms_1.parse(dms); },
+            fromLonLat: function (o) { return parse_dms_1.parse(o); }
         },
         navigation: {
-            zoomToFeature: navigation_1.zoomToFeature,
+            zoomToFeature: navigation_1.zoomToFeature
         },
+        Extensions: extensions_1.Extensions
     };
     return index;
 });
@@ -419,11 +728,25 @@ define("node_modules/ol3-fun/tests/base", ["require", "exports", "node_modules/o
     }
     exports.should = should;
     function shouldEqual(a, b, message) {
-        if (a != b)
-            console.warn("\"" + a + "\" <> \"" + b + "\"");
+        if (a != b) {
+            var msg = "\"" + a + "\" <> \"" + b + "\"";
+            message = (message ? message + ": " : "") + msg;
+            console.warn(msg);
+        }
         should(a == b, message);
     }
     exports.shouldEqual = shouldEqual;
+    function shouldThrow(fn, message) {
+        try {
+            fn();
+        }
+        catch (ex) {
+            should(!!ex, ex);
+            return ex;
+        }
+        should(false, "expected an exception" + (message ? ": " + message : ""));
+    }
+    exports.shouldThrow = shouldThrow;
     function stringify(o) {
         return JSON.stringify(o, null, "\t");
     }
@@ -1973,4 +2296,4 @@ define("tests/ags-symbolizer", ["require", "exports", "node_modules/ol3-fun/test
 define("tests/index", ["require", "exports", "tests/common", "tests/ol3-symbolizer", "tests/ags-symbolizer"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
 });
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=tests.max.js.map

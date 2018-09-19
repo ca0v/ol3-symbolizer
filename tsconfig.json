@@ -1,18 +1,19 @@
 {
-    "compilerOptions": {
-        "removeComments": true,
-        "declaration": true,
-        "module": "amd",
-        "target": "es5",
-        "noImplicitAny": true,
-        "noImplicitThis": true,
-        "noImplicitUseStrict": true,
-        "noImplicitReturns": true,
-        "sourceMap": true,
-        "outFile": "./built/index.max.js",
-        "moduleResolution": "classic",
-        "baseUrl": "./node_modules"
-    },
-    "include": ["index.ts"],
-    "exclude": ["ol3-symbolizer/labs"]
+	"compilerOptions": {
+		"removeComments": true,
+		"declaration": true,
+		"module": "amd",
+		"target": "es5",
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"noImplicitUseStrict": true,
+		"noImplicitReturns": true,
+		"sourceMap": true,
+		"outFile": "./built/index.max.js",
+		"moduleResolution": "classic",
+		"baseUrl": "./node_modules",
+		"lib": ["esnext", "dom", "scripthost"]
+	},
+	"include": ["index.ts"],
+	"exclude": ["ol3-symbolizer/labs"]
 }

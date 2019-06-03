@@ -40,10 +40,12 @@
 	},
 	"devDependencies": {
 		"@types/jquery": "^3.3.9",
+		"@types/jquery-mockjax": "^2.3.0",
 		"@types/mocha": "^5.2.5",
 		"@types/ol": "^4.6.2",
 		"@types/requirejs": "^2.1.31",
 		"jquery": "^3.3.1",
+		"jquery-mockjax": "^2.5.0",
 		"live-server": "^1.2.0",
 		"mocha": "^5.2.0",
 		"uglify-js": "^3.4.8"

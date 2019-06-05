@@ -1,6 +1,7 @@
 .vscode
 dist
 bower_components
+node_modules
 jspm_packages
 typings
 *.log

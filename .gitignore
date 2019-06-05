@@ -5,3 +5,4 @@ node_modules
 *.map
 built/**
 static/**
+*.sqlite

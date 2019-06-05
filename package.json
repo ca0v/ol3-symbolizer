@@ -5,7 +5,7 @@
   "main": "built/index.js",
   "scripts": {
     "clean": "rmdir .\\built /s/q",
-    "update": "npm install ol3-fun",
+    "update": "npm install ol3-fun reverse-proxy-cache",
     "doc": "typedoc --out ./built/docs --tsconfig ./tsconfig.json --readme none",
     "build-for-amd": "tsc -p tsconfig.json",
     "build-for-loaders": "tsc -p loaders/tsconfig.json",
@@ -21,8 +21,8 @@
     "move": "mv built/index.max.d.ts built/index.d.ts",
     "before-push": "npm-run-all clean build-for-loaders build-for-amd build-for-tests build-for-examples move test",
     "install": "npm run build-for-amd",
-    "gateway": "reverse-proxy-cache 3001",
-    "test": "dev-for-test"
+    "gateway": "reverse-proxy-cache",
+    "test": "npm run dev-for-tests"
   },
   "pre-commit": [
     "before-push"
@@ -52,5 +52,20 @@
     "npm-run-all": "^4.1.5",
     "reverse-proxy-cache": "https://github.com/ca0v/reverse-proxy-cache/tarball/v1.0.0",
     "uglify-js": "^3.4.8"
+  },
+  "reverse-proxy-cache": {
+    "port": "3001",
+    "reverse-proxy-db": "unittest.sqlite",
+    "proxy-pass": [
+      {
+        "about": "requests to /mock redirect to https://usalvwdgis1.infor.com:6443",
+        "baseUri": "/mock/ags",
+        "proxyUri": "https://usalvwdgis1.infor.com:6443/arcgis"
+      },
+      {
+        "baseUri": "/mock/geoserver",
+        "proxyUri": "http://localhost:8080/geoserver"
+      }
+    ]
   }
 }

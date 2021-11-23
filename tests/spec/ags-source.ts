@@ -1,28 +1,31 @@
 import { shouldEqual } from "ol3-fun/tests/base";
 import { ArcGisVectorSourceFactory } from "../../ol3-symbolizer/ags/ags-source";
 import { debounce } from "ol3-fun/ol3-fun/common";
+import { TileDebug } from "ol/source";
+import { createXYZ } from "ol/tilegrid";
+import Map from "ol/Map";
+import { Tile as TileLayer } from "ol/layer";
+import View from "ol/View";
+import { unByKey } from "ol/Observable";
 
 describe("ags-source tests", () => {
   it("ArcGisVectorSourceFactory", (done) => {
     // attempting to create a mock map
-    let source =
-      new ol.source.TileDebug({
-        projection: "EPSG:3857",
-        tileGrid: ol.tilegrid.createXYZ(
-          {
-            tileSize: 256,
-          }
-        ),
-      });
+    let source = new TileDebug({
+      projection: "EPSG:3857",
+      tileGrid: createXYZ({
+        tileSize: 256,
+      }),
+    });
 
-    let map = new ol.Map({
+    let map = new Map({
       target: "map",
       layers: [
-        new ol.layer.Tile({
+        new TileLayer({
           source: source,
         }),
       ],
-      view: new ol.View({
+      view: new View({
         center: [-12826838, 4326274],
         zoom: 5,
         projection: "EPSG:3857",
@@ -57,13 +60,13 @@ describe("ags-source tests", () => {
               )
             );
             shouldEqual(3, ids.size);
-            ol.Observable.unByKey(h);
+            unByKey(<any>h);
             done();
           })
         );
       });
       layers.forEach((l) =>
-        map.addLayer(l)
+        map.addLayer(<any>l)
       );
     });
   });

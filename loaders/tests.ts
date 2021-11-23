@@ -85,11 +85,10 @@ export async function run() {
 
   if (isTest) {
     mocha.setup("bdd");
-    debugger;
     let testNames =
       getParameterByName("test") || "*";
     if (testNames === "*")
-      testNames = "tests";
+      testNames = "/tests.js";
     await Promise.all(
       testNames
         .split(",")

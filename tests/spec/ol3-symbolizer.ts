@@ -1,4 +1,4 @@
-import * as Dashes from "../../ol3-symbolizer/styles/stroke/linedash";
+import { dasharray } from "../../ol3-symbolizer/styles/stroke/linedash";
 import {
   should,
   shouldEqual,
@@ -6,6 +6,10 @@ import {
 } from "ol3-fun/tests/base";
 import { StyleConverter } from "../../ol3-symbolizer/format/ol3-symbolizer";
 import { Format } from "../../ol3-symbolizer/format/@types/formats";
+import {
+  Circle,
+  RegularShape,
+} from "ol/style";
 
 describe("ol3-symbolizer", () => {
   let converter = new StyleConverter();
@@ -20,7 +24,7 @@ describe("ol3-symbolizer", () => {
       circle.stroke;
 
       let color = <Format.Color>{};
-      color === [1] || color == "";
+      color == [1] || color == "";
 
       let fill = <Format.Fill>{};
       fill.color;
@@ -111,7 +115,7 @@ describe("ol3-symbolizer", () => {
         converter.fromJson(baseline);
 
       let circleStyle =
-        style.getImage() as ol.style.Circle;
+        style.getImage() as Circle;
       should(
         circleStyle !== null,
         "getImage returns a style"
@@ -156,7 +160,7 @@ describe("ol3-symbolizer", () => {
         converter.fromJson(baseline);
 
       let starStyle =
-        style.getImage() as ol.style.RegularShape;
+        style.getImage() as RegularShape;
       should(
         starStyle !== null,
         "getImage returns a style"
@@ -241,7 +245,7 @@ describe("ol3-symbolizer", () => {
           color: "orange",
           width: 2,
           lineDash:
-            Dashes.longdashdotdot,
+            dasharray.longdashdotdot,
         },
       };
 

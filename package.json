@@ -15,7 +15,7 @@
     "build:examples": "tsc -p examples/tsconfig.json --outFile ./built/examples.max.js",
     "live:tests": "esbuild ./tests/index.ts --outfile=./loaders/tests.js --watch --bundle --format=esm --target=esnext",
     "live:loader": "esbuild ./loaders/tests.ts --outfile=./loaders/loader.js --servedir=./loaders --bundle --format=esm --target=esnext",
-    "dev:tests": "npm-run-all -p gateway live:tests live:loader",
+    "dev:tests": "npm-run-all -p gateway live:tests live:loader lint:tests",
     "live:examples": "live-server --port=5001 --wait=200 --watch=./built/*.max.js --open=\"./loaders/tests.html?theme=dark\" --browser=CHROME",
     "dev:examples": "npm run build:examples & start npm run live:examples & npm run build:examples -- -w",
     "uglify:amd": "cd built && uglifyjs index.max.js --source-map \"content='index.max.js.map',url='index.js.map'\" --output=index.js --compress --mangle",
@@ -42,7 +42,6 @@
   "dependencies": {
     "@ca0v/ceylon": "file:../ceylon",
     "@types/jquery": "latest",
-    "@types/ol": "latest",
     "esbuild": "^0.13.15",
     "husky": "^7.0.4",
     "jquery": "latest",

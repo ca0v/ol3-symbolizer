@@ -1,4 +1,3 @@
-declare var requirejs: any;
 /**
 // ol/style/Style will only load when using webpack...the common-js syntax isn't amd-compatible and 
 // TSC may transpile most of this code but with the ".js" in the MID's it might not work and some commonjs syntax in dependent projects won't work w/ TSC
@@ -15,7 +14,10 @@ import {
   mixin,
   defaults,
 } from "ol3-fun/index"; // replace with ol-fun/mixin
-import { should } from "ol3-fun/tests/base";
+import {
+  should,
+  shouldEqual,
+} from "ol3-fun/tests/base";
 
 describe("assign tests", function () {
   it("assign empty", function () {
@@ -78,14 +80,14 @@ describe("mixin tests", () => {
 });
 
 describe("test accessing openlayers using amd", function () {
-  it("log ol.style.Style", function () {
-    requirejs(
-      ["openlayers"],
-      (ol: any) => {
-        let style = ol.style.Style;
-        should(!!style, "");
-        console.log(style.toString());
-      }
+  it("log ol.style.Style", async function () {
+    const style = await import(
+      "ol/style/Style"
+    );
+    should(!!style, "");
+    shouldEqual(
+      typeof style.createDefaultStyle,
+      "function"
     );
   });
 });

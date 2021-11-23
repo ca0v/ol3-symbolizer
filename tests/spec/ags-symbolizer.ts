@@ -7,6 +7,7 @@ import {
 import { StyleConverter } from "../../ol3-symbolizer/format/ags-symbolizer";
 import { StyleConverter as ToJsonConverter } from "../../ol3-symbolizer/format/ol3-symbolizer";
 import { ArcGisFeatureServerLayer } from "../../ol3-symbolizer/format/@types/ArcGisFeatureServerLayer";
+import { Style } from "ol/style";
 
 let fromJson = (() => {
   let fromJsonConverter =
@@ -20,7 +21,7 @@ let fromJson = (() => {
 let toJson = (() => {
   let toJsonConverter =
     new ToJsonConverter();
-  return (style: ol.style.Style) =>
+  return (style: Style) =>
     toJsonConverter.toJson(style);
 })();
 

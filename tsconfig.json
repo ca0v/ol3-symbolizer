@@ -1,17 +1,17 @@
 {
 	"compilerOptions": {
-		"removeComments": true,
-		"declaration": true,
-		"module": "amd",
-		"target": "es5",
-		"strict": true,
-		"noEmitOnError": true,
-		"sourceMap": true,
-		"inlineSources": true,
-		"outFile": "./built/index.max.js",
-		"moduleResolution": "classic",
 		"baseUrl": "./node_modules",
-		"lib": ["esnext", "dom"]
+		"declaration": true,
+		"lib": ["es2015", "dom", "ES2015.Promise"],
+		"module": "es2015",
+		"moduleResolution": "classic",
+		"noEmit": true,
+		"noEmitOnError": true,
+		"noImplicitAny": false,
+		"removeComments": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"target": "es2015",
 	},
-	"include": ["index.ts", "ol3-symbolizer/**/*.ts"]
+	"files": ["index.ts"]
 }

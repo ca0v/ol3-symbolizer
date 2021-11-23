@@ -6,9 +6,7 @@
 		"strictFunctionTypes": true,
 		"strictNullChecks": false,
 		"strictPropertyInitialization": false,
-		"declaration": false,
-		"outFile": "./spec/index.js"
+		"declaration": false
 	},
-	"include": ["index.ts"],
-	"exclude": []
+	"files": ["./index.ts"]
 }

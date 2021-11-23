@@ -1,5 +1,5 @@
 import "./spec/packages";
-import "./spec/common";
-import "./spec/ol3-symbolizer";
-import "./spec/ags-symbolizer";
-import "./spec/ags-source";
+// import "./spec/common";
+// import "./spec/ol3-symbolizer";
+// import "./spec/ags-symbolizer";
+// import "./spec/ags-source";

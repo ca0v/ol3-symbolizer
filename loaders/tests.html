@@ -1,16 +1,64 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
     <title>Mocha Tests</title>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="./../loaders/theme.css">
-    <script type="text/javascript" src="../static/require.js" data-main="../built/loaders/tests"></script>
-</head>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="theme.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/mocha/mocha.css"
+    />
+    <style>
+      body {
+        background-color: #111;
+        color: #ccc;
+      }
 
-<body class="dark">
+      #mocha-stats canvas {
+        background-color: #ccc;
+        border-radius: 2em;
+      }
+
+      #mocha-stats em {
+        color: #ccc;
+      }
+
+      .test map,
+      .test .map {
+        position: initial;
+        width: 400px;
+        height: 400px;
+        border: 1px solid black;
+      }
+
+      .run head,
+      .run body,
+      .run .map {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+      }
+    </style>
+    <script src="https://unpkg.com/chai/chai.js"></script>
+    <script src="https://unpkg.com/mocha/mocha.js"></script>
+    <script type="module">
+      import { run } from "./loader.js";
+      run();
+    </script>
+  </head>
+
+  <body class="dark">
     <div id="mocha" class="terse"></div>
     <div id="map" class="map"></div>
-</body>
-
+  </body>
 </html>

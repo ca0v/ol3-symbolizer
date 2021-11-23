@@ -7,22 +7,24 @@
     "clean": "rmdir .\\built /s/q",
     "update": "npm install ol3-fun reverse-proxy-cache",
     "doc": "typedoc --out ./built/docs --tsconfig ./tsconfig.json --readme none",
-    "build-for-amd": "tsc -p tsconfig.json",
-    "build-for-loaders": "tsc -p loaders/tsconfig.json",
-    "build-for-tests": "tsc -p tests/tsconfig.json --outFile ./built/tests.max.js",
-    "watch-for-tests": "npm run build-for-tests -- -w",
-    "build-for-examples": "tsc -p examples/tsconfig.json --outFile ./built/examples.max.js",
-    "live-for-tests": "live-server --port=5001 --wait=200 --watch=./built/*.max.js --open=\"./loaders/tests.html?theme=dark&debug=1&test=*\" --browser=CHROME",
-    "live-for-examples": "live-server --port=5001 --wait=200 --watch=./built/*.max.js --open=\"./loaders/tests.html?theme=dark\" --browser=CHROME",
-    "dev-for-tests": "npm-run-all -p gateway live-for-tests watch-for-tests",
-    "dev-for-examples": "npm run build-for-examples & start npm run live-for-examples & npm run build-for-examples -- -w",
-    "uglify-for-amd": "cd built && uglifyjs index.max.js --source-map \"content='index.max.js.map',url='index.js.map'\" --output=index.js --compress --mangle",
-    "tests": "npm run dev-for-tests",
+    "build:amd": "tsc -p tsconfig.json",
+    "build:loaders": "tsc -p loaders/tsconfig.json",
+    "build:tests": "esbuild ./tests/index.ts --outfile=./built/loaders/test.js --watch --watch --format=esm --target=esnext",
+    "lint:tests": "tsc -p tests/tsconfig.json --watch",
+    "watch:tests": "npm-run-all -p build:tests lint:tests",
+    "build:examples": "tsc -p examples/tsconfig.json --outFile ./built/examples.max.js",
+    "live:tests": "esbuild ./tests/index.ts --outfile=./loaders/tests.js --watch --bundle --format=esm --target=esnext",
+    "live:loader": "esbuild ./loaders/tests.ts --outfile=./loaders/loader.js --servedir=./loaders --bundle --format=esm --target=esnext",
+    "dev:tests": "npm-run-all -p gateway live:tests live:loader",
+    "live:examples": "live-server --port=5001 --wait=200 --watch=./built/*.max.js --open=\"./loaders/tests.html?theme=dark\" --browser=CHROME",
+    "dev:examples": "npm run build:examples & start npm run live:examples & npm run build:examples -- -w",
+    "uglify:amd": "cd built && uglifyjs index.max.js --source-map \"content='index.max.js.map',url='index.js.map'\" --output=index.js --compress --mangle",
+    "tests": "npm run dev:tests",
     "move": "mv built/index.max.d.ts built/index.d.ts",
-    "before-push": "npm-run-all clean build-for-loaders build-for-amd build-for-tests build-for-examples move test",
-    "install": "npm run build-for-amd",
+    "before-push": "npm-run-all clean build:loaders build:amd build:tests build:examples move test",
+    "install": "npm run build:amd",
     "gateway": "reverse-proxy-cache",
-    "test": "npm run dev-for-tests"
+    "test": "npm run dev:tests"
   },
   "pre-commit": [
     "before-push"
@@ -38,20 +40,20 @@
   },
   "homepage": "https://github.com/ca0v/ol3-symbolizer#readme",
   "dependencies": {
-    "ol3-fun": "https://github.com/ca0v/ol3-fun/tarball/v5.1.3",
-    "typescript": "^3.0.1"
-  },
-  "devDependencies": {
-    "@types/jquery": "^3.3.9",
-    "@types/mocha": "^5.2.5",
-    "@types/ol": "^4.6.2",
-    "@types/requirejs": "^2.1.31",
-    "jquery": "^3.3.1",
-    "live-server": "^1.2.0",
-    "mocha": "^5.2.0",
-    "npm-run-all": "^4.1.5",
-    "reverse-proxy-cache": "https://github.com/ca0v/reverse-proxy-cache/tarball/v1.0.0",
-    "uglify-js": "^3.4.8"
+    "@ca0v/ceylon": "file:../ceylon",
+    "@types/jquery": "latest",
+    "@types/ol": "latest",
+    "esbuild": "^0.13.15",
+    "husky": "^7.0.4",
+    "jquery": "latest",
+    "live-server": "latest",
+    "mocha": "latest",
+    "npm-run-all": "latest",
+    "ol": "^6.9.0",
+    "ol3-fun": "file:../ol3-fun",
+    "requirejs": "^2.3.6",
+    "reverse-proxy-cache": "file:../reverse-proxy-cache",
+    "typescript": "^4.5.2"
   },
   "reverse-proxy-cache": {
     "port": "3001",
@@ -67,5 +69,8 @@
         "proxyUri": "http://localhost:8080/geoserver"
       }
     ]
+  },
+  "devDependencies": {
+    "@types/mocha": "^9.0.0"
   }
 }

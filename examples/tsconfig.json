@@ -3,8 +3,6 @@
 	"compilerOptions": {
 		"strictNullChecks": false,
 		"declaration": false,
-		"outFile": "./spec/index.js"
 	},
-	"include": ["index.ts", "**/*.ts"],
-	"exclude": []
+	"files": ["index.ts"],
 }
